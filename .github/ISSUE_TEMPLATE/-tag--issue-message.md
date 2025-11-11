@@ -1,5 +1,5 @@
 ---
-name: "[Tag] Issue Message\U0001F48C"
+name: "[Tag] Issue Message"
 about: issue description
 title: ''
 labels: ''
