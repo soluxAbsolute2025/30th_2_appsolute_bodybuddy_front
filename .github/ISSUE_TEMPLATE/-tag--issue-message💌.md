@@ -1,6 +1,6 @@
 ---
-name: "[tag] issue message"
-about: Suggest an idea for this project
+name: "[Tag] Issue Message\U0001F48C"
+about: issue description
 title: ''
 labels: ''
 assignees: ''
@@ -15,3 +15,5 @@ assignees: ''
 - [ ] task1
 - [ ] task2
 - [ ] task3
+
+## 📰 참고할 만한 자료
