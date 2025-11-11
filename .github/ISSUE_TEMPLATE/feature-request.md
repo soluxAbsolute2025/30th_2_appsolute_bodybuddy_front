@@ -1,7 +1,7 @@
 ---
-name: "[Tag] Issue Message"
+name: Feature Request
 about: issue description
-title: ''
+title: "[Tag] Issue Message\U0001F48C"
 labels: ''
 assignees: ''
 
