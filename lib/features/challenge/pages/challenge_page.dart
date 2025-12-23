@@ -62,15 +62,19 @@ class _ChallengePageState extends State<ChallengePage> {
               },
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 30),
 
             const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
+              padding: EdgeInsets.symmetric(horizontal: 17),
               child: Text(
                 '진행 중인 챌린지',
                 style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
+                  fontFamily: 'Pretendard',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  height: 1.0,
+                  letterSpacing: 0, 
+                  color: Colors.black,
                 ),
               ),
             ),
