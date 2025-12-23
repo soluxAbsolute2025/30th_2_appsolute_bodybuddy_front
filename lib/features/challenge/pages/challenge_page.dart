@@ -35,12 +35,11 @@ class ChallengePage extends StatelessWidget {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: const [
             ChallengeScopeToggle(),
-            SizedBox(height: 24),
+            SizedBox(height: 0),
           ],
         ),
       ),
