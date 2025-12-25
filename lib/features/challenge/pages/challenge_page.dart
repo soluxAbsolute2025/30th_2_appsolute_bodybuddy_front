@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-
 import '../widgets/challenge_scope_toggle.dart';
 import '../widgets/ongoing_challenge_card.dart';
 import '../data/dummy_challenges.dart';
+import '../data/dummy_recommended_challenges.dart';
+import '../widgets/recommended_challenge_card.dart';
 
 class ChallengePage extends StatefulWidget {
   const ChallengePage({super.key});
@@ -64,36 +65,84 @@ class _ChallengePageState extends State<ChallengePage> {
 
             const SizedBox(height: 30),
 
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 17),
-              child: Text(
-                '진행 중인 챌린지',
-                style: TextStyle(
-                  fontFamily: 'Pretendard',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  height: 1.0,
-                  letterSpacing: 0, 
-                  color: Colors.black,
+            // 진행 중인 챌린지 (개인일 때만)
+            if (isPersonalSelected) ...[
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 17),
+                child: Text(
+                  '진행 중인 챌린지',
+                  style: TextStyle(
+                    fontFamily: 'Pretendard',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    height: 1.0,
+                    letterSpacing: 0,
+                    color: Colors.black,
+                  ),
                 ),
               ),
-            ),
 
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                children: challenges
-                    .map(
-                      (challenge) =>
-                          OngoingChallengeCard(challenge: challenge),
-                    )
-                    .toList(),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: challenges
+                      .map(
+                        (challenge) =>
+                            OngoingChallengeCard(challenge: challenge),
+                      )
+                      .toList(),
+                ),
               ),
-            ),
 
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
+            ],
+
+            // 추천 챌린지
+            if (isPersonalSelected) ...[
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 17),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '추천 챌린지',
+                      style: TextStyle(
+                        fontFamily: 'Pretendard',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        height: 1.0,
+                        color: Colors.black,
+                      ),
+                    ),
+                    Text(
+                      '더보기',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF999999),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: dummyRecommendedChallenges
+                      .map(
+                        (challenge) =>
+                            RecommendedChallengeCard(challenge: challenge),
+                      )
+                      .toList(),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+            ],
           ],
         ),
       ),

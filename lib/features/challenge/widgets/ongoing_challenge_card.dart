@@ -93,7 +93,7 @@ class OngoingChallengeCard extends StatelessWidget {
                   width: 66,
                   height: 66,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF2F2F2),
+                    color: const Color(0xFFF5F5F5),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: ClipRRect(
