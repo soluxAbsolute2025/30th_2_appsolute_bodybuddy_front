@@ -4,6 +4,8 @@ import '../widgets/ongoing_challenge_card.dart';
 import '../data/dummy_challenges.dart';
 import '../data/dummy_recommended_challenges.dart';
 import '../widgets/recommended_challenge_card.dart';
+import '../data/dummy_completed_challenges.dart';
+import '../widgets/completed_challenge_card.dart';
 
 class ChallengePage extends StatefulWidget {
   const ChallengePage({super.key});
@@ -143,6 +145,47 @@ class _ChallengePageState extends State<ChallengePage> {
 
               const SizedBox(height: 24),
             ],
+
+            Container(
+              width: double.infinity,
+              height: 10,
+              color: const Color(0xFFF8F8F8),
+            ),
+            const SizedBox(height: 16),
+
+            // 완료한 챌린지 (개인일 때만)
+            if (isPersonalSelected) ...[
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 17),
+                child: Text(
+                  '완료한 챌린지',
+                  style: TextStyle(
+                    fontFamily: 'Pretendard',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    height: 1.0,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: dummyCompletedChallenges
+                      .map(
+                        (challenge) =>
+                            CompletedChallengeCard(challenge: challenge),
+                      )
+                      .toList(),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+            ],
+
           ],
         ),
       ),

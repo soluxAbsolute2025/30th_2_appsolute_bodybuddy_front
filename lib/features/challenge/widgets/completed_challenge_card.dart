@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import '../data/dummy_recommended_challenges.dart';
+import '../data/dummy_completed_challenges.dart';
 
-class RecommendedChallengeCard extends StatelessWidget {
-  final RecommendedChallenge challenge;
+class CompletedChallengeCard extends StatelessWidget {
+  final CompletedChallenge challenge;
 
-  const RecommendedChallengeCard({
+  const CompletedChallengeCard({
     super.key,
     required this.challenge,
   });
@@ -22,31 +22,48 @@ class RecommendedChallengeCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 왼쪽 아이콘 영역
+          // 이미지 영역
           Container(
             width: 52,
             height: 52,
             decoration: BoxDecoration(
-              color: const Color(0xFFF5F5F5),
               borderRadius: BorderRadius.circular(10),
-              image: challenge.imageUrl != null
-                  ? DecorationImage(
-                      image: NetworkImage(challenge.imageUrl!),
-                      fit: BoxFit.cover,
-                    )
-                  : null,
             ),
-            child: challenge.imageUrl == null
-                ? const Icon(
-                    Icons.fitness_center,
-                    color: Colors.grey,
-                  )
-                : null,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // 이미지 or 회색 네모
+                  challenge.imageUrl != null
+                      ? Image.network(
+                          challenge.imageUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: const Color(0xFFD8D8D8),
+                            );
+                          },
+                        )
+                      : Container(
+                          color: const Color(0xFFD8D8D8),
+                          child: const Icon(
+                            Icons.check_circle_outline,
+                            color: Colors.grey,
+                          ),
+                        ),
+
+                  Container(
+                    color: Colors.black.withOpacity(0.35),
+                  ),
+                ],
+              ),
+            ),
           ),
 
           const SizedBox(width: 12),
 
-          // 텍스트 영역
+          // 텍스트
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -56,6 +73,7 @@ class RecommendedChallengeCard extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
+                    color: Color(0xFF747474),
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -72,20 +90,20 @@ class RecommendedChallengeCard extends StatelessWidget {
 
           const SizedBox(width: 12),
 
-          // 시작하기 버튼
+          // 성공 버튼 (비활성)
           Container(
             padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFF1AEDB1),
+              color: const Color(0xFFA8A8A8),
               borderRadius: BorderRadius.circular(5),
             ),
             child: const Text(
-              '시작하기',
+              '챌린지 성공!',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: Colors.white,
+                color: const Color(0xFFF4F4F4),
               ),
             ),
           ),
