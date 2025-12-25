@@ -8,6 +8,7 @@ const List<Challenge> dummyPersonalChallenges = [
     total: 30,
     rewardXp: 500,
     dDay: 15,
+    imageUrl: "https://cdn-icons-png.flaticon.com/512/2965/2965567.png",
   ),
   Challenge(
     title: '주간 운동 목표',
@@ -16,6 +17,7 @@ const List<Challenge> dummyPersonalChallenges = [
     total: 5,
     rewardXp: 200,
     dDay: 15,
+    imageUrl: null, 
   ),
 ];
 

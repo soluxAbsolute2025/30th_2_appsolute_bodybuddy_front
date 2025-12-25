@@ -96,32 +96,53 @@ class OngoingChallengeCard extends StatelessWidget {
                     color: const Color(0xFFF2F2F2),
                     borderRadius: BorderRadius.circular(10),
                   ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: challenge.imageUrl == null
+                        ? const SizedBox() // ❗ 이미지 없으면 회색 네모 그대로
+                        : Image.network(
+                            challenge.imageUrl!,
+                            fit: BoxFit.cover,
+                            // 로딩 중일 때
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return const SizedBox(); // 회색 유지
+                            },
+                            // 에러 났을 때
+                            errorBuilder: (context, error, stackTrace) {
+                              return const SizedBox(); // 회색 유지
+                            },
+                          ),
+                  ),
                 ),
                 const SizedBox(width: 12),
 
                 // 텍스트 영역
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        challenge.title,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          height: 1.0,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          challenge.title,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            height: 1.0,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        challenge.description,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF7D7C7C),
+                        const SizedBox(height: 10),
+                        Text(
+                          challenge.description,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF7D7C7C),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
 

@@ -5,6 +5,7 @@ class Challenge {
   final int total;
   final int rewardXp;
   final int dDay;
+  final String? imageUrl;
 
   const Challenge({
     required this.title,
@@ -13,6 +14,7 @@ class Challenge {
     required this.total,
     required this.rewardXp,
     required this.dDay,
+    this.imageUrl,
   });
 
   double get progress => current / total;
