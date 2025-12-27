@@ -1,6 +1,8 @@
 // features/home/pages/home_page.dart
-
 import 'package:flutter/material.dart';
+import '../../../common/widgets/main_appbar.dart';
+
+import '../widgets/friends/my_friends_section.dart';
 
 class BuddyZonePage extends StatefulWidget {
   const BuddyZonePage({super.key});
@@ -15,27 +17,12 @@ class _BuddyZoneState extends State<BuddyZonePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        titleSpacing: 0,
-        title: SizedBox(
-          height: 60.0,
-          child: const Padding(
-            padding: EdgeInsets.fromLTRB(16.0, 19.0, 16.0, 17.0),
-            child: Text(
-              '버디존',
-              style: TextStyle(
-                fontFamily: 'Pretendard',
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                height: 1.0,
-                color: Colors.black,
-              ),
-            ),
-          ),
-        ),
+      backgroundColor: Color(0xFFF8F8F8),
+      appBar: MainAppbar(
+        navIndex: 3,
+        titleText: '버디존',
+        imageUrl: 'assets/images/common/my.svg',
+        buttonText: '친구 추가',
       ),
       body: Column(
         children: <Widget>[
@@ -112,6 +99,9 @@ class _BuddyZoneState extends State<BuddyZonePage> {
               ],
             ),
           ),
+          MyFriendsSection(),
+          SizedBox(height: 10.0),
+          MyFriendsSection(),
         ],
       ),
     );
