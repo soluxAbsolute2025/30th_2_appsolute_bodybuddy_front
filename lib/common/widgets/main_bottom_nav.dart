@@ -36,48 +36,6 @@ class MainBottomNav extends StatelessWidget {
           label: item.label,
         );
       }).toList(),
-      // [
-      //   BottomNavigationBarItem(
-      //     icon: SvgPicture.asset(
-      //       'assets/images/common/home.svg',
-      //       width: 18,
-      //       height: 18,
-      //     ),
-      //     label: '홈',
-      //   ),
-      //   BottomNavigationBarItem(
-      //     icon: SvgPicture.asset(
-      //       'assets/images/common/bodylog.svg',
-      //       width: 18,
-      //       height: 18,
-      //     ),
-      //     label: '바디로그',
-      //   ),
-      //   BottomNavigationBarItem(
-      //     icon: SvgPicture.asset(
-      //       'assets/images/common/challenge.svg',
-      //       width: 16,
-      //       height: 16,
-      //     ),
-      //     label: '챌린지',
-      //   ),
-      //   BottomNavigationBarItem(
-      //     icon: SvgPicture.asset(
-      //       'assets/images/common/buddyzone.svg',
-      //       width: 16,
-      //       height: 16,
-      //     ),
-      //     label: '버디존',
-      //   ),
-      //   BottomNavigationBarItem(
-      //     icon: SvgPicture.asset(
-      //       'assets/images/common/my.svg',
-      //       width: 18,
-      //       height: 18,
-      //     ),
-      //     label: '마이',
-      //   ),
-      // ],
     );
   }
 }
