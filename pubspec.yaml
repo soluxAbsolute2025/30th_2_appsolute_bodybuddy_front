@@ -68,6 +68,13 @@ flutter:
     - assets/images/common/buddyzone.svg
     - assets/images/common/my.svg
     - assets/images/common/act_my.svg
+    - assets/images/common/main_logo.png
+    - assets/images/common/profile1.jpg
+    - assets/images/common/hand.svg
+    - assets/images/common/friend_add.svg
+
+
+  # To add images to your application, add an images section, like this:
 
 
   # An images assets can refer to one or more resolution-specific "variants", see
