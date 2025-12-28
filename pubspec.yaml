@@ -59,19 +59,13 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/images/common/home.svg
-    - assets/images/common/act_home.svg
-    - assets/images/common/bodylog.svg
-    - assets/images/common/challenge.svg
-    - assets/images/common/buddyzone.svg
-    - assets/images/common/my.svg
-    - assets/images/common/act_my.svg
-    - assets/images/common/main_logo.png
-    - assets/images/common/profile1.jpg
-    - assets/images/common/hand.svg
-    - assets/images/common/friend_add.svg
+    - assets/images/common/
+    - assets/images/
+    - assets/challenge/
+    - assets/buddyzone/
 
 
   # To add images to your application, add an images section, like this:
