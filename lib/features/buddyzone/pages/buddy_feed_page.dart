@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../widgets/feeds/feed_only_widget.dart';
+import '../widgets/feeds/feed_search_widget.dart';
+import '../widgets/feeds/feed_hottag_widget.dart';
 
 class BuddyFeedPage extends StatelessWidget {
   const BuddyFeedPage({super.key});
@@ -6,9 +9,20 @@ class BuddyFeedPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.all(16.0),
-      color: Colors.lightBlueAccent[50],
-      child: Column(children: <Widget>[]),
+      padding: EdgeInsets.all(16.0),
+      color: Colors.white,
+      child: Column(
+        children: <Widget>[
+          FeedSearchWidget(),
+          SizedBox(height: 16.0),
+          FeedHottagWidget(),
+          SizedBox(height: 16.0),
+          FeedOnlyWidget(),
+          SizedBox(height: 16.0),
+          FeedOnlyWidget(),
+          SizedBox(height: 16.0),
+        ],
+      ),
     );
   }
 }
