@@ -7,6 +7,9 @@ import '../widgets/recommended_challenge_card.dart';
 import '../data/dummy_completed_challenges.dart';
 import '../widgets/completed_challenge_card.dart';
 import '../../../common/widgets/main_appbar.dart';
+import '../widgets/challenge_summary_card.dart';
+import '../data/dummy_challenge_summary.dart';
+
 
 class ChallengePage extends StatefulWidget {
   const ChallengePage({super.key});
@@ -163,6 +166,12 @@ class _ChallengePageState extends State<ChallengePage> {
                       )
                       .toList(),
                 ),
+              ),
+
+              const SizedBox(height: 16),
+              
+              ChallengeSummaryCard(
+                summary: dummyChallengeSummary,
               ),
 
               const SizedBox(height: 24),
