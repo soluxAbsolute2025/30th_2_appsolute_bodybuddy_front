@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'pages/main_page.dart';
 import 'features/bodylog/pages/bodylog_page.dart';
 
 void main() {
