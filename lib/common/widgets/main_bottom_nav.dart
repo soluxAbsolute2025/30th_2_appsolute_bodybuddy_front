@@ -1,6 +1,6 @@
 // lib/common/widgets/main_bottom_nav.dart
-
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class MainBottomNav extends StatelessWidget {
   final int currentIndex;
@@ -15,16 +15,74 @@ class MainBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BottomNavigationBar(
+      backgroundColor: Colors.white,
       currentIndex: currentIndex,
       onTap: onTap,
       type: BottomNavigationBarType.fixed,
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: '홈'),
-        BottomNavigationBarItem(icon: Icon(Icons.search), label: '검색'),
-        BottomNavigationBarItem(icon: Icon(Icons.add), label: '작성'),
-        BottomNavigationBarItem(icon: Icon(Icons.notifications), label: '알림'),
-        BottomNavigationBarItem(icon: Icon(Icons.person), label: '프로필'),
-      ],
+
+      // 커스텀
+      selectedFontSize: 10.0,
+      unselectedFontSize: 10.0,
+      selectedItemColor: Color(0xFF1AEDB1),
+      unselectedItemColor: Color(0xFF7D7C7C),
+
+      items: _bottomNavItems.map((item) {
+        return BottomNavigationBarItem(
+          icon: SvgPicture.asset(
+            currentIndex == item.index ? item.actIcon : item.inactIcon,
+            width: 18,
+            height: 18,
+          ),
+          label: item.label,
+        );
+      }).toList(),
     );
   }
 }
+
+class BottomNavItem {
+  final int index;
+  final String actIcon;
+  final String inactIcon;
+  final String label;
+
+  const BottomNavItem({
+    required this.index,
+    required this.actIcon,
+    required this.inactIcon,
+    required this.label,
+  });
+}
+
+const _bottomNavItems = [
+  BottomNavItem(
+    index: 0,
+    actIcon: 'assets/images/common/act_home.svg',
+    inactIcon: 'assets/images/common/home.svg',
+    label: '홈',
+  ),
+  BottomNavItem(
+    index: 1,
+    actIcon: 'assets/images/common/bodylog.svg',
+    inactIcon: 'assets/images/common/home.svg',
+    label: '바디로그',
+  ),
+  BottomNavItem(
+    index: 2,
+    actIcon: 'assets/images/common/challenge.svg',
+    inactIcon: 'assets/images/common/home.svg',
+    label: '챌린지',
+  ),
+  BottomNavItem(
+    index: 3,
+    actIcon: 'assets/images/common/buddyzone.svg',
+    inactIcon: 'assets/images/common/home.svg',
+    label: '버디존',
+  ),
+  BottomNavItem(
+    index: 4,
+    actIcon: 'assets/images/common/act_my.svg',
+    inactIcon: 'assets/images/common/my.svg',
+    label: '마이',
+  ),
+];
