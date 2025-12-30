@@ -2,7 +2,8 @@
 import 'package:flutter/material.dart';
 import '../../../common/widgets/main_appbar.dart';
 
-import '../widgets/friends/my_friends_section.dart';
+import 'buddy_friends_page.dart';
+import 'buddy_feed_page.dart';
 
 class BuddyZonePage extends StatefulWidget {
   const BuddyZonePage({super.key});
@@ -99,9 +100,23 @@ class _BuddyZoneState extends State<BuddyZonePage> {
               ],
             ),
           ),
-          MyFriendsSection(),
-          SizedBox(height: 10.0),
-          MyFriendsSection(),
+          if (_isBuddySelectIndex == 0) ...[
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                child: BuddyFeedPage(),
+              ),
+            ),
+          ] else if (_isBuddySelectIndex == 1) ...[
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                child: BuddyFriendPage(),
+              ),
+            ),
+          ],
+
+          // Container(padding: EdgeInsets.all(16.0), child: FeedOnlyWidget()),
         ],
       ),
     );

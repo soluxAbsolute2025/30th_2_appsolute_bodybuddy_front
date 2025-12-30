@@ -44,7 +44,7 @@ class _ChallengePageState extends State<ChallengePage> {
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: Image.asset(
-              'asset/challenge/shop.png',
+              'assets/challenge/shop.png',
               width: 24,
               height: 24,
             ),
