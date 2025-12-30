@@ -20,7 +20,7 @@ class CompletedChallengeCard extends StatelessWidget {
         border: Border.all(color: const Color(0xFFD8D8D8)),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // 이미지 영역
           Container(
