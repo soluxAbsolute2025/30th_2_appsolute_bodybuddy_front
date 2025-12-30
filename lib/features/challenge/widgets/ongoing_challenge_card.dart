@@ -17,16 +17,17 @@ class OngoingChallengeCard extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // ================== 🔽 하단 민트 카드 ==================
           Positioned(
-            top: 85, // 흰 카드 아래로 살짝 보이게
+            top: 85,
             left: 0,
             right: 0,
             child: Container(
               height: 110,
               padding: const EdgeInsets.fromLTRB(16, 28, 16, 16),
               decoration: BoxDecoration(
-                color: const Color(0xFFbDFFEE),
+                color: challenge.type == ChallengeType.weekly
+                    ? const Color(0xFFD6FEFF)
+                    : const Color(0xFFBDFFEE),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Column(
