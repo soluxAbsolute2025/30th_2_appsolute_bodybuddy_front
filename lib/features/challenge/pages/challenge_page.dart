@@ -6,6 +6,7 @@ import '../data/dummy_recommended_challenges.dart';
 import '../widgets/recommended_challenge_card.dart';
 import '../data/dummy_completed_challenges.dart';
 import '../widgets/completed_challenge_card.dart';
+import '../../../common/widgets/main_appbar.dart';
 
 class ChallengePage extends StatefulWidget {
   const ChallengePage({super.key});
@@ -25,33 +26,14 @@ class _ChallengePageState extends State<ChallengePage> {
         : dummyGroupChallenges;
 
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        titleSpacing: 16,
-        centerTitle: false,
-        title: const Text(
-          '바디 챌린지',
-          style: TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            height: 1.0,
-            color: Colors.black,
-          ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Image.asset(
-              'assets/challenge/shop.png',
-              width: 24,
-              height: 24,
-            ),
-          ),
-        ],
-      ),
-
+      appBar: MainAppbar(
+      navIndex: 2,
+      titleText: '바디 챌린지',
+      imageUrl: 'assets/challenge/shop.svg',
+      buttonText: '상점',
+      onButtonPressed: () {
+      },
+    ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
