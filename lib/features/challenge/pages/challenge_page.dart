@@ -9,7 +9,7 @@ import '../widgets/completed_challenge_card.dart';
 import '../../../common/widgets/main_appbar.dart';
 import '../widgets/challenge_summary_card.dart';
 import '../data/dummy_challenge_summary.dart';
-
+import '../widgets/challenge_floating_button.dart';
 
 class ChallengePage extends StatefulWidget {
   const ChallengePage({super.key});
@@ -180,6 +180,17 @@ class _ChallengePageState extends State<ChallengePage> {
           ],
         ),
       ),
+      floatingActionButton: isPersonalSelected
+          ? ChallengeFloatingButton(
+              onPressed: () {
+                // TODO: 새 챌린지 생성 페이지 이동
+                // Navigator.pushNamed(context, '/challenge/create');
+              },
+            )
+          : null,
+
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      
     );
   }
 }
