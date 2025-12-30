@@ -42,9 +42,15 @@ class _ChallengePageState extends State<ChallengePage> {
           ),
         ],
       ),
-      floatingActionButton: isPersonalSelected
-          ? ChallengeFloatingButton(onPressed: () {})
-          : null,
+      floatingActionButton: Visibility(
+        visible: isPersonalSelected,
+        maintainState: true,
+        maintainAnimation: true,
+        maintainSize: true,
+        child: ChallengeFloatingButton(
+          onPressed: () {},
+        ),
+      ),
     );
   }
 }
