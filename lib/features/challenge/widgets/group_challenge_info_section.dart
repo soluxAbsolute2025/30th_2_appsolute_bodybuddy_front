@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../models/group_challenge.dart';
+import '../models/group_challenge_detail_model.dart';
 
 class GroupChallengeInfoSection extends StatelessWidget {
-  final GroupChallenge challenge;
+  final GroupChallengeDetail challenge;
 
   const GroupChallengeInfoSection({
     super.key,
@@ -11,64 +11,129 @@ class GroupChallengeInfoSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            challenge.title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+    return Column(
+      children: [
+        /// 이미지 영역
+        Container(
+          height: 250,
+          decoration: BoxDecoration(
+            color: challenge.imageUrl == null
+                ? const Color(0xFFF5F5F5)
+                : null,
+            image: challenge.imageUrl != null
+                ? DecorationImage(
+                    image: NetworkImage(challenge.imageUrl!),
+                    fit: BoxFit.cover,
+                  )
+                : null,
           ),
-          const SizedBox(height: 12),
-          _InfoRow(
-            icon: Icons.calendar_today,
-            text:
-                '${_format(challenge.startDate)} ~ ${_format(challenge.endDate)}',
+        ),
+
+        /// 정보 카드
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+          color: Colors.white,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              /// 제목
+              Text(
+                challenge.title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              /// 기간
+              _InfoRow(
+                iconPath: 'assets/challenge/calender.png',
+                text:
+                    '${_format(challenge.startDate)} ~ ${_format(challenge.endDate)}',
+              ),
+
+              /// 참여 인원 (🔥 부분 스타일)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Image.asset(
+                      'assets/challenge/person.png',
+                      width: 20,
+                      height: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    RichText(
+                      text: TextSpan(
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF000000),
+                        ),
+                        children: [
+                          TextSpan(
+                            text:
+                                '${challenge.currentParticipants}명 참여 ',
+                          ),
+                          TextSpan(
+                            text: '/ ${challenge.maxParticipants}명',
+                            style: const TextStyle(
+                              color: Color(0xFFA8A8A8),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              /// 공개 여부
+              _InfoRow(
+                iconPath: 'assets/challenge/lock.png',
+                text: challenge.isPublic ? '친구 공개' : '비공개',
+              ),
+            ],
           ),
-          _InfoRow(
-            icon: Icons.people,
-            text:
-                '${challenge.currentParticipants}명 참여 / ${challenge.maxParticipants}명',
-          ),
-          _InfoRow(
-            icon: Icons.lock_open,
-            text: challenge.isPublic ? '친구 공개' : '비공개',
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  String _format(DateTime d) => '${d.year}.${d.month}.${d.day}';
+  String _format(DateTime d) => '${d.year}. ${d.month}. ${d.day}';
 }
 
 class _InfoRow extends StatelessWidget {
-  final IconData icon;
+  final String iconPath;
   final String text;
 
   const _InfoRow({
-    required this.icon,
+    required this.iconPath,
     required this.text,
   });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: Colors.green),
+          Image.asset(
+            iconPath,
+            width: 20,
+            height: 20,
+          ),
           const SizedBox(width: 8),
-          Text(text),
+          Text(
+            text,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Color(0xFF000000),
+            ),
+          ),
         ],
       ),
     );

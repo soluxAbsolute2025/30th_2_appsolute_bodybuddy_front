@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../models/group_challenge.dart';
+import '../models/group_challenge_detail_model.dart';
 import 'group_challenge_rank_item.dart';
 
 class GroupChallengeRankSection extends StatelessWidget {
-  final GroupChallenge challenge;
+  final GroupChallengeDetail challenge;
 
   const GroupChallengeRankSection({
     super.key,
@@ -13,20 +13,22 @@ class GroupChallengeRankSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             '순위',
-            style: TextStyle(fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           ...challenge.ranks.map(
             (rank) => GroupChallengeRankItem(rank: rank),
           ),

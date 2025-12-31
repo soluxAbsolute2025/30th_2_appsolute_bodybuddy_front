@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../models/group_challenge.dart';
+import '../models/group_challenge_detail_model.dart';
 
 class GroupChallengeDescriptionSection extends StatelessWidget {
-  final GroupChallenge challenge;
+  final GroupChallengeDetail challenge;
 
   const GroupChallengeDescriptionSection({
     super.key,
@@ -12,20 +12,39 @@ class GroupChallengeDescriptionSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            '챌린지 내용',
-            style: TextStyle(fontWeight: FontWeight.bold),
+            '챌린지 설명',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
           ),
-          Text(challenge.description),
+          const SizedBox(height: 10),
+
+          Padding(
+            padding: const EdgeInsets.only(left: 1), 
+            child: Text(
+              challenge.description,
+              style: const TextStyle(
+                fontFamily: 'Pretendard',
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                height: 1.0,
+                letterSpacing: 0,
+                color: Color(0xFF747474),
+              ),
+            ),
+          ),
+          const SizedBox(height: 15),
         ],
       ),
     );
