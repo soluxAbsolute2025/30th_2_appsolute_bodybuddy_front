@@ -12,12 +12,15 @@ class ParticipatingGroupChallengeCard extends StatelessWidget {
   final List<GroupMember> members;
   final String? imageUrl;
 
+  final VoidCallback onImageTap;
+
   const ParticipatingGroupChallengeCard({
     super.key,
     required this.title,
     required this.rank,
     required this.remainDays,
     required this.members,
+    required this.onImageTap,
     this.imageUrl,
   });
 
@@ -29,39 +32,38 @@ class ParticipatingGroupChallengeCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         /// 카드 영역
-        Container(
-          width: double.infinity,
-          height: 150,
-          decoration: BoxDecoration(
-            color: imageUrl == null ? const Color(0xFFF5F5F5) : null,
-            borderRadius: BorderRadius.circular(10),
-            image: imageUrl != null
-                ? DecorationImage(
-                    image: NetworkImage(imageUrl!),
-                    fit: BoxFit.cover,
-                  )
-                : null,
-          ),
-          child: Stack(
-            children: [
-              /// 우측 상단 순위 뱃지
-              Positioned(
-                top: 12,
-                right: 12,
-                child: Positioned(
+        GestureDetector(
+          onTap: onImageTap,
+          child: Container(
+            width: double.infinity,
+            height: 150,
+            decoration: BoxDecoration(
+              color: imageUrl == null ? const Color(0xFFF5F5F5) : null,
+              borderRadius: BorderRadius.circular(10),
+              image: imageUrl != null
+                  ? DecorationImage(
+                      image: NetworkImage(imageUrl!),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
+            ),
+            child: Stack(
+              children: [
+                /// 우측 상단 순위 뱃지
+                Positioned(
                   top: 12,
                   right: 12,
                   child: RankBadge(rank: rank),
                 ),
-              ),
 
-              /// 하단 프로필 자리 (placeholder)
-              Positioned(
-                bottom: 16,
-                left: 16,
-                child: OverlappingProfileStack(members: members),
-              ),
-            ],
+                /// 하단 프로필
+                Positioned(
+                  bottom: 16,
+                  left: 16,
+                  child: OverlappingProfileStack(members: members),
+                ),
+              ],
+            ),
           ),
         ),
 
