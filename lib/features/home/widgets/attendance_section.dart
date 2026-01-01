@@ -41,6 +41,7 @@ class AttendanceSection extends StatelessWidget {
             AttendanceQuizCard(),
             SizedBox(height: 16),
             AttendanceWeekStrip(),
+            SizedBox(height: 20),
           ],
         ),
       ),
