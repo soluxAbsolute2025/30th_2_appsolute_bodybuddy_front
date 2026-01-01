@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'today_body_card.dart';
+import 'ongoing_challenge_section.dart';
 
 class TodayDateHeader extends StatelessWidget {
   const TodayDateHeader({super.key});
@@ -32,6 +33,10 @@ class TodayDateHeader extends StatelessWidget {
 
         // 오늘의 바디 카드
         const TodayBodyCard(),
+        const SizedBox(height: 16),
+
+        /// 진행 중인 챌린지
+        const OngoingChallengeSection(),
       ],
     );
   }
