@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'pages/main_page.dart';
+import 'features/bodylog/pages/bodylog_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         scaffoldBackgroundColor: Colors.white,
       ),
-      home: const MainPage(),
+      home: const BodyLogPage(),
     );
   }
 }
