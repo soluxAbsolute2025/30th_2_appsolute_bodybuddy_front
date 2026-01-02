@@ -19,13 +19,13 @@ final dummyGroupChallenges = [
   OngoingChallenge(
     challengeId: 3,
     title: '친구들과 다이어트',
-    dday: 15,
+    rank: 2,
     profileUrl: null,
   ),
   OngoingChallenge(
     challengeId: 4,
     title: '주간 운동 목표',
-    dday: 15,
+    rank: 3,
     profileUrl: 'https://cdn-icons-png.flaticon.com/512/2965/2965567.png',
   ),
 ];

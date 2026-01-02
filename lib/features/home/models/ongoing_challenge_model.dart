@@ -1,13 +1,15 @@
 class OngoingChallenge {
   final int challengeId;
   final String title;
-  final int dday;
+  final int? dday;
+  final int? rank;
   final String? profileUrl;
 
   OngoingChallenge({
     required this.challengeId,
     required this.title,
-    required this.dday,
+    this.dday,
+    this.rank,
     this.profileUrl,
   });
 

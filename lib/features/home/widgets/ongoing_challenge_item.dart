@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/ongoing_challenge_model.dart';
+import '../../challenge/widgets/rank_badge.dart';
 
 class OngoingChallengeItem extends StatelessWidget {
   final OngoingChallenge challenge;
@@ -52,24 +53,45 @@ class OngoingChallengeItem extends StatelessWidget {
           ),
         ),
 
-        /// D-Day
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: const Color(0xFFE9FFF9),
-            borderRadius: BorderRadius.circular(5),
-            border: Border.all(color: const Color(0xFF1AEDB1)),
-          ),
-          child: Text(
-            'D + ${challenge.dday}',
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF1AEDB1),
-            ),
-          ),
-        ),
+        /// 개인 / 그룹 분기 뱃지
+        isGroup
+            ? RankBadge(
+                rank: challenge.rank ?? 0,
+              )
+            : _DDayBadge(
+                dday: challenge.dday ?? 0,
+              ),
       ],
+    );
+  }
+}
+
+/// dday
+class _DDayBadge extends StatelessWidget {
+  final int dday;
+
+  const _DDayBadge({required this.dday});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE9FFF9),
+        borderRadius: BorderRadius.circular(5),
+        border: Border.all(
+          color: const Color(0xFF1AEDB1),
+          width: 1,
+        ),
+      ),
+      child: Text(
+        'D + $dday',
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF1AEDB1),
+        ),
+      ),
     );
   }
 }
