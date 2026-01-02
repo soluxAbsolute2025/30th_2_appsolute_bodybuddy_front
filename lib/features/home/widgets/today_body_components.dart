@@ -39,7 +39,7 @@ class MetricRow extends StatelessWidget {
                   style: const TextStyle(
                     fontFamily: 'Pretendard',
                     fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
