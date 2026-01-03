@@ -22,7 +22,7 @@ class _BuddyZoneState extends State<BuddyZonePage> {
       appBar: MainAppbar(
         navIndex: 3,
         titleText: '버디존',
-        imageUrl: 'assets/images/common/my.svg',
+        imageUrl: 'assets/images/common/shop.svg',
         buttonText: '친구 추가',
       ),
       body: Column(
