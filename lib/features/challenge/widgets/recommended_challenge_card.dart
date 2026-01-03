@@ -20,7 +20,7 @@ class RecommendedChallengeCard extends StatelessWidget {
         border: Border.all(color: const Color(0xFFD8D8D8)),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // 왼쪽 아이콘 영역
           Container(

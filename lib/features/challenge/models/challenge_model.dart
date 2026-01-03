@@ -1,3 +1,8 @@
+enum ChallengeType {
+  daily,  
+  weekly, 
+}
+
 class Challenge {
   final String title;
   final String description;
@@ -6,6 +11,7 @@ class Challenge {
   final int rewardXp;
   final int dDay;
   final String? imageUrl;
+  final ChallengeType type;
 
   const Challenge({
     required this.title,
@@ -15,6 +21,7 @@ class Challenge {
     required this.rewardXp,
     required this.dDay,
     this.imageUrl,
+    required this.type,
   });
 
   double get progress => current / total;

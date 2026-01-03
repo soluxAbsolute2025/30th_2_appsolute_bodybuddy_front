@@ -67,6 +67,7 @@ flutter:
     - assets/challenge/
     - assets/buddyzone/
     - assets/mypage/
+    - assets/home/
 
 
   # To add images to your application, add an images section, like this:
