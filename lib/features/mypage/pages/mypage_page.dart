@@ -16,7 +16,7 @@ class MypagePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF8F8F8),
+      backgroundColor: Color(0xFFFFFFFF),
       appBar: MainAppbar(
         navIndex: 4,
         titleText: '마이페이지',
