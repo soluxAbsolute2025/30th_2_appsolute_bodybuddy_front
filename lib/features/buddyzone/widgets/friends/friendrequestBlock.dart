@@ -15,7 +15,7 @@ class _FriendrequestState extends State<FriendrequestBlock> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Color(0xFFF8F8F8),
+        color: Color(0xFFFBFBFB),
         borderRadius: BorderRadius.circular(10.0),
       ),
       // margin: EdgeInsets.symmetric(horizontal: 16.0),
@@ -90,19 +90,26 @@ class _FriendrequestState extends State<FriendrequestBlock> {
             padding: EdgeInsets.only(right: 10.0),
             child: Row(
               children: [
-                InkWell(
-                  onTap: () {
-                    print("수락 클릭!");
-                  },
-                  borderRadius: BorderRadius.circular(5.0),
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      vertical: 6.0,
-                      horizontal: 14.0,
-                    ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(5.0),
-                      color: Color(0xFF1AEDB1),
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(5.0),
+                    color: Color(0xFF1AEDB1),
+                  ),
+                  child: TextButton(
+                    onPressed: () {
+                      print("수락 클릭!");
+                    },
+                    style: TextButton.styleFrom(
+                      foregroundColor: Color(0xFF669688),
+                      padding: EdgeInsets.symmetric(
+                        vertical: 6.0,
+                        horizontal: 14.0,
+                      ),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      minimumSize: Size.zero,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5.0),
+                      ),
                     ),
                     child: Center(
                       child: Text(
@@ -117,20 +124,26 @@ class _FriendrequestState extends State<FriendrequestBlock> {
                   ),
                 ),
                 SizedBox(width: 5.0),
-                InkWell(
-                  onTap: () {
-                    print("x 클릭!");
-                  },
-                  borderRadius: BorderRadius.circular(5.0),
-                  splashColor: Colors.black12,
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      vertical: 8.0,
-                      horizontal: 8.0,
-                    ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(5.0),
-                      color: Color(0xDBFFFFFF),
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(5.0),
+                    color: Colors.white,
+                  ),
+                  child: TextButton(
+                    onPressed: () {
+                      print("x 클릭!");
+                    },
+                    style: TextButton.styleFrom(
+                      foregroundColor: Color(0x1188D3BD),
+                      padding: EdgeInsets.symmetric(
+                        vertical: 8.0,
+                        horizontal: 8.0,
+                      ),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      minimumSize: Size.zero,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5.0),
+                      ),
                     ),
                     child: Center(
                       child: SvgPicture.asset('assets/images/common/x.svg'),

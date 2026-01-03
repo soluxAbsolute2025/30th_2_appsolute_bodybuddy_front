@@ -16,7 +16,7 @@ class BuddyFeedPage extends StatelessWidget {
           FeedSearchWidget(),
           SizedBox(height: 16.0),
           FeedHottagWidget(),
-          SizedBox(height: 16.0),
+          SizedBox(height: 24.0),
           FeedOnlyWidget(),
           SizedBox(height: 16.0),
           FeedOnlyWidget(),

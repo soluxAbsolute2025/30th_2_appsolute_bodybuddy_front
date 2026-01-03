@@ -49,13 +49,13 @@ class FeedOnlyWidget extends StatelessWidget {
                           horizontal: 10.0,
                         ),
                         decoration: BoxDecoration(
-                          color: Color(0xFF1AEDB1),
+                          color: Color(0xFFE9FFF9),
                           borderRadius: BorderRadius.circular(5.0),
                         ),
                         child: Text(
                           'Lv.15',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: Color(0xFF1AEDB1),
                             fontSize: 11.0,
                             fontWeight: FontWeight.w500,
                             fontFamily: 'Pretendard',
@@ -141,7 +141,6 @@ class FeedOnlyWidget extends StatelessWidget {
           SizedBox(height: 16.0),
           Container(
             width: double.infinity,
-
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10.0),
               child: Image(
