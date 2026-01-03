@@ -1,0 +1,96 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+
+class MypageProfileWidget extends StatelessWidget {
+  const MypageProfileWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      constraints: BoxConstraints(maxHeight: 100.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 62.0,
+            height: 62.0,
+            child: ClipOval(
+              child: Image(
+                image: AssetImage('assets/images/common/profile1.jpg'),
+              ),
+            ),
+          ),
+          SizedBox(width: 14.0),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Row(
+                  children: [
+                    Text(
+                      '김헬스',
+                      style: TextStyle(
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Pretendard',
+                      ),
+                    ),
+                    SizedBox(width: 8.0),
+                    Container(
+                      // height: 17.0,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          vertical: 1.0,
+                          horizontal: 10.0,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Color(0xFF1AEDB1),
+                          borderRadius: BorderRadius.circular(5.0),
+                        ),
+                        child: Text(
+                          'Lv.15',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 11.0,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: 'Pretendard',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 2.0),
+                Row(
+                  children: [
+                    Container(
+                      child: Text(
+                        textAlign: TextAlign.left,
+                        '건강한 라이프 스타일 실천 중',
+                        style: TextStyle(
+                          color: Color(0xFF747474),
+                          fontSize: 14.0,
+                          fontFamily: 'Pretendard',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: EdgeInsets.only(right: 16.0),
+            child: SvgPicture.asset(
+              'assets/mypage/arrow.svg',
+              width: 6.0,
+              height: 10.0,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
