@@ -9,7 +9,7 @@ class MypageLevelBadgeWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(16.0),
+      padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
       // constraints: BoxConstraints(maxHeight: 100.0),
       decoration: BoxDecoration(
         color: Colors.white,
