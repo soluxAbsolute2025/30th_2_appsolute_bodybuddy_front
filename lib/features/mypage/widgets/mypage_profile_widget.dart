@@ -8,7 +8,7 @@ class MypageProfileWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: Colors.white,
-      constraints: BoxConstraints(maxHeight: 100.0),
+      constraints: BoxConstraints(maxHeight: 90.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
