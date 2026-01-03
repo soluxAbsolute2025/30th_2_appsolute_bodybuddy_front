@@ -44,46 +44,24 @@ class MainAppbar extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       actions: [
-        if (navIndex == 1 || navIndex == 2)
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: TextButton(
-              onPressed: () {},
-              style: TextButton.styleFrom(
-                padding: EdgeInsets.zero,
-                minimumSize: Size.zero,
-                tapTargetSize:
-                    MaterialTapTargetSize.shrinkWrap, // 터치 영역을 내용물에 맞춤
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-              ),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 4.0,
-                  horizontal: 8.0,
-                ),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Color(0xFFD8D8D8),
-                    width: 1.0,
-                    style: BorderStyle.solid,
+        if (navIndex == 0 || navIndex == 1 || navIndex == 2)
+          Container(
+            margin: const EdgeInsets.only(right: 16.0),
+            width: 35.0,
+            height: 35.0,
+            child: Center(
+              child: TextButton(
+                onPressed: () {},
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                  tapTargetSize:
+                      MaterialTapTargetSize.shrinkWrap, // 터치 영역을 내용물에 맞춤
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.0),
                   ),
-                  borderRadius: BorderRadius.circular(8.0),
                 ),
-                child: Row(
-                  children: [
-                    SvgPicture.asset(imageUrl!, width: 14, height: 14),
-                    const SizedBox(width: 8),
-                    Text(
-                      buttonText!,
-                      style: const TextStyle(
-                        fontSize: 14.0,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ],
-                ),
+                child: Center(child: SvgPicture.asset(imageUrl!, height: 20)),
               ),
             ),
           ),
