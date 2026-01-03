@@ -44,7 +44,7 @@ class _FriendrequestState extends State<FriendrequestBlock> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(width: 16.0),
+                    SizedBox(width: 10.0),
                     Container(
                       // height: 17.0,
                       child: Container(
@@ -53,13 +53,13 @@ class _FriendrequestState extends State<FriendrequestBlock> {
                           horizontal: 10.0,
                         ),
                         decoration: BoxDecoration(
-                          color: Color(0xFF1AEDB1),
+                          color: Color(0xFFE9FFF9),
                           borderRadius: BorderRadius.circular(5.0),
                         ),
                         child: Text(
                           'Lv.15',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: Color(0xFF1AEDB1),
                             fontSize: 11.0,
                             fontWeight: FontWeight.w500,
                           ),
