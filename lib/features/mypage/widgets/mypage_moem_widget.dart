@@ -41,6 +41,7 @@ class MypageMoemWidget extends StatelessWidget {
               ],
             ),
           ),
+          VerticalDivider(indent: 24.0, endIndent: 24.0),
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

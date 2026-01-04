@@ -8,7 +8,7 @@ class MypageProfileWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: Colors.white,
-      constraints: BoxConstraints(maxHeight: 100.0),
+      constraints: BoxConstraints(maxHeight: 90.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -46,13 +46,13 @@ class MypageProfileWidget extends StatelessWidget {
                           horizontal: 10.0,
                         ),
                         decoration: BoxDecoration(
-                          color: Color(0xFF1AEDB1),
+                          color: Color(0xFFE9FFF9),
                           borderRadius: BorderRadius.circular(5.0),
                         ),
                         child: Text(
                           'Lv.15',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: Color(0xFF18D9A2),
                             fontSize: 11.0,
                             fontWeight: FontWeight.w500,
                             fontFamily: 'Pretendard',

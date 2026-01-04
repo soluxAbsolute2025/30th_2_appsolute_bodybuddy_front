@@ -6,6 +6,11 @@ class MypageLevelWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    int userVal = 2450;
+    int maxVal = 3000;
+
+    double ratio = userVal / maxVal;
+
     return Container(
       // color: Colors.orange,
       child: Column(
@@ -47,10 +52,20 @@ class MypageLevelWidget extends StatelessWidget {
           SizedBox(height: 8.0),
           Container(
             width: double.infinity,
+            alignment: Alignment.centerLeft,
             height: 10.0,
             decoration: BoxDecoration(
-              color: Color(0xFF17D8A1),
+              color: Color(0xFFEBEBEB),
               borderRadius: BorderRadius.circular(10.0),
+            ),
+            child: FractionallySizedBox(
+              widthFactor: ratio,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Color(0xFF17D8A1),
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ),
             ),
           ),
           SizedBox(height: 8.0),
