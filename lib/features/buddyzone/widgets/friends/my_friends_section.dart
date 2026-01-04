@@ -15,7 +15,7 @@ class MyFriendsSection extends StatelessWidget {
         bottom: 25.0,
         right: 16.0,
         left: 16.0,
-        top: 25.0,
+        top: 20.0,
       ),
       child: Column(
         children: [
@@ -48,11 +48,31 @@ class MyFriendsSection extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: EdgeInsets.only(right: 16.0),
-                  child: SvgPicture.asset(
-                    'assets/images/common/friend_add.svg',
-                    width: 22.0,
-                    height: 15.0,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(5.0),
+                    color: Colors.white,
+                  ),
+                  child: TextButton(
+                    onPressed: () {
+                      print("친구 추가 클릭!");
+                    },
+                    style: TextButton.styleFrom(
+                      foregroundColor: Color(0x1188D3BD),
+                      padding: EdgeInsets.symmetric(
+                        vertical: 8.0,
+                        horizontal: 8.0,
+                      ),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      minimumSize: Size.zero,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5.0),
+                      ),
+                    ),
+                    child: Center(
+                      child: SvgPicture.asset(
+                        'assets/images/common/friend_add.svg',
+                      ),
+                    ),
                   ),
                 ),
               ],
