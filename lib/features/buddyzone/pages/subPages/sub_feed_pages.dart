@@ -17,7 +17,7 @@ class SubFeedPages extends StatelessWidget {
         child: Column(
           children: [
             Container(
-              padding: EdgeInsets.only(left: 16.0, right: 16.0, top: 7.0),
+              padding: EdgeInsets.only(left: 16.0, right: 16.0),
               child: FeedOnlyWidget(profileSize: 37.0, fontSize: 14.0),
             ),
             SizedBox(height: 12.0),
