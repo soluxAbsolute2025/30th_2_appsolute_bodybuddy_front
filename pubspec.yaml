@@ -69,6 +69,7 @@ flutter:
     - assets/mypage/
     - assets/home/
     - assets/bodylog/
+    - assets/carebuddy/
 
 
   # To add images to your application, add an images section, like this:
