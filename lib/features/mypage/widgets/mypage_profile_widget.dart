@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '/features/mypage/pages/mypage_profile_page.dart';
+
 class MypageProfileWidget extends StatelessWidget {
   const MypageProfileWidget({super.key});
 
@@ -81,8 +83,23 @@ class MypageProfileWidget extends StatelessWidget {
               ],
             ),
           ),
-          Container(
-            padding: EdgeInsets.only(right: 16.0),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context, rootNavigator: true).push(
+                MaterialPageRoute(
+                  builder: (context) => const MypageProfilePage(),
+                ),
+              );
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: Color(0x1188D3BD),
+              padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap, // 터치 영역을 내용물에 맞춤
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(5.0),
+              ),
+            ),
             child: SvgPicture.asset(
               'assets/mypage/arrow.svg',
               width: 6.0,
