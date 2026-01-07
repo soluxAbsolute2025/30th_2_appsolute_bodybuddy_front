@@ -48,7 +48,10 @@ class _MainPageState extends State<MainPage> {
           _buildNavigator(4, const MypagePage()),
         ],
       ),
-      floatingActionButton: _shouldShowFloating() ? MainFloating() : null,
+
+      floatingActionButton: _shouldShowFloating()
+          ? MainFloating(navigatorKey: _navigatorKeys[_currentIndex])
+          : null,
       bottomNavigationBar: MainBottomNav(
         currentIndex: _currentIndex,
         onTap: (index) {
@@ -71,7 +74,6 @@ class _MainPageState extends State<MainPage> {
 
   // 조건에 따라 플로팅 버튼 표시 여부 결정
   bool _shouldShowFloating() {
-    // 특정 인덱스나 상태에 따라 false 반환 로직 추가
     return true;
   }
 }
