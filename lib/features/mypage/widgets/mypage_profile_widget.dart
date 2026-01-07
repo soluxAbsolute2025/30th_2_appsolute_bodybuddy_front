@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '/features/mypage/pages/mypage_profile_page.dart';
+
 class MypageProfileWidget extends StatelessWidget {
   const MypageProfileWidget({super.key});
 
@@ -82,7 +84,12 @@ class MypageProfileWidget extends StatelessWidget {
             ),
           ),
           TextButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => MypageProfilePage()),
+              );
+            },
             style: TextButton.styleFrom(
               foregroundColor: Color(0x1188D3BD),
               padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
