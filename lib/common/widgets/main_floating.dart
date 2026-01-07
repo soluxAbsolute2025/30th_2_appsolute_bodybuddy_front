@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 // import 'package:flutter_svg/flutter_svg.dart';
+// import '../features/carebuddy/pages/carebuddy_page.dart';
+import '../../features/buddyzone/pages/subPages/sub_feed_pages.dart';
 
 class MainFloating extends StatelessWidget {
   const MainFloating({super.key});
@@ -9,7 +11,12 @@ class MainFloating extends StatelessWidget {
     return SizedBox(
       height: 35.0,
       child: FloatingActionButton.extended(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.of(context, rootNavigator: true).push(
+            // MaterialPageRoute(builder: (context) => const CareBuddyPage()),
+            MaterialPageRoute(builder: (context) => const SubFeedPages()),
+          );
+        },
         backgroundColor: Colors.transparent,
         elevation: 0,
         focusElevation: 0,
