@@ -2,14 +2,14 @@ import 'package:bodybuddy_frontend/common/widgets/sub_appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-class MypageProfilePage extends StatefulWidget {
-  const MypageProfilePage({super.key});
+class MypageRangePage extends StatefulWidget {
+  const MypageRangePage({super.key});
 
   @override
-  State<MypageProfilePage> createState() => _MypageProfilePageState();
+  State<MypageRangePage> createState() => _MypageRangePageState();
 }
 
-class _MypageProfilePageState extends State<MypageProfilePage> {
+class _MypageRangePageState extends State<MypageRangePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(

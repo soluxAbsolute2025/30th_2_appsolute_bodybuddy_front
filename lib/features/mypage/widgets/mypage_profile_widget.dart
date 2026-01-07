@@ -85,9 +85,10 @@ class MypageProfileWidget extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => MypageProfilePage()),
+              Navigator.of(context, rootNavigator: true).push(
+                MaterialPageRoute(
+                  builder: (context) => const MypageProfilePage(),
+                ),
               );
             },
             style: TextButton.styleFrom(
