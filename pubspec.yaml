@@ -68,6 +68,7 @@ flutter:
     - assets/buddyzone/
     - assets/mypage/
     - assets/home/
+    - assets/carebuddy/
 
 
   # To add images to your application, add an images section, like this:
