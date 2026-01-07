@@ -1,6 +1,7 @@
 // features/home/pages/home_page.dart
 import 'package:flutter/material.dart';
 import '../../../common/widgets/main_appbar.dart';
+import 'subPages/sub_feed_pages.dart';
 
 import 'buddy_friends_page.dart';
 import 'buddy_feed_page.dart';
@@ -105,6 +106,7 @@ class _BuddyZoneState extends State<BuddyZonePage> {
               child: SingleChildScrollView(
                 scrollDirection: Axis.vertical,
                 child: BuddyFeedPage(),
+                // child: SubFeedPages(),
               ),
             ),
           ] else if (_isBuddySelectIndex == 1) ...[

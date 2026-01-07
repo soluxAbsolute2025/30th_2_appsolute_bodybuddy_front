@@ -49,20 +49,18 @@ class MainAppbar extends StatelessWidget implements PreferredSizeWidget {
             margin: const EdgeInsets.only(right: 16.0),
             width: 35.0,
             height: 35.0,
-            child: Center(
-              child: TextButton(
-                onPressed: () {},
-                style: TextButton.styleFrom(
-                  padding: EdgeInsets.zero,
-                  minimumSize: Size.zero,
-                  tapTargetSize:
-                      MaterialTapTargetSize.shrinkWrap, // 터치 영역을 내용물에 맞춤
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
+            child: TextButton(
+              onPressed: () {},
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.zero,
+                minimumSize: Size.zero,
+                tapTargetSize:
+                    MaterialTapTargetSize.shrinkWrap, // 터치 영역을 내용물에 맞춤
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(5.0),
                 ),
-                child: Center(child: SvgPicture.asset(imageUrl!, height: 20)),
               ),
+              child: Center(child: SvgPicture.asset(imageUrl!, height: 20)),
             ),
           ),
       ],

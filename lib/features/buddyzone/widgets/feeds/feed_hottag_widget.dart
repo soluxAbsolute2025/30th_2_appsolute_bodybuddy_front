@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
 
-class FeedHottagWidget extends StatelessWidget {
+class FeedHottagWidget extends StatefulWidget {
   const FeedHottagWidget({super.key});
+
+  @override
+  State<FeedHottagWidget> createState() => _FeedHottagState();
+}
+
+class _FeedHottagState extends State<FeedHottagWidget> {
+  int selectedIndex = 0;
+  final List<String> _tags = ['다이어트', '홈트레이닝', '러닝', '요가', '필라테스'];
 
   @override
   Widget build(BuildContext context) {
@@ -29,71 +37,51 @@ class FeedHottagWidget extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.start,
               mainAxisSize: MainAxisSize.max,
-              children: [
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    vertical: 6.0,
-                    horizontal: 12.0,
-                  ),
+              children: List.generate(_tags.length, (index) {
+                bool isSelected = index == selectedIndex;
+
+                return Container(
+                  margin: EdgeInsets.only(right: 8.0),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: isSelected ? Color(0xFFE9FFF9) : Colors.transparent,
                     borderRadius: BorderRadius.circular(5.0),
-                    border: Border.all(color: Color(0xFFD9D9D9), width: 1),
-                  ),
-                  child: Text(
-                    '다이어트',
-                    style: TextStyle(
-                      color: const Color(0xFFA7A7A7),
-                      fontSize: 12,
-                      fontFamily: 'Pretendard',
-                      fontWeight: FontWeight.w400,
+                    border: Border.all(
+                      color: isSelected ? Color(0xFF18D9A2) : Color(0xFFA7A7A7),
+                      width: 1,
                     ),
                   ),
-                ),
-                SizedBox(width: 8.0),
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    vertical: 6.0,
-                    horizontal: 12.0,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(5.0),
-                    border: Border.all(color: Color(0xFFD9D9D9), width: 1),
-                  ),
-                  child: Text(
-                    '다이어트',
-                    style: TextStyle(
-                      color: const Color(0xFFA7A7A7),
-                      fontSize: 12,
-                      fontFamily: 'Pretendard',
-                      fontWeight: FontWeight.w400,
+                  child: TextButton(
+                    onPressed: () {
+                      setState(() {
+                        selectedIndex = index;
+                      });
+                    },
+                    style: TextButton.styleFrom(
+                      foregroundColor: Color(0x1188D3BD),
+                      padding: EdgeInsets.symmetric(
+                        vertical: 6.0,
+                        horizontal: 12.0,
+                      ),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5.0),
+                      ),
+                    ),
+                    child: Text(
+                      _tags[index],
+                      style: TextStyle(
+                        color: isSelected
+                            ? Color(0xFF18D9A2)
+                            : Color(0xFFA7A7A7),
+                        fontSize: 12,
+                        fontFamily: 'Pretendard',
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
                   ),
-                ),
-                SizedBox(width: 8.0),
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    vertical: 6.0,
-                    horizontal: 12.0,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(5.0),
-                    border: Border.all(color: Color(0xFFD9D9D9), width: 1),
-                  ),
-                  child: Text(
-                    '다이어트',
-                    style: TextStyle(
-                      color: const Color(0xFFA7A7A7),
-                      fontSize: 12,
-                      fontFamily: 'Pretendard',
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ),
-                SizedBox(width: 8.0),
-              ],
+                );
+              }),
             ),
           ),
         ],

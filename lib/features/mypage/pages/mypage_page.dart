@@ -6,7 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../common/widgets/main_appbar.dart';
-import '../widgets/mypage_level_widget.dart';
+import '../widgets/badge_collection_widget.dart';
+import '../widgets/etc_widget.dart';
+import '../widgets/statistics_settings_widget.dart';
+import '../widgets/mypage_level_badge_widget.dart';
 import '../widgets/mypage_moem_widget.dart';
 import '../widgets/mypage_profile_widget.dart';
 
@@ -23,17 +26,41 @@ class MypagePage extends StatelessWidget {
         imageUrl: 'assets/images/common/my.svg',
         buttonText: '친구 추가',
       ),
-      body: Container(
-        color: Colors.white,
-        margin: EdgeInsets.symmetric(horizontal: 16.0),
+      body: SingleChildScrollView(
         child: Column(
           children: [
-            MypageProfileWidget(),
-            SizedBox(height: 5.0),
-            MypageLevelWidget(),
-            SizedBox(height: 30.0),
-            MypageMoemWidget(),
-            SizedBox(height: 16.0),
+            Container(
+              color: Colors.white,
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                children: [
+                  MypageProfileWidget(),
+                  // SizedBox(height: 5.0),
+                  MypageLevelBadgeWidget(),
+                  SizedBox(height: 30.0),
+                  MypageMoemWidget(),
+                  SizedBox(height: 16.0),
+                ],
+              ),
+            ),
+            SizedBox(height: 10.0),
+            Container(
+              color: Colors.white,
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
+              child: BadgeCollectionWidget(),
+            ),
+            SizedBox(height: 10.0),
+            Container(
+              color: Colors.white,
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
+              child: StatisticsSettingsWidget(),
+            ),
+            SizedBox(height: 10.0),
+            Container(
+              color: Colors.white,
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
+              child: EtcWidget(),
+            ),
           ],
         ),
       ),

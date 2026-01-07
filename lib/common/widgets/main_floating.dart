@@ -1,15 +1,28 @@
 import 'package:flutter/material.dart';
 // import 'package:flutter_svg/flutter_svg.dart';
+import '../../features/carebuddy/pages/carebuddy_page.dart';
+// import '../../features/buddyzone/pages/subPages/sub_feed_pages.dart';
 
 class MainFloating extends StatelessWidget {
-  const MainFloating({super.key});
+  final GlobalKey<NavigatorState>? navigatorKey;
+  const MainFloating({super.key, this.navigatorKey});
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       height: 35.0,
       child: FloatingActionButton.extended(
-        onPressed: () {},
+        onPressed: () {
+          if (navigatorKey != null) {
+            navigatorKey!.currentState!.push(
+              MaterialPageRoute(builder: (context) => const CareBuddyPage()),
+            );
+          } else {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const CareBuddyPage()),
+            );
+          }
+        },
         backgroundColor: Colors.transparent,
         elevation: 0,
         focusElevation: 0,
