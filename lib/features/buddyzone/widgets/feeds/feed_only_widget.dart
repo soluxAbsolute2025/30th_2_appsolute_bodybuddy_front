@@ -1,3 +1,4 @@
+import 'package:bodybuddy_frontend/features/buddyzone/pages/subPages/sub_feed_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -175,7 +176,12 @@ class _FeedOnlyWidgetState extends State<FeedOnlyWidget> {
             ),
             SizedBox(width: 10.0),
             TextButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SubFeedPages()),
+                );
+              },
               style: TextButton.styleFrom(
                 foregroundColor: Color(0xFF87D2BD),
                 padding: EdgeInsets.symmetric(vertical: 6.0, horizontal: 6.0),
