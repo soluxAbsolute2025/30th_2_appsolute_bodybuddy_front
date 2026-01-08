@@ -97,7 +97,7 @@ class _MypageProfilePageState extends State<MypageProfilePage> {
             ),
           ),
           Container(
-            margin: EdgeInsets.symmetric(horizontal: 16.0, vertical: 30.0),
+            margin: EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
             alignment: Alignment.center,
             width: double.infinity,
             decoration: BoxDecoration(
