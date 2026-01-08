@@ -1,5 +1,6 @@
 import 'package:bodybuddy_frontend/common/widgets/sub_appbar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/painting.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -11,10 +12,10 @@ class MypageRangePage extends StatefulWidget {
 }
 
 class _MypageRangePageState extends State<MypageRangePage> {
-  final bool _water = true;
-  final bool _fit = true;
-  final bool _food = true;
-  final bool _sleep = true;
+  bool _water = true;
+  bool _fit = true;
+  bool _food = true;
+  bool _sleep = true;
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +26,7 @@ class _MypageRangePageState extends State<MypageRangePage> {
           Expanded(
             child: Container(
               width: double.infinity,
-              padding: EdgeInsets.fromLTRB(16.0, 0, 16.0, 0),
+              padding: EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -44,25 +45,49 @@ class _MypageRangePageState extends State<MypageRangePage> {
                     valueType: 'Water',
                     rageValue: _water,
                     imageUrl: 'assets/mypage/water.svg',
+                    onChanged: (value) {
+                      setState(() {
+                        _water = value;
+                      });
+                    },
                   ),
+                  Divider(color: Color(0xFFF5F5F5)),
                   _rangeBlockWidget(
                     titleText: '운동 기록',
                     valueType: 'Fit',
                     rageValue: _fit,
                     imageUrl: 'assets/mypage/fit.svg',
+                    onChanged: (value) {
+                      setState(() {
+                        _fit = value;
+                      });
+                    },
                   ),
+                  Divider(color: Color(0xFFF5F5F5)),
                   _rangeBlockWidget(
                     titleText: '식단 기록',
                     valueType: 'Food',
                     rageValue: _food,
                     imageUrl: 'assets/mypage/food.svg',
+                    onChanged: (value) {
+                      setState(() {
+                        _food = value;
+                      });
+                    },
                   ),
+                  Divider(color: Color(0xFFF5F5F5)),
                   _rangeBlockWidget(
                     titleText: '수면 기록',
                     valueType: 'Sleep',
                     rageValue: _sleep,
                     imageUrl: 'assets/mypage/sleep.svg',
+                    onChanged: (value) {
+                      setState(() {
+                        _sleep = value;
+                      });
+                    },
                   ),
+                  Divider(color: Color(0xFFF5F5F5)),
                 ],
               ),
             ),
@@ -109,22 +134,25 @@ class _MypageRangePageState extends State<MypageRangePage> {
     required String valueType,
     required bool rageValue,
     required String imageUrl,
+    required Function(bool) onChanged,
   }) {
-    // // 초기값이 있을 경우를 대비해 컨트롤러 생성
-    // final TextEditingController controller = TextEditingController(
-    //   text: initText,
-    // );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           height: 64.0,
           width: double.infinity,
-          padding: EdgeInsets.symmetric(vertical: 20.0),
+          padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 4.0),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              SvgPicture.asset(imageUrl),
+              Container(
+                width: 14.0,
+                height: 14.0,
+                alignment: Alignment.center,
+                child: SvgPicture.asset(imageUrl, width: 14.0),
+              ),
+              SizedBox(width: 10.0),
               Expanded(
                 child: Text(
                   titleText,
@@ -136,15 +164,39 @@ class _MypageRangePageState extends State<MypageRangePage> {
                   ),
                 ),
               ),
-              CupertinoSwitch(
-                value: rageValue,
-                activeColor: Color(0xFF1AEDB0),
-                onChanged: (value) {},
-              ),
+              _CustomSwitch(rageValue, onChanged: onChanged),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _CustomSwitch(bool _isEnable, {required Function(bool) onChanged}) {
+    return GestureDetector(
+      onTap: () => onChanged(!_isEnable),
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 100),
+        width: 42.0,
+        height: 22.0,
+        padding: const EdgeInsets.all(1.0),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(60.0),
+          color: _isEnable ? Color(0xFF1AEDB1) : Color(0xFFD8D8D8),
+        ),
+        child: AnimatedAlign(
+          duration: Duration(milliseconds: 100),
+          alignment: _isEnable ? Alignment.centerRight : Alignment.centerLeft,
+          child: Container(
+            width: 20.0,
+            height: 20.0,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

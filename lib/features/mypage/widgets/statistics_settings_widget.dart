@@ -35,10 +35,9 @@ class StatisticsSettingsWidget extends StatelessWidget {
                 ),
                 TextButton(
                   onPressed: () {
-                    Navigator.push(
-                      context,
+                    Navigator.of(context, rootNavigator: true).push(
                       MaterialPageRoute(
-                        builder: (context) => MypageRangePage(),
+                        builder: (context) => const MypageRangePage(),
                       ),
                     );
                   },
@@ -83,7 +82,13 @@ class StatisticsSettingsWidget extends StatelessWidget {
                   ),
                 ),
                 TextButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    // Navigator.of(context, rootNavigator: true).push(
+                    //   MaterialPageRoute(
+                    //     builder: (context) => const MypagePasswardPage(),
+                    //   ),
+                    // );
+                  },
                   style: TextButton.styleFrom(
                     foregroundColor: Color(0x1188D3BD),
                     padding: EdgeInsets.symmetric(
