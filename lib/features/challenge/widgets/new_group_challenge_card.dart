@@ -46,7 +46,7 @@ class NewGroupChallengeCard extends StatelessWidget {
                 Positioned.fill(
                   child: Container(
                     decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.35),
+                    color: Colors.black.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(10), 
                   ),
                   ),
@@ -63,14 +63,14 @@ class NewGroupChallengeCard extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: isFull
-                        ? const Color(0xFFB9B9B9)
+                        ? const Color(0xFFA8A8A8)
                         : const Color(0xFF1AEDB1),
                     borderRadius: BorderRadius.circular(5),
                   ),
                   child: Text(
                     isFull ? '모집완료' : '모집중',
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: Color(0xFFF4F4F4),
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
                     ),
