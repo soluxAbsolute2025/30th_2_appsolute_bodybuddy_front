@@ -109,7 +109,7 @@ class GroupChallengeDetailPage extends StatelessWidget {
               color: const Color(0xFFF8F8F8),
             ),
             GroupChallengeRankSection(challenge: challenge),
-            const SizedBox(height: 20),
+            const SizedBox(height: 0),
           ],
         ),
       ),

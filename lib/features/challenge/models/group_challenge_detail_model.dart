@@ -29,10 +29,12 @@ class ChallengeRank {
   final String name;
   final bool isMe;
   final String? profileImageUrl;
+  final int progress;
 
   const ChallengeRank({
     required this.rank,
     required this.name,
+    required this.progress,
     this.isMe = false,
     this.profileImageUrl,
   });
