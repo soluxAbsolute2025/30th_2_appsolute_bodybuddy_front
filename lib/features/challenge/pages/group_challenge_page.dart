@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../data/dummy_group_challenges.dart';
+import '../data/dummy_completed_group_challenge.dart';
 import '../widgets/participating_group_challenge_card.dart';
 import '../widgets/new_group_challenge_card.dart';
 import '../data/dummy_recruiting_group_challenges.dart';
 import '../widgets/create_group_challenge_banner.dart';
+import '../widgets/completed_group_challenge_card.dart';
 
 class GroupChallengePage extends StatefulWidget {
   const GroupChallengePage({super.key});
@@ -14,31 +16,51 @@ class GroupChallengePage extends StatefulWidget {
 }
 
 class _GroupChallengePageState extends State<GroupChallengePage> {
-  final ScrollController _scrollController = ScrollController();
-  Timer? _timer;
+  final ScrollController _recruitingController = ScrollController();
+  final ScrollController _completedController = ScrollController();
+
+  Timer? _recruitingTimer;
+  Timer? _completedTimer;
 
   @override
   void initState() {
     super.initState();
 
-    _timer = Timer.periodic(const Duration(milliseconds: 30), (_) {
-      if (!_scrollController.hasClients) return;
+    // 새로운 그룹 챌린지 자동 스크롤
+    _recruitingTimer = Timer.periodic(const Duration(milliseconds: 30), (_) {
+      if (!_recruitingController.hasClients) return;
 
-      final maxScroll = _scrollController.position.maxScrollExtent;
-      final current = _scrollController.offset;
+      final maxScroll = _recruitingController.position.maxScrollExtent;
+      final current = _recruitingController.offset;
 
       if (current >= maxScroll) {
-        _scrollController.jumpTo(0);
+        _recruitingController.jumpTo(0);
       } else {
-        _scrollController.jumpTo(current + 0.4);
+        _recruitingController.jumpTo(current + 0.4);
+      }
+    });
+
+    // 완료한 그룹 챌린지 자동 스크롤
+    _completedTimer = Timer.periodic(const Duration(milliseconds: 30), (_) {
+      if (!_completedController.hasClients) return;
+
+      final maxScroll = _completedController.position.maxScrollExtent;
+      final current = _completedController.offset;
+
+      if (current >= maxScroll) {
+        _completedController.jumpTo(0);
+      } else {
+        _completedController.jumpTo(current + 0.4);
       }
     });
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
-    _scrollController.dispose();
+    _recruitingTimer?.cancel();
+    _completedTimer?.cancel();
+    _recruitingController.dispose();
+    _completedController.dispose();
     super.dispose();
   }
 
@@ -49,6 +71,8 @@ class _GroupChallengePageState extends State<GroupChallengePage> {
         .toList();
 
     final recruitingChallenges = dummyRecruitingGroupChallenges;
+
+    final completedChallenges = dummyCompletedGroupChallenges;
 
     return SingleChildScrollView(
       child: Column(
@@ -148,7 +172,7 @@ class _GroupChallengePageState extends State<GroupChallengePage> {
           SizedBox(
             height: 180,
             child: ListView.separated(
-              controller: _scrollController,
+              controller: _recruitingController,
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.only(left: 16, right: 16),
               itemCount: recruitingChallenges.length,
@@ -160,9 +184,76 @@ class _GroupChallengePageState extends State<GroupChallengePage> {
             ),
           ),
 
-          const SizedBox(height: 40),
+          const SizedBox(height: 16),
           const CreateGroupChallengeBanner(),
           const SizedBox(height: 40),
+
+          Container(
+            width: double.infinity,
+            height: 20,
+            color: const Color(0xFFF8F8F8),
+          ),
+
+          const SizedBox(height: 24),
+
+          /// 완료한 챌린지
+          Padding( 
+            padding: const EdgeInsets.symmetric(horizontal: 17),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween, 
+              children: const [ 
+                Text( 
+                  '완료한 챌린지', 
+                  style: TextStyle( 
+                    fontFamily: 'Pretendard', 
+                    fontSize: 16, 
+                    fontWeight: FontWeight.w600, 
+                  ),
+                ),
+                Text( 
+                  '더보기', 
+                  style: TextStyle(
+                    fontSize: 13, color: Color(0xFF999999)
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: completedChallenges.isEmpty
+                ? const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: Center(
+                      child: Text(
+                        '완료한 그룹 챌린지가 없어요',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF999999),
+                        ),
+                      ),
+                    ),
+                  )
+                : SizedBox(
+                    height: 180, // 카드 높이에 맞게 150~180 사이로 조절
+                    child: ListView.separated(
+                      controller: _completedController,
+                      scrollDirection: Axis.horizontal,
+                      padding: EdgeInsets.zero,
+                      itemCount: completedChallenges.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 16),
+                      itemBuilder: (context, index) {
+                        return CompletedGroupChallengeCard(
+                          challenge: completedChallenges[index],
+                        );
+                      },
+                    ),
+                  ),
+          ),
+
+          const SizedBox(height: 24),
         ],
       ),
     );

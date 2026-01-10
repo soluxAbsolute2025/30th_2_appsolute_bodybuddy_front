@@ -101,7 +101,7 @@ class _PersonalChallengePageState
 
           Container(
             width: double.infinity,
-            height: 10,
+            height: 15,
             color: const Color(0xFFF8F8F8),
           ),
 
