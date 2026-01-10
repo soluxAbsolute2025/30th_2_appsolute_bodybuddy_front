@@ -90,7 +90,7 @@ class _PlusCircle extends StatelessWidget {
         style: const TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w500,
-          color: Colors.black,
+          color: Color(0xFF18D9A2),
           height: 1.0,
         ),
       ),
