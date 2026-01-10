@@ -3,7 +3,7 @@ import 'overlapping_profile_stack.dart';
 import '../models/group_member_model.dart';
 import 'rank_badge.dart';
 import 'group_code_join_button.dart';
-
+import 'group_code_join_dialog.dart';
 
 class ParticipatingGroupChallengeCard extends StatelessWidget {
   final String title;
@@ -102,7 +102,13 @@ class ParticipatingGroupChallengeCard extends StatelessWidget {
         /// 그룹 코드로 참여 버튼
         GroupCodeJoinButton(
           onTap: () {
-            // TODO: 그룹 코드 입력 BottomSheet 열기
+            showJoinGroupCodeDialog(
+              context: context,
+              onJoin: (code) {
+                // TODO: 여기서 그룹 참여 API 호출
+                debugPrint('그룹 코드: $code');
+              },
+            );
           },
         ),
       ],
