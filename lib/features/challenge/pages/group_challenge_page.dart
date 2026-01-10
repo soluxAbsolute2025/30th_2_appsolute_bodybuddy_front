@@ -7,6 +7,8 @@ import '../widgets/new_group_challenge_card.dart';
 import '../data/dummy_recruiting_group_challenges.dart';
 import '../widgets/create_group_challenge_banner.dart';
 import '../widgets/completed_group_challenge_card.dart';
+import '../pages/group_challenge_detail_page.dart';
+import '../data/dummy_group_challenge_detail.dart';
 
 class GroupChallengePage extends StatefulWidget {
   const GroupChallengePage({super.key});
@@ -128,6 +130,17 @@ class _GroupChallengePageState extends State<GroupChallengePage> {
                             members: challenge.members,
                             remainDays: challenge.remainDays,
                             imageUrl: challenge.imageUrl,
+
+                            onImageTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => GroupChallengeDetailPage(
+                                    challenge: dummyGroupChallengeDetail,
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         )
                         .toList(),
