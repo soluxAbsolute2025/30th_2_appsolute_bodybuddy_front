@@ -9,6 +9,7 @@ final dummyGroupChallengeDetail = GroupChallengeDetail(
   description: '연말 전까지 몸무게 -3kg',
   currentParticipants: 4,
   maxParticipants: 8, 
+  groupCode: 'DIET2025',
   ranks: const [
     ChallengeRank(
       rank: 1,
