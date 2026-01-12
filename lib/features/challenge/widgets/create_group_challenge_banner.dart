@@ -25,8 +25,8 @@ class CreateGroupChallengeBanner extends StatelessWidget {
                 Color(0xFF1EFAC0),
               ],
               stops: [
-                0.0,
-                0.7,
+                0.2,
+                0.8,
               ],
             ),
           ),

@@ -1,4 +1,5 @@
 import 'package:bodybuddy_frontend/features/buddyzone/pages/subPages/sub_feed_pages.dart';
+import 'package:bodybuddy_frontend/features/buddyzone/pages/subPages/sub_feed_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -71,30 +72,41 @@ class _FeedOnlyWidgetState extends State<FeedOnlyWidget> {
                     ),
                   ),
                   SizedBox(width: 20.0),
-                  SvgPicture.asset('assets/buddyzone/time.svg'),
-                  SizedBox(width: 5.0),
-                  Text(
-                    '30분 전',
-                    style: TextStyle(
-                      fontSize: 12.0,
-                      fontWeight: FontWeight.w400,
-                      color: Color(0xFF7D7C7C),
-                      fontFamily: 'Pretendard',
-                    ),
-                  ),
-                  SizedBox(width: 10.0),
-                  SvgPicture.asset('assets/buddyzone/gps.svg'),
-                  SizedBox(width: 5.0),
-                  Text(
-                    '헬스장',
-                    style: TextStyle(
-                      fontSize: 12.0,
-                      fontWeight: FontWeight.w400,
-                      color: Color(0xFF7D7C7C),
-                      fontFamily: 'Pretendard',
-                    ),
-                  ),
                 ],
+              ),
+            ),
+            SvgPicture.asset('assets/buddyzone/time.svg'),
+            SizedBox(width: 5.0),
+            Text(
+              '30'
+              '분 전',
+              style: TextStyle(
+                fontSize: 12.0,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF7D7C7C),
+                fontFamily: 'Pretendard',
+              ),
+            ),
+            SizedBox(width: 5.0),
+            Text(
+              '·',
+              style: TextStyle(
+                fontSize: 12.0,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF7D7C7C),
+                fontFamily: 'Pretendard',
+              ),
+            ),
+            SizedBox(width: 5.0),
+            SvgPicture.asset('assets/buddyzone/gps.svg'),
+            SizedBox(width: 5.0),
+            Text(
+              '헬스장',
+              style: TextStyle(
+                fontSize: 12.0,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF7D7C7C),
+                fontFamily: 'Pretendard',
               ),
             ),
           ],
@@ -177,9 +189,8 @@ class _FeedOnlyWidgetState extends State<FeedOnlyWidget> {
             SizedBox(width: 10.0),
             TextButton(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => SubFeedPages()),
+                Navigator.of(context, rootNavigator: true).push(
+                  MaterialPageRoute(builder: (context) => const SubFeedPages()),
                 );
               },
               style: TextButton.styleFrom(
