@@ -1,3 +1,4 @@
+import 'package:bodybuddy_frontend/features/mypage/pages/mypage_myfeed_page.dart';
 import 'package:bodybuddy_frontend/features/mypage/pages/mypage_passward_page.dart';
 import 'package:bodybuddy_frontend/features/mypage/pages/mypage_profile_page.dart';
 import 'package:bodybuddy_frontend/features/mypage/pages/mypage_range_page.dart';
@@ -83,11 +84,11 @@ class StatisticsSettingsWidget extends StatelessWidget {
                 ),
                 TextButton(
                   onPressed: () {
-                    // Navigator.of(context, rootNavigator: true).push(
-                    //   MaterialPageRoute(
-                    //     builder: (context) => const MypagePasswardPage(),
-                    //   ),
-                    // );
+                    Navigator.of(context, rootNavigator: true).push(
+                      MaterialPageRoute(
+                        builder: (context) => const MypageMyfeedPage(),
+                      ),
+                    );
                   },
                   style: TextButton.styleFrom(
                     foregroundColor: Color(0x1188D3BD),
