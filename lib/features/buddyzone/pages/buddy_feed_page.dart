@@ -3,7 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../widgets/feeds/feed_search_widget.dart';
 import '../widgets/feeds/feed_hottag_widget.dart';
 import '../widgets/feeds/feed_frame_widget.dart';
-import './subPages/sub_feed_pages.dart';
+import './subPages/sub_feed_page.dart';
 
 class BuddyFeedPage extends StatelessWidget {
   const BuddyFeedPage({super.key});
