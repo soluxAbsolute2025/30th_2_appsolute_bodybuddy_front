@@ -50,7 +50,7 @@ class MainAppbar extends StatelessWidget implements PreferredSizeWidget {
             width: 35.0,
             height: 35.0,
             child: TextButton(
-              onPressed: () {},
+              onPressed: onButtonPressed,
               style: TextButton.styleFrom(
                 padding: EdgeInsets.zero,
                 minimumSize: Size.zero,
