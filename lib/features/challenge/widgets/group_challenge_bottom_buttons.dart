@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 class GroupChallengeBottomButtons extends StatelessWidget {
   final VoidCallback onPressedVerify;
   final bool isLoading;
+  final bool isVerified;
 
   const GroupChallengeBottomButtons({
     super.key,
     required this.onPressedVerify,
     this.isLoading = false,
+    this.isVerified = false,
   });
 
   @override
@@ -47,34 +49,57 @@ class GroupChallengeBottomButtons extends StatelessWidget {
             Expanded(
               child: SizedBox(
                 height: 36,
-                child: ElevatedButton(
-                  onPressed: isLoading ? null : onPressedVerify,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1AEDB1),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                  ),
-                  child: isLoading
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
+                child: isVerified
+                    ? OutlinedButton(
+                        onPressed: null, // 비활성
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(
+                            color: Color(0xFFDBDBDB),
+                            width: 1,
                           ),
-                        )
-                      : const Text(
-                          '인증하기',
+                          backgroundColor: const Color(0xFFDBDBDB),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                        ),
+                        child: const Text(
+                          '인증 완료',
                           style: TextStyle(
                             fontFamily: 'Pretendard',
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                            color: Color(0xFFFFFFFF),
                           ),
                         ),
-                ),
+                      )
+                    : ElevatedButton(
+                        onPressed: isLoading ? null : onPressedVerify,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF1AEDB1),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                        ),
+                        child: isLoading
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text(
+                                '인증하기',
+                                style: TextStyle(
+                                  fontFamily: 'Pretendard',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
+                      ),
               ),
             ),
           ],
