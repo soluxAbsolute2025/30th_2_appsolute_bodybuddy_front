@@ -1,3 +1,4 @@
+import '../../pages/subPages/sub_feed_page.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/pages/subPages/sub_feed_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -170,10 +171,22 @@ class _FeedOnlyWidgetState extends State<FeedOnlyWidget> {
         SizedBox(height: 16.0),
         Row(
           children: [
-            SvgPicture.asset(
-              width: 22,
-              height: 19,
-              'assets/buddyzone/heart.svg',
+            TextButton(
+              onPressed: () {},
+              style: TextButton.styleFrom(
+                foregroundColor: Color(0xFF87D2BD),
+                padding: EdgeInsets.symmetric(vertical: 6.0, horizontal: 6.0),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                minimumSize: Size.zero,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(5.0),
+                ),
+              ),
+              child: SvgPicture.asset(
+                width: 22,
+                height: 19,
+                'assets/buddyzone/heart.svg',
+              ),
             ),
             SizedBox(width: 8.0),
             Text(

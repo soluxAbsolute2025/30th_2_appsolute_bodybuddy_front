@@ -19,7 +19,7 @@ class _FriendrequestState extends State<FriendrequestBlock> {
         borderRadius: BorderRadius.circular(10.0),
       ),
       // margin: EdgeInsets.symmetric(horizontal: 16.0),
-      padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 6.0),
+      padding: EdgeInsets.only(top: 8.0, bottom: 8.0, right: 6.0, left: 6.0),
       child: Row(
         children: [
           SizedBox(
@@ -87,7 +87,7 @@ class _FriendrequestState extends State<FriendrequestBlock> {
             ),
           ),
           Container(
-            padding: EdgeInsets.only(right: 10.0),
+            padding: EdgeInsets.only(right: 5.0),
             child: Row(
               children: [
                 Container(
@@ -134,7 +134,7 @@ class _FriendrequestState extends State<FriendrequestBlock> {
                       print("x 클릭!");
                     },
                     style: TextButton.styleFrom(
-                      foregroundColor: Color(0x1188D3BD),
+                      foregroundColor: Color(0xFFF65A33),
                       padding: EdgeInsets.symmetric(
                         vertical: 8.0,
                         horizontal: 8.0,
