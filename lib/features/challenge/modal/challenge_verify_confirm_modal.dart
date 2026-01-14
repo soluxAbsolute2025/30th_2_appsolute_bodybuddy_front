@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 Future<void> showChallengeVerifyConfirmModal({
   required BuildContext context,
   required String challengeTitle,
-  required VoidCallback onConfirm,
+  required Future<void> Function() onConfirm,
 }) {
   return showDialog(
     context: context,
