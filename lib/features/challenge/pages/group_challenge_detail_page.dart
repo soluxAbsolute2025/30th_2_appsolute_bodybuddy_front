@@ -5,8 +5,11 @@ import '../widgets/group_challenge_info_section.dart';
 import '../widgets/group_challenge_description_section.dart';
 import '../widgets/group_challenge_rank_section.dart';
 import '../widgets/group_challenge_bottom_buttons.dart';
+import '../data/dummy_challenge_verify.dart';
+import '../modal/challenge_verify_confirm_modal.dart';
+import '../modal/challenge_verify_complete_modal.dart';
 
-class GroupChallengeDetailPage extends StatelessWidget {
+class GroupChallengeDetailPage extends StatefulWidget {
   final GroupChallengeDetail challenge;
 
   const GroupChallengeDetailPage({
@@ -15,7 +18,38 @@ class GroupChallengeDetailPage extends StatelessWidget {
   });
 
   @override
+  State<GroupChallengeDetailPage> createState() =>
+      _GroupChallengeDetailPageState();
+}
+
+class _GroupChallengeDetailPageState extends State<GroupChallengeDetailPage> {
+  bool _isVerifying = false;
+
+  Future<void> _onPressVerify() async {
+    if (_isVerifying) return;
+
+    await showChallengeVerifyConfirmModal(
+      context: context,
+      challengeTitle: DummyChallengeVerify.dailyTitle,
+      onConfirm: () async {
+        setState(() => _isVerifying = true);
+
+        if (!mounted) return;
+
+        setState(() => _isVerifying = false);
+
+        await showChallengeVerifyCompleteModal(
+          context: context,
+          point: DummyChallengeVerify.rewardPoint,
+        );
+      },
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final challenge = widget.challenge;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -74,7 +108,7 @@ class GroupChallengeDetailPage extends StatelessWidget {
               child: Row(
                 children: [
                   SvgPicture.asset(
-                    'assets/icons/shop.svg', // 🔥 상점 아이콘
+                    'assets/icons/shop.svg',
                     width: 14,
                     height: 14,
                   ),
@@ -114,7 +148,10 @@ class GroupChallengeDetailPage extends StatelessWidget {
         ),
       ),
 
-      bottomNavigationBar: const GroupChallengeBottomButtons(),
+      bottomNavigationBar: GroupChallengeBottomButtons(
+        onPressedVerify: _onPressVerify,
+        isLoading: _isVerifying,
+      ),
     );
   }
 }

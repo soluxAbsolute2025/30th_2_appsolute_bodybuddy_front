@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 
 class GroupChallengeBottomButtons extends StatelessWidget {
-  const GroupChallengeBottomButtons({super.key});
+  final VoidCallback onPressedVerify;
+  final bool isLoading;
+
+  const GroupChallengeBottomButtons({
+    super.key,
+    required this.onPressedVerify,
+    this.isLoading = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +25,7 @@ class GroupChallengeBottomButtons extends StatelessWidget {
                 child: OutlinedButton(
                   onPressed: () {},
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xFF1AEDB1), width: 1),
+                    side: const BorderSide(color: Color(0xFFEFEFEF), width: 1),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(5),
                     ),
@@ -41,7 +48,7 @@ class GroupChallengeBottomButtons extends StatelessWidget {
               child: SizedBox(
                 height: 36,
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: isLoading ? null : onPressedVerify,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF1AEDB1),
                     elevation: 0,
@@ -49,15 +56,24 @@ class GroupChallengeBottomButtons extends StatelessWidget {
                       borderRadius: BorderRadius.circular(5),
                     ),
                   ),
-                  child: const Text(
-                    '인증하기',
-                    style: TextStyle(
-                      fontFamily: 'Pretendard',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
+                  child: isLoading
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          '인증하기',
+                          style: TextStyle(
+                            fontFamily: 'Pretendard',
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ),
             ),
