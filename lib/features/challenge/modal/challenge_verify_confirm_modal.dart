@@ -94,9 +94,9 @@ Future<void> showChallengeVerifyConfirmModal({
                       child: SizedBox(
                         height: 44,
                         child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            onConfirm();
+                          onPressed: () async {
+                            Navigator.of(context, rootNavigator: true).pop();
+                            await onConfirm();   
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor:

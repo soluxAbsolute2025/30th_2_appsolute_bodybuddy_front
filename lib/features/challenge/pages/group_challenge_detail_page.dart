@@ -25,32 +25,32 @@ class _GroupChallengeDetailPageState extends State<GroupChallengeDetailPage> {
   bool isVerified = false;
   bool isLoading = false;
 
-  Future<void> _onPressVerify() async {
-    if (isLoading || isVerified) return;
+    Future<void> _onPressVerify() async {
+      if (isLoading || isVerified) return;
 
-    await showChallengeVerifyConfirmModal(
-      context: context,
-      challengeTitle: DummyChallengeVerify.dailyTitle,
-      onConfirm: () async {
-        setState(() => isLoading = true);
+      await showChallengeVerifyConfirmModal(
+        context: context,
+        challengeTitle: DummyChallengeVerify.dailyTitle,
+        onConfirm: () async {
+          setState(() => isLoading = true);
 
-        // TODO: 백엔드 API 붙일 자리
-        // await api.verify();
+          // TODO: 백엔드 API 자리
+          // await api.verify();
 
-        // 완료 모달
-        await showChallengeVerifyCompleteModal(
-          context: context,
-          point: DummyChallengeVerify.rewardPoint,
-        );
+          // ✅ 완료 모달을 "닫힐 때까지" 기다림
+          await showChallengeVerifyCompleteModal(
+            context: context,
+            point: DummyChallengeVerify.rewardPoint,
+          );
 
-        if (!mounted) return;
-        setState(() {
-          isLoading = false;
-          isVerified = true;
-        });
-      },
-    );
-  }
+          if (!mounted) return;
+          setState(() {
+            isLoading = false;
+            isVerified = true;
+          });
+        },
+      );
+    }
 
   @override
   Widget build(BuildContext context) {

@@ -6,8 +6,8 @@ Future<void> showChallengeVerifyCompleteModal({
 }) {
   return showDialog(
     context: context,
-    barrierDismissible: true,
-    builder: (_) {
+    barrierDismissible: false,
+    builder: (dialogContext) { 
       bool isHover = false;
 
       return Center(
@@ -41,7 +41,7 @@ Future<void> showChallengeVerifyCompleteModal({
                           onExit: (_) => setState(() => isHover = false),
                           cursor: SystemMouseCursors.click,
                           child: GestureDetector(
-                            onTap: () => Navigator.pop(context),
+                            onTap: () => Navigator.of(context, rootNavigator: true).pop(),
                             child: Container(
                               padding: const EdgeInsets.all(5),
                               decoration: BoxDecoration(
@@ -51,7 +51,7 @@ Future<void> showChallengeVerifyCompleteModal({
                                         color: Colors.black.withOpacity(0.15),
                                         width: 1,
                                       )
-                                    : null, 
+                                    : null,
                               ),
                               child: Image.asset(
                                 'assets/challenge/close.png',
@@ -66,11 +66,8 @@ Future<void> showChallengeVerifyCompleteModal({
                   ],
                 ),
 
-                const SizedBox(height: 10),
+                const SizedBox(height: 40),
 
-                const SizedBox(height: 30),
-
-                // 체크 아이콘
                 Container(
                   width: 40,
                   height: 40,
@@ -80,7 +77,6 @@ Future<void> showChallengeVerifyCompleteModal({
                   ),
                   child: const Icon(Icons.check, color: Colors.white, size: 25),
                 ),
-
                 const SizedBox(height: 16),
 
                 const Text(
@@ -92,7 +88,6 @@ Future<void> showChallengeVerifyCompleteModal({
                   ),
                   textAlign: TextAlign.center,
                 ),
-
                 const SizedBox(height: 8),
 
                 Text(

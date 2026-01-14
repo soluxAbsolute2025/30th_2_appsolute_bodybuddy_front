@@ -51,7 +51,7 @@ class GroupChallengeBottomButtons extends StatelessWidget {
                 height: 36,
                 child: isVerified
                     ? OutlinedButton(
-                        onPressed: null, // 비활성
+                        onPressed: null,
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(
                             color: Color(0xFFDBDBDB),
