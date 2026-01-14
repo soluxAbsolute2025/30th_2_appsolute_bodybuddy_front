@@ -24,28 +24,26 @@ class MyFriendsSection extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  child: Row(
-                    children: [
-                      Text(
-                        '나의 친구',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.w600,
-                        ),
+                Row(
+                  children: [
+                    Text(
+                      '나의 친구',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.w600,
                       ),
-                      SizedBox(width: 5.0),
-                      Text(
-                        '3',
-                        style: TextStyle(
-                          color: Color(0xFFA8A8A8),
-                          fontSize: 17.0,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    ),
+                    SizedBox(width: 5.0),
+                    Text(
+                      '3',
+                      style: TextStyle(
+                        color: Color(0xFFA8A8A8),
+                        fontSize: 17.0,
+                        fontWeight: FontWeight.w600,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
                 Container(
                   decoration: BoxDecoration(
@@ -56,7 +54,6 @@ class MyFriendsSection extends StatelessWidget {
                     onPressed: () {
                       print("친구 추가 클릭!");
                       _showdialog(context);
-                      // _showWithdrawdialog(context);
                     },
                     style: TextButton.styleFrom(
                       foregroundColor: Color(0x1188D3BD),
@@ -121,12 +118,14 @@ class MyFriendsSection extends StatelessWidget {
             SizedBox(height: 10.0),
           ],
         ),
-        content: SizedBox(
+        content: Container(
           width: MediaQuery.of(context).size.width,
+          margin: EdgeInsets.symmetric(horizontal: 16.0),
           child: _TextFromFieldWidget(hintText: '친구 아이디 입력'),
         ),
         actions: [
           _dialogButtonWidget(text: '취소', context: context),
+          SizedBox(width: 8.0),
           _dialogButtonWidget(text: '추가', context: context),
         ],
         backgroundColor: Colors.white,
