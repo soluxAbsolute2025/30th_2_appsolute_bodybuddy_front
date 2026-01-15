@@ -1,6 +1,7 @@
 import 'package:bodybuddy_frontend/common/widgets/sub_appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CareBuddyPage extends StatefulWidget {
   final bool showFloating;
@@ -11,9 +12,28 @@ class CareBuddyPage extends StatefulWidget {
 }
 
 class _CareBuddyPageState extends State<CareBuddyPage> {
+  final textController = TextEditingController();
+  bool isButtonEnabled = false;
   int selectedIndex = 0;
   List<String> tags = ['다이어트 식단 추천', '운동 후 근육통 완화', '수면 개선 방법', '스트레스 관리법'];
   List<String> subtags = ['운동', '영양', '질병', '정신건강'];
+
+  @override
+  void initState() {
+    super.initState();
+
+    textController.addListener(() {
+      setState(() {
+        isButtonEnabled = textController.text.isNotEmpty;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    textController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -117,6 +137,7 @@ class _CareBuddyPageState extends State<CareBuddyPage> {
                           borderRadius: BorderRadius.circular(30.0), // 둥근 타원형
                         ),
                         child: TextField(
+                          controller: textController,
                           style: const TextStyle(fontSize: 14.0),
                           decoration: InputDecoration(
                             hintText: '건강에 관해 궁금한 점을 물어보세요',
@@ -128,18 +149,12 @@ class _CareBuddyPageState extends State<CareBuddyPage> {
                               horizontal: 20.0,
                               vertical: 12.0,
                             ),
-                            border: InputBorder.none, // 기본 밑줄 제거
-                            // 2. TextField 내부에 전송 아이콘(SuffixIcon) 배치
-                            suffixIcon: IconButton(
-                              icon: SvgPicture.asset(
-                                'assets/carebuddy/send.svg', // 전송 아이콘 경로
-                                width: 20,
-                                height: 20,
-                              ),
-                              onPressed: () {
-                                print("전송 클릭!");
-                              },
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30.0),
+                              borderSide: BorderSide.none,
                             ),
+                            // 2. TextField 내부에 전송 아이콘(SuffixIcon) 배치
+                            suffixIcon: _TextFieldButton(),
                           ),
                         ),
                       ),
@@ -153,25 +168,33 @@ class _CareBuddyPageState extends State<CareBuddyPage> {
                       '운동',
                       'assets/carebuddy/tag1.svg',
                       0xFFDFFEFF,
+                      0xFF86DBDD,
                       0xFF00AEFF,
+                      url: 'https://www.youtube.com/?app=desktop&hl=ko&gl=KR',
                     ),
                     _subtag(
                       '영양',
                       'assets/carebuddy/tag2.svg',
                       0xFFDDFFE3,
+                      0xFF87E597,
                       0xFF00D346,
+                      url: 'https://www.youtube.com/?app=desktop&hl=ko&gl=KR',
                     ),
                     _subtag(
                       '질병',
                       'assets/carebuddy/tag3.svg',
                       0xFFFFDFDB,
+                      0xFFD78E83,
                       0xFFEA441A,
+                      url: 'https://www.youtube.com/?app=desktop&hl=ko&gl=KR',
                     ),
                     _subtag(
                       '정신 건강',
                       'assets/carebuddy/tag4.svg',
                       0xFFF8DFFF,
+                      0xFFB67DC4,
                       0xFF9000FF,
+                      url: 'https://www.youtube.com/?app=desktop&hl=ko&gl=KR',
                     ),
                   ],
                 ),
@@ -327,19 +350,53 @@ class _CareBuddyPageState extends State<CareBuddyPage> {
     );
   }
 
+  Widget _TextFieldButton() {
+    return Container(
+      margin: EdgeInsets.all(5.0),
+      child: TextButton(
+        style: TextButton.styleFrom(
+          foregroundColor: Color(0xFF669688),
+          backgroundColor: isButtonEnabled
+              ? Color(0xFF1AEDB1)
+              : Color(0xFFF8F8F8),
+          padding: EdgeInsets.fromLTRB(2.0, 0.0, 0.0, 0.0),
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          shape: CircleBorder(),
+        ),
+        onPressed: isButtonEnabled ? () {} : null,
+        child: SvgPicture.asset(
+          isButtonEnabled
+              ? 'assets/carebuddy/send_active.svg'
+              : 'assets/carebuddy/send.svg',
+          key: ValueKey(isButtonEnabled),
+        ),
+      ),
+    );
+  }
+
   Widget _subtag(
     String text,
     String imageUrl,
     int backgroundcolor,
+    int foregroundcolor,
     int textColor, {
+    String url = '',
     bool isSelected = false,
   }) {
     return Row(
       children: [
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
-          decoration: ShapeDecoration(
-            color: Color(backgroundcolor),
+        TextButton(
+          onPressed: () {
+            _launchInBrowser(Uri.parse(url));
+          },
+          style: TextButton.styleFrom(
+            foregroundColor: Color(foregroundcolor),
+            backgroundColor: Color(backgroundcolor),
+            padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
+
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10.0),
             ),
@@ -363,5 +420,12 @@ class _CareBuddyPageState extends State<CareBuddyPage> {
         SizedBox(width: 10.0),
       ],
     );
+  }
+
+  // 외부 웹 링크 연결하기
+  Future<void> _launchInBrowser(Uri url) async {
+    if (!await launchUrl(url, mode: LaunchMode.inAppBrowserView)) {
+      throw Exception('Could not launch $url');
+    }
   }
 }
