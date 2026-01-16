@@ -12,6 +12,19 @@ class _FeedHottagState extends State<FeedHottagWidget> {
   final List<String> _tags = ['다이어트', '홈트레이닝', '러닝', '요가', '필라테스'];
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
+  void _getHottag() {}
+
+  @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,

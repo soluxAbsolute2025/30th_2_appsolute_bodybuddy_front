@@ -52,6 +52,7 @@ class MainAppbar extends StatelessWidget implements PreferredSizeWidget {
             child: TextButton(
               onPressed: onButtonPressed,
               style: TextButton.styleFrom(
+                foregroundColor: Color(0xFF88D3BD),
                 padding: EdgeInsets.zero,
                 minimumSize: Size.zero,
                 tapTargetSize:
