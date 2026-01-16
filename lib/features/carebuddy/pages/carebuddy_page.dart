@@ -221,7 +221,7 @@ class _CareBuddyPageState extends State<CareBuddyPage> {
         _sendMessage(tagText: text);
       },
       style: TextButton.styleFrom(
-        foregroundColor: Color(0x1188D3BD),
+        foregroundColor: Color(0xFF1AEDB0),
         padding: EdgeInsets.zero,
         minimumSize: Size.zero,
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
