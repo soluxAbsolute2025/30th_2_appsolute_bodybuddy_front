@@ -1,6 +1,14 @@
 import 'package:bodybuddy_frontend/common/widgets/sub_appbar.dart';
+import 'package:bodybuddy_frontend/features/carebuddy/models/carebuddy_tag_suggest.dart';
+import 'package:bodybuddy_frontend/features/carebuddy/widgets/carebuddy_bottom_buttons.dart';
+import 'package:bodybuddy_frontend/features/carebuddy/widgets/carebuddy_top_content.dart';
+import 'package:bodybuddy_frontend/features/carebuddy/widgets/chat_bubble_my.dart';
+import 'package:bodybuddy_frontend/features/carebuddy/widgets/chat_bubble_ai.dart';
+import 'package:bodybuddy_frontend/features/carebuddy/models/carebuddy_chat_model.dart';
+import 'package:bodybuddy_frontend/features/carebuddy/providers/carebuddy_api.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CareBuddyPage extends StatefulWidget {
   final bool showFloating;
@@ -11,9 +19,55 @@ class CareBuddyPage extends StatefulWidget {
 }
 
 class _CareBuddyPageState extends State<CareBuddyPage> {
-  int selectedIndex = 0;
+  final textController = TextEditingController();
+  final scrollController = ScrollController();
+
+  bool isButtonEnabled = false;
+  int selectedIndex = -1;
   List<String> tags = ['다이어트 식단 추천', '운동 후 근육통 완화', '수면 개선 방법', '스트레스 관리법'];
-  List<String> subtags = ['운동', '영양', '질병', '정신건강'];
+  TagSuggest tagSuggest = TagSuggest(success: false, data: []);
+
+  final List<ChatMessage> _messages = [];
+
+  @override
+  void initState() {
+    super.initState();
+
+    // _getSuggest();
+
+    textController.addListener(() {
+      setState(() {
+        isButtonEnabled = textController.text.isNotEmpty;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    textController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToBottom() {
+    if (!scrollController.hasClients) return;
+
+    scrollController.animateTo(
+      scrollController.position.maxScrollExtent,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
+  }
+
+  Future<void> _getSuggest() async {
+    final result = await CarebuddyApi().getSuggest('accessToken');
+
+    if (!mounted) return;
+
+    setState(() {
+      tagSuggest = result;
+      tags = result.data;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +78,7 @@ class _CareBuddyPageState extends State<CareBuddyPage> {
         children: [
           Expanded(
             child: SingleChildScrollView(
+              controller: scrollController,
               child: Container(
                 width: double.infinity,
                 padding: EdgeInsets.fromLTRB(16.0, 28.0, 16.0, 0.0),
@@ -31,40 +86,7 @@ class _CareBuddyPageState extends State<CareBuddyPage> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 41.0,
-                      height: 41.0,
-                      decoration: ShapeDecoration(
-                        color: const Color(0xFFF5F5F5),
-                        shape: CircleBorder(),
-                      ),
-                      child: Center(
-                        child: Container(
-                          width: 21,
-                          height: 28,
-                          decoration: BoxDecoration(
-                            image: DecorationImage(
-                              image: AssetImage(
-                                'assets/images/common/main_logo.png',
-                              ),
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 14.0),
-                    Text(
-                      '안녕하세요, 케어버디입니다!\n무엇을 도와드릴까요?',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 16,
-                        fontFamily: 'Pretendard',
-                        fontWeight: FontWeight.w500,
-                        height: 1.50,
-                      ),
-                    ),
-                    SizedBox(height: 14.0),
+                    CarebuddyTopContent(),
                     Wrap(
                       spacing: 10.0,
                       runSpacing: 11.0,
@@ -88,14 +110,18 @@ class _CareBuddyPageState extends State<CareBuddyPage> {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    Column(
-                      spacing: 9.0,
-                      children: [
-                        _myChat('다이어트 식단 추천'),
-                        _aiChat(
-                          '좋은 질문이에요! 제가 도움을 드리겠습니다. 건강 관련 정보를 제공하기 위해 최선을 다하고 있어요.',
-                        ),
-                      ],
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount: _messages.length,
+                      itemBuilder: (context, index) {
+                        final message = _messages[index];
+                        if (message.sender == ChatSender.my) {
+                          return MyChatBubble(message: message);
+                        } else {
+                          return AiChatBubble(message: message);
+                        }
+                      },
                     ),
                   ],
                 ),
@@ -117,6 +143,12 @@ class _CareBuddyPageState extends State<CareBuddyPage> {
                           borderRadius: BorderRadius.circular(30.0), // 둥근 타원형
                         ),
                         child: TextField(
+                          controller: textController,
+                          textInputAction: TextInputAction.done,
+                          onSubmitted: (value) {
+                            _sendMessage();
+                          },
+                          maxLines: 1,
                           style: const TextStyle(fontSize: 14.0),
                           decoration: InputDecoration(
                             hintText: '건강에 관해 궁금한 점을 물어보세요',
@@ -128,18 +160,12 @@ class _CareBuddyPageState extends State<CareBuddyPage> {
                               horizontal: 20.0,
                               vertical: 12.0,
                             ),
-                            border: InputBorder.none, // 기본 밑줄 제거
-                            // 2. TextField 내부에 전송 아이콘(SuffixIcon) 배치
-                            suffixIcon: IconButton(
-                              icon: SvgPicture.asset(
-                                'assets/carebuddy/send.svg', // 전송 아이콘 경로
-                                width: 20,
-                                height: 20,
-                              ),
-                              onPressed: () {
-                                print("전송 클릭!");
-                              },
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30.0),
+                              borderSide: BorderSide.none,
                             ),
+                            // 2. TextField 내부에 전송 아이콘(SuffixIcon) 배치
+                            suffixIcon: _textFieldButton(),
                           ),
                         ),
                       ),
@@ -147,34 +173,7 @@ class _CareBuddyPageState extends State<CareBuddyPage> {
                   ],
                 ),
                 SizedBox(height: 16.0),
-                Row(
-                  children: [
-                    _subtag(
-                      '운동',
-                      'assets/carebuddy/tag1.svg',
-                      0xFFDFFEFF,
-                      0xFF00AEFF,
-                    ),
-                    _subtag(
-                      '영양',
-                      'assets/carebuddy/tag2.svg',
-                      0xFFDDFFE3,
-                      0xFF00D346,
-                    ),
-                    _subtag(
-                      '질병',
-                      'assets/carebuddy/tag3.svg',
-                      0xFFFFDFDB,
-                      0xFFEA441A,
-                    ),
-                    _subtag(
-                      '정신 건강',
-                      'assets/carebuddy/tag4.svg',
-                      0xFFF8DFFF,
-                      0xFF9000FF,
-                    ),
-                  ],
-                ),
+                CarebuddyBottomButtons(),
               ],
             ),
           ),
@@ -183,15 +182,46 @@ class _CareBuddyPageState extends State<CareBuddyPage> {
     );
   }
 
+  void _sendMessage({String? tagText}) {
+    final text = tagText ?? textController.text.trim();
+    if (text.isEmpty) return;
+
+    setState(() {
+      _messages.add(
+        ChatMessage(
+          text: text,
+          sender: ChatSender.my,
+          createdAt: DateTime.now(),
+        ),
+      );
+
+      _messages.add(
+        ChatMessage(
+          text: text,
+          sender: ChatSender.ai,
+          createdAt: DateTime.now(),
+        ),
+      );
+    });
+
+    textController.clear();
+
+    // 렌더링 끝난 다음 스크롤
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToBottom();
+    });
+  }
+
   Widget _tagButton(int index, String text, {bool isSelected = false}) {
     return TextButton(
       onPressed: () {
         setState(() {
           selectedIndex = index;
         });
+        _sendMessage(tagText: text);
       },
       style: TextButton.styleFrom(
-        foregroundColor: Color(0x1188D3BD),
+        foregroundColor: Color(0xFF1AEDB0),
         padding: EdgeInsets.zero,
         minimumSize: Size.zero,
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -217,151 +247,28 @@ class _CareBuddyPageState extends State<CareBuddyPage> {
     );
   }
 
-  Widget _myChat(String text) {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 19.0, vertical: 15.0),
-            constraints: BoxConstraints(maxWidth: 300.0),
-            decoration: BoxDecoration(
-              color: Color(0xFF1AEDB0),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(20.0),
-                topRight: Radius.circular(0.0),
-                bottomLeft: Radius.circular(20.0),
-                bottomRight: Radius.circular(20.0),
-              ),
-            ),
-            child: Text(
-              text,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontFamily: 'Pretendard Variable',
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          SizedBox(height: 10.0),
-          Text(
-            '방금전',
-            style: TextStyle(
-              color: const Color(0xFFA6A6A6),
-              fontSize: 12,
-              fontFamily: 'Pretendard Variable',
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          SizedBox(height: 9.0),
-        ],
-      ),
-    );
-  }
-
-  Widget _aiChat(String text) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 36.0,
-            height: 36.0,
-            decoration: ShapeDecoration(
-              color: const Color(0xFFF5F5F5),
-              shape: CircleBorder(),
-            ),
-            child: Center(
-              child: Container(
-                width: 18.62,
-                height: 24.35,
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/common/main_logo.png'),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          SizedBox(height: 10.0),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
-            constraints: BoxConstraints(maxWidth: 300.0),
-            decoration: BoxDecoration(
-              color: Color(0xFFF5F5F5),
-
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(0.0),
-                topRight: Radius.circular(20.0),
-                bottomLeft: Radius.circular(20.0),
-                bottomRight: Radius.circular(20.0),
-              ),
-            ),
-            child: Text(
-              text,
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 14,
-                fontFamily: 'Pretendard Variable',
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ),
-          SizedBox(height: 10.0),
-          Text(
-            '방금전',
-            style: TextStyle(
-              color: const Color(0xFFA6A6A6),
-              fontSize: 12,
-              fontFamily: 'Pretendard Variable',
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          SizedBox(height: 25.0),
-        ],
-      ),
-    );
-  }
-
-  Widget _subtag(
-    String text,
-    String imageUrl,
-    int backgroundcolor,
-    int textColor, {
-    bool isSelected = false,
-  }) {
-    return Row(
-      children: [
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
-          decoration: ShapeDecoration(
-            color: Color(backgroundcolor),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.0),
-            ),
-          ),
-          child: Row(
-            children: [
-              SvgPicture.asset(imageUrl),
-              SizedBox(width: 10.0),
-              Text(
-                text,
-                style: TextStyle(
-                  color: Color(textColor),
-                  fontSize: 14,
-                  fontFamily: 'Pretendard Variable',
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
+  Widget _textFieldButton() {
+    return Container(
+      margin: EdgeInsets.all(5.0),
+      child: TextButton(
+        style: TextButton.styleFrom(
+          foregroundColor: Color(0xFF669688),
+          backgroundColor: isButtonEnabled
+              ? Color(0xFF1AEDB1)
+              : Color(0xFFF8F8F8),
+          padding: EdgeInsets.fromLTRB(2.0, 0.0, 0.0, 0.0),
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          shape: CircleBorder(),
         ),
-        SizedBox(width: 10.0),
-      ],
+        onPressed: isButtonEnabled ? _sendMessage : null,
+        child: SvgPicture.asset(
+          isButtonEnabled
+              ? 'assets/carebuddy/send_active.svg'
+              : 'assets/carebuddy/send.svg',
+          key: ValueKey(isButtonEnabled),
+        ),
+      ),
     );
   }
 }
