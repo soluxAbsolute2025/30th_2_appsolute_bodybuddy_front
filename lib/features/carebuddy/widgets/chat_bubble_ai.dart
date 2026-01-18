@@ -3,9 +3,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class AiChatBubble extends StatelessWidget {
-  final ChatMessage message;
+  final ChatMessage? message;
 
   const AiChatBubble({required this.message, super.key});
+
+  List<TextSpan> _buildTextSpans(String text) {
+    final parts = text.split('**');
+
+    return List.generate(parts.length, (index) {
+      final isBold = index.isOdd;
+
+      return TextSpan(
+        text: parts[index],
+        style: TextStyle(
+          fontWeight: isBold ? FontWeight.w600 : FontWeight.w400,
+          color: Colors.black,
+          fontSize: 14,
+          fontFamily: 'Pretendard Variable',
+        ),
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,26 +66,26 @@ class AiChatBubble extends StatelessWidget {
                 bottomRight: Radius.circular(20.0),
               ),
             ),
-            child: Text(
-              "좋은 질문이에요! 제가 도움을 드리겠습니다. 건강 관련 정보를 제공하기 위해 최선을 다하고 있어요.",
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 14,
-                fontFamily: 'Pretendard Variable',
-                fontWeight: FontWeight.w400,
+            child: RichText(
+              text: TextSpan(
+                children: _buildTextSpans(
+                  message?.text ??
+                      "**좋은 질문**이에요! 제가 도움을 드리겠습니다. 건강 관련 정보를 제공하기 위해 최선을 다하고 있어요.",
+                ),
               ),
             ),
           ),
           SizedBox(height: 10.0),
-          Text(
-            message.createdAt.toString(),
-            style: TextStyle(
-              color: const Color(0xFFA6A6A6),
-              fontSize: 12,
-              fontFamily: 'Pretendard Variable',
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          // Text(
+          //   "방금전",
+          //   // message.createdAt.toString(),
+          //   style: TextStyle(
+          //     color: const Color(0xFFA6A6A6),
+          //     fontSize: 12,
+          //     fontFamily: 'Pretendard Variable',
+          //     fontWeight: FontWeight.w500,
+          //   ),
+          // ),
         ],
       ),
     );

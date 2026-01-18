@@ -24,7 +24,7 @@ class _CareBuddyPageState extends State<CareBuddyPage> {
 
   bool isButtonEnabled = false;
   int selectedIndex = -1;
-  List<String> tags = ['다이어트 식단 추천', '운동 후 근육통 완화', '수면 개선 방법', '스트레스 관리법'];
+  List<String> tags = ['다이어트', '운동', '수면', '스트레스'];
   TagSuggest tagSuggest = TagSuggest(success: false, data: []);
 
   final List<ChatMessage> _messages = [];
@@ -33,7 +33,7 @@ class _CareBuddyPageState extends State<CareBuddyPage> {
   void initState() {
     super.initState();
 
-    // _getSuggest();
+    _getSuggest();
 
     textController.addListener(() {
       setState(() {
@@ -59,7 +59,9 @@ class _CareBuddyPageState extends State<CareBuddyPage> {
   }
 
   Future<void> _getSuggest() async {
-    final result = await CarebuddyApi().getSuggest('accessToken');
+    final result = await CarebuddyApi().getSuggest(
+      'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0aGEiLCJ1c2VySWQiOjMzMCwiaWF0IjoxNzY4NzUyMzczLCJleHAiOjE3Njg3NTU5NzN9.UCq3B2XXMpJeUC6nD_V2kmcZISi-rC7OJWAURNQhhvc',
+    );
 
     if (!mounted) return;
 
@@ -182,9 +184,8 @@ class _CareBuddyPageState extends State<CareBuddyPage> {
     );
   }
 
-  void _sendMessage({String? tagText}) {
+  void _sendMessage({String? tagText}) async {
     final text = tagText ?? textController.text.trim();
-    if (text.isEmpty) return;
 
     setState(() {
       _messages.add(
@@ -194,17 +195,30 @@ class _CareBuddyPageState extends State<CareBuddyPage> {
           createdAt: DateTime.now(),
         ),
       );
+    });
 
+    textController.clear();
+
+    // 렌더링 끝난 다음 스크롤
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToBottom();
+    });
+
+    final String answer = await CarebuddyApi().postMessage(
+      'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0aGEiLCJ1c2VySWQiOjMzMCwiaWF0IjoxNzY4Njg0NjA1LCJleHAiOjE3Njg2ODgyMDV9.9_YLiKzuf65baWTTI8qH-4wf7L8mX2G_gvyalxSmQ30',
+      text,
+    );
+    if (text.isEmpty) return;
+
+    setState(() {
       _messages.add(
         ChatMessage(
-          text: text,
+          text: answer,
           sender: ChatSender.ai,
           createdAt: DateTime.now(),
         ),
       );
     });
-
-    textController.clear();
 
     // 렌더링 끝난 다음 스크롤
     WidgetsBinding.instance.addPostFrameCallback((_) {
