@@ -1,19 +1,20 @@
 // 최상위 데이터 클래스
 class FeedPageResponse {
   final List<FeedPost> content;
-  final Pageable pageable;
+  final Pageable? pageable;
   final bool last;
   final int totalPages;
   final int totalElements;
-  final bool first;
-  final int size;
+  final bool? first;
+  final int? size;
   final int number;
-  final int numberOfElements;
-  final bool empty;
+  final int? numberOfElements;
+  final Sort? sort;
+  final bool? empty;
 
   FeedPageResponse({
     required this.content,
-    required this.pageable,
+    this.pageable,
     required this.last,
     required this.totalPages,
     required this.totalElements,
@@ -21,6 +22,7 @@ class FeedPageResponse {
     required this.size,
     required this.number,
     required this.numberOfElements,
+    required this.sort,
     required this.empty,
   });
 
@@ -29,14 +31,15 @@ class FeedPageResponse {
       content: (json['content'] as List)
           .map((e) => FeedPost.fromJson(e))
           .toList(),
-      pageable: Pageable.fromJson(json['pageable']),
+      pageable: json['pageable'] ? Pageable.fromJson(json['pageable']) : null,
       last: json['last'],
       totalPages: json['totalPages'],
       totalElements: json['totalElements'],
-      first: json['first'],
-      size: json['size'],
+      first: json['first'] ?? null,
+      size: json['size'] ?? null,
       number: json['number'],
       numberOfElements: json['numberOfElements'],
+      sort: json['sort'] ? Sort.fromJson(json['sort']) : null,
       empty: json['empty'],
     );
   }
@@ -97,6 +100,22 @@ class FeedPost {
       comments: (json['comments'] as List)
           .map((e) => FeedComment.fromJson(e))
           .toList(),
+    );
+  }
+}
+
+class Sort {
+  final bool empty;
+  final bool unsorted;
+  final bool sorted;
+
+  Sort({required this.empty, required this.unsorted, required this.sorted});
+
+  factory Sort.fromJson(Map<String, dynamic> json) {
+    return Sort(
+      empty: json['empty'],
+      unsorted: json['unsorted'],
+      sorted: json['sorted'],
     );
   }
 }

@@ -15,7 +15,7 @@ class FeedFrameWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(10.0),
         border: Border.all(color: Color(0xFFD9D9D9), width: 1.0),
       ),
-      child: FeedOnlyWidget(),
+      child: Column(children: [FeedOnlyWidget(), SizedBox(height: 16.0)]),
     );
   }
 }
