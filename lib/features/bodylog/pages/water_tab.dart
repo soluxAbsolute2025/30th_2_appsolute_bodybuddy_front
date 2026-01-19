@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../../../common/common.dart'; // Common.token 사용을 위해 import
+import 'package:intl/intl.dart'; // 날짜 포맷팅을 위해 추가 (pubspec.yaml에 intl 없으면 기본 DateTime 사용)
+import '../../../common/common.dart';
 
 class WaterTab extends StatefulWidget {
   const WaterTab({super.key});
@@ -12,23 +13,31 @@ class WaterTab extends StatefulWidget {
 }
 
 class _WaterTabState extends State<WaterTab> {
-  // 1. 상태 변수들 (서버에서 받아올 데이터)
-  int _todayTotal = 0; // 오늘 마신 총량
-  final int _goalAmount = 2000; // 목표량 (일단 고정, 나중에 user info에서 가져오기 가능)
+  // 1. 상태 변수들
+  int _todayTotal = 0; // 오늘 총 섭취량
+  final int _goalAmount = 2000; // 목표량
   List<dynamic> _logs = []; // 오늘 기록 리스트
-  bool _isLoading = false; // 로딩 상태
+  Map<String, int> _weeklyData = {}; // 주간 데이터 (날짜: 섭취량)
+  bool _isLoading = false;
 
-  final String _baseUrl = "http://52.79.228.227:8080"; // 서버 주소
+  final String _baseUrl = "http://52.79.228.227:8080";
 
   @override
   void initState() {
     super.initState();
-    _fetchTodayData(); // 페이지 열리자마자 데이터 가져오기
+    _fetchAllData(); // 초기 데이터 로드
   }
 
-  // --- [API] 1. 오늘 기록 가져오기 ---
+  // 데이터 한 번에 새로고침 (오늘 기록 + 주간 기록)
+  Future<void> _fetchAllData() async {
+    await _fetchTodayData();
+    await _fetchWeeklyData();
+  }
+
+  // --- [API] 1. 오늘 기록 가져오기 (GET /api/water-log/today) ---
   Future<void> _fetchTodayData() async {
     if (Common.token == null) return;
+    if (!mounted) return;
 
     setState(() => _isLoading = true);
 
@@ -39,17 +48,17 @@ class _WaterTabState extends State<WaterTab> {
         headers: {
           "Content-Type": "application/json",
           "Authorization": "Bearer ${Common.token}",
+          "TimeZone": "Asia/Seoul", // ★ 명세서 필수 헤더 추가
         },
       );
 
       if (response.statusCode == 200) {
-        // 서버 응답 구조에 따라 다를 수 있지만, 리스트로 가정합니다.
-        // 예: [{"id": 1, "amount": 200, "createdAt": "..."}]
+        // 명세서: [{"waterLogId": 101, "amountMl": 500, "loggedAt": "..."}]
         final List<dynamic> data = jsonDecode(response.body);
 
         int sum = 0;
         for (var item in data) {
-          sum += (item['amount'] as int); // 총량 계산
+          sum += (item['amountMl'] as int); // ★ amount -> amountMl 로 변경
         }
 
         setState(() {
@@ -57,21 +66,65 @@ class _WaterTabState extends State<WaterTab> {
           _todayTotal = sum;
         });
       } else {
-        print("데이터 불러오기 실패: ${response.statusCode}");
+        print("❌ 오늘 기록 로드 실패: ${response.statusCode}");
       }
     } catch (e) {
-      print("에러 발생: $e");
+      print("❌ 네트워크 에러(Today): $e");
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  // --- [API] 2. 물 기록 추가하기 ---
-  Future<void> _addWaterLog(int amount) async {
+  // --- [API] 2. 주간 기록 가져오기 (GET /api/water-log/weekly) ---
+  Future<void> _fetchWeeklyData() async {
     if (Common.token == null) return;
 
     try {
+      final url = Uri.parse('$_baseUrl/api/water-log/weekly');
+      final response = await http.get(
+        url,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer ${Common.token}",
+          "TimeZone": "Asia/Seoul", // ★ 필수 헤더
+        },
+      );
+
+      if (response.statusCode == 200) {
+        // 명세서: {"2025-12-24": 1000, "2025-12-30": 500}
+        final Map<String, dynamic> rawData = jsonDecode(response.body);
+
+        // dynamic 값을 int로 안전하게 변환
+        Map<String, int> parsedData = {};
+        rawData.forEach((key, value) {
+          parsedData[key] = value as int;
+        });
+
+        setState(() {
+          _weeklyData = parsedData;
+        });
+      } else {
+        print("❌ 주간 기록 로드 실패: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("❌ 네트워크 에러(Weekly): $e");
+    }
+  }
+
+  // --- [API] 3. 기록 추가하기 (POST /api/water-log) ---
+  Future<void> _addWaterLog(int amount) async {
+    if (Common.token == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("로그인이 필요합니다.")));
+      return;
+    }
+
+    // 날짜 포맷: YYYY-MM-DD
+    DateTime now = DateTime.now();
+    String todayDate = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+
+    try {
       final url = Uri.parse('$_baseUrl/api/water-log');
+
       final response = await http.post(
         url,
         headers: {
@@ -79,27 +132,29 @@ class _WaterTabState extends State<WaterTab> {
           "Authorization": "Bearer ${Common.token}",
         },
         body: jsonEncode({
-          "amount": amount,
-          // "unit": "ml" // 필요하다면 추가
+          "mlAmount": amount,      // ★ amount -> mlAmount
+          "recordDate": todayDate, // ★ 필수 필드
         }),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        print("물 추가 성공: $amount");
-        _fetchTodayData(); // 데이터 새로고침 (총량 및 리스트 업데이트)
+        print("✅ 저장 성공");
+        _fetchAllData(); // 데이터 새로고침 (오늘 + 주간)
       } else {
-        print("추가 실패: ${response.body}");
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("기록 저장 실패")));
+        print("❌ 저장 실패: ${utf8.decode(response.bodyBytes)}");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("저장 실패: ${utf8.decode(response.bodyBytes)}")));
+        }
       }
     } catch (e) {
-      print("에러 발생: $e");
+      print("❌ 네트워크 에러(Add): $e");
     }
   }
 
-  // --- [API] 3. 기록 삭제하기 (리스트에서 X 버튼 눌렀을 때) ---
-  Future<void> _deleteWaterLog(int id) async {
+  // --- [API] 4. 기록 삭제하기 (DELETE /api/water-log/{id}) ---
+  Future<void> _deleteWaterLog(int waterLogId) async {
     try {
-      final url = Uri.parse('$_baseUrl/api/water-log/$id');
+      final url = Uri.parse('$_baseUrl/api/water-log/$waterLogId');
       final response = await http.delete(
         url,
         headers: {
@@ -108,7 +163,10 @@ class _WaterTabState extends State<WaterTab> {
       );
 
       if (response.statusCode == 200) {
-        _fetchTodayData(); // 삭제 후 새로고침
+        print("✅ 삭제 성공");
+        _fetchAllData(); // 새로고침
+      } else {
+        print("❌ 삭제 실패: ${response.body}");
       }
     } catch (e) {
       print("삭제 에러: $e");
@@ -117,14 +175,12 @@ class _WaterTabState extends State<WaterTab> {
 
   @override
   Widget build(BuildContext context) {
-    // 퍼센트 계산 (1.0이 최대)
     double percent = (_todayTotal / _goalAmount).clamp(0.0, 1.0);
     int percentInt = (percent * 100).toInt();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const SizedBox(height: 10),
           const Align(
@@ -133,7 +189,7 @@ class _WaterTabState extends State<WaterTab> {
           ),
           const SizedBox(height: 30),
 
-          // 1. 중앙 물결 이미지 및 원형 그래프 영역
+          // 1. 원형 그래프 UI (기존 동일)
           SizedBox(
             width: 180,
             height: 180,
@@ -141,8 +197,7 @@ class _WaterTabState extends State<WaterTab> {
               alignment: Alignment.center,
               children: [
                 Container(
-                  width: 150,
-                  height: 150,
+                  width: 150, height: 150,
                   decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.grey[50]),
                   child: ClipOval(
                     child: Stack(
@@ -153,13 +208,12 @@ class _WaterTabState extends State<WaterTab> {
                           width: 150, height: 150, fit: BoxFit.cover,
                           errorBuilder: (ctx, err, stack) => Container(color: const Color(0xFFE0F7FA)),
                         ),
-                        // 물 차오르는 높이 조절 (percent * 150)
                         Align(
                           alignment: Alignment.bottomCenter,
                           child: Container(
-                            height: 150 * percent, // 퍼센트에 따라 높이 변함
+                            height: 150 * percent,
                             width: 150,
-                            color: const Color(0xFF4BECBE).withOpacity(0.3), // 이미지 없으면 색으로 대체
+                            color: const Color(0xFF4BECBE).withOpacity(0.3),
                             child: Image.asset(
                               'assets/bodylog/water_front.png',
                               fit: BoxFit.cover,
@@ -171,8 +225,6 @@ class _WaterTabState extends State<WaterTab> {
                     ),
                   ),
                 ),
-
-                // 퍼센트 텍스트
                 Align(
                   alignment: Alignment.topCenter,
                   child: Padding(
@@ -183,15 +235,12 @@ class _WaterTabState extends State<WaterTab> {
                     ),
                   ),
                 ),
-
-                // 진행률 원형 테두리
                 SizedBox(
-                  width: 150,
-                  height: 150,
+                  width: 150, height: 150,
                   child: Transform.rotate(
                     angle: -math.pi / 2,
                     child: CircularProgressIndicator(
-                      value: percent, // 계산된 퍼센트 적용
+                      value: percent,
                       strokeWidth: 10,
                       color: const Color(0xFF4BECBE),
                       backgroundColor: const Color(0xFFF5F5F5),
@@ -205,17 +254,16 @@ class _WaterTabState extends State<WaterTab> {
 
           const SizedBox(height: 20),
 
-          // 수분 섭취량 텍스트
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text('${_todayTotal}ml', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)), // 변수 적용
+              Text('${_todayTotal}ml', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               Text(' / ${_goalAmount}ml', style: const TextStyle(fontSize: 16, color: Colors.grey)),
             ],
           ),
           const SizedBox(height: 30),
 
-          // 2. 버튼들
+          // 2. 버튼 리스트
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -227,7 +275,6 @@ class _WaterTabState extends State<WaterTab> {
                 const SizedBox(width: 12),
                 _buildAddButton('+ 500ml', 500),
                 const SizedBox(width: 12),
-                // 직접 입력 버튼
                 InkWell(
                   onTap: _showCustomInputDialog,
                   child: Container(
@@ -254,38 +301,39 @@ class _WaterTabState extends State<WaterTab> {
           ),
           const SizedBox(height: 10),
 
-          // 리스트 빌더로 교체
           _logs.isEmpty
               ? const Padding(
             padding: EdgeInsets.all(20),
-            child: Text("아직 기록이 없습니다.", style: TextStyle(color: Colors.grey)),
+            child: Text("오늘 마신 물이 없어요!", style: TextStyle(color: Colors.grey)),
           )
               : ListView.builder(
-            shrinkWrap: true, // 스크롤 중첩 방지
+            shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _logs.length,
             itemBuilder: (context, index) {
               final log = _logs[index];
-              // log['createdAt']가 "2024-05-20T10:30:00" 형식이면 시간만 자름
-              String time = "00:00";
-              if (log['createdAt'] != null && log['createdAt'].length > 16) {
-                time = log['createdAt'].substring(11, 16);
+
+              // ★ 명세서대로 필드명 변경 적용
+              final int id = log['waterLogId'];
+              final int amount = log['amountMl'];
+              final String rawTime = log['loggedAt'] ?? "";
+
+              String time = "-";
+              // 2025-12-30T00:00:00 형식이면 T 뒤에 시간만 자르기
+              if (rawTime.contains("T")) {
+                time = rawTime.split("T")[1].substring(0, 5); // 00:00
               }
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 10),
-                child: _buildRecordItem(
-                    log['id'],
-                    '${log['amount']}ml',
-                    time
-                ),
+                child: _buildRecordItem(id, '${amount}ml', time),
               );
             },
           ),
 
           const SizedBox(height: 40),
 
-          // 4. 주간 차트 (API 연결 필요 시 주간 API 호출 추가 필요, 일단 UI 유지)
+          // 4. 주간 수분 섭취량 (실제 데이터 반영)
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -299,13 +347,11 @@ class _WaterTabState extends State<WaterTab> {
               children: [
                 const Text('주간 수분 섭취량', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(height: 20),
+                // 차트 그리기
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    _buildBar('25', 0.6), _buildBar('26', 0.4), _buildBar('27', 0.5),
-                    _buildBar('28', 0.8), _buildBar('29', 0.55), _buildBar('30', 0.65), _buildBar('31', 0.7),
-                  ],
+                  children: _buildWeeklyBars(),
                 ),
               ],
             ),
@@ -316,9 +362,47 @@ class _WaterTabState extends State<WaterTab> {
     );
   }
 
-  // --- 헬퍼 위젯들 ---
+  // --- 주간 차트 빌더 ---
+  List<Widget> _buildWeeklyBars() {
+    List<Widget> bars = [];
+    DateTime now = DateTime.now();
 
-  // 직접 입력 팝업
+    // 오늘부터 6일 전까지 (총 7일) 반복
+    for (int i = 6; i >= 0; i--) {
+      DateTime date = now.subtract(Duration(days: i));
+      String dateKey = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+
+      // 해당 날짜의 데이터 가져오기 (없으면 0)
+      int amount = _weeklyData[dateKey] ?? 0;
+
+      // 높이 비율 (최대 3000ml 기준)
+      double heightRatio = (amount / 3000).clamp(0.0, 1.0);
+      // 최소 높이는 보이게 설정 (데이터가 있으면)
+      if (amount > 0 && heightRatio < 0.1) heightRatio = 0.1;
+
+      bars.add(_buildBar(date.day.toString(), heightRatio, amount));
+    }
+    return bars;
+  }
+
+  Widget _buildBar(String day, double heightRatio, int amount) {
+    return Column(
+      children: [
+        // 툴팁처럼 양을 표시하고 싶으면 여기에 Text 추가 가능
+        Container(
+          width: 8,
+          height: 150 * heightRatio, // 최대 높이 150
+          decoration: BoxDecoration(
+            color: amount > 0 ? const Color(0xFF4BECBE) : Colors.grey[300], // 데이터 없으면 회색
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(day, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+      ],
+    );
+  }
+
   void _showCustomInputDialog() {
     TextEditingController controller = TextEditingController();
     showDialog(
@@ -336,7 +420,7 @@ class _WaterTabState extends State<WaterTab> {
             onPressed: () {
               int? amount = int.tryParse(controller.text);
               if (amount != null && amount > 0) {
-                _addWaterLog(amount); // API 호출
+                _addWaterLog(amount);
                 Navigator.pop(context);
               }
             },
@@ -347,7 +431,6 @@ class _WaterTabState extends State<WaterTab> {
     );
   }
 
-  // + 버튼 (클릭 시 API 호출)
   Widget _buildAddButton(String text, int amount) {
     return InkWell(
       onTap: () => _addWaterLog(amount),
@@ -362,7 +445,6 @@ class _WaterTabState extends State<WaterTab> {
     );
   }
 
-  // 기록 아이템 (삭제 버튼 포함)
   Widget _buildRecordItem(int id, String amount, String time) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -382,30 +464,13 @@ class _WaterTabState extends State<WaterTab> {
               Text(time, style: const TextStyle(color: Colors.grey)),
               const SizedBox(width: 10),
               GestureDetector(
-                onTap: () => _deleteWaterLog(id), // 삭제 API 연결
+                onTap: () => _deleteWaterLog(id),
                 child: const Icon(Icons.close, size: 18, color: Colors.grey),
               ),
             ],
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildBar(String day, double heightRatio) {
-    return Column(
-      children: [
-        Container(
-          width: 8,
-          height: 150 * heightRatio,
-          decoration: BoxDecoration(
-            color: const Color(0xFF4BECBE),
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(day, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-      ],
     );
   }
 }
