@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../../pages/main_page.dart';
 import 'welcome_flow_page.dart';
+import '../../../common/common.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -21,35 +22,28 @@ class _LoginPageState extends State<LoginPage> {
 
   bool _isLoading = false;
 
-  // [수정됨] 온보딩 정보가 있는지 확인하는 함수
+  // 온보딩 정보가 있는지 확인하는 함수
   Future<bool> _checkUserHasInfo(String accessToken) async {
     try {
-      // ★ 요청하신 대로 /api/users/onboarding 주소 사용
       final url = Uri.parse('$baseUrl/api/users/onboarding');
 
       final response = await http.get(
         url,
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer $accessToken", // 토큰 필수
+          "Authorization": "Bearer $accessToken",
         },
       );
 
       print("🔎 [온보딩 여부 확인] 상태코드: ${response.statusCode}");
 
-      // 200 OK: 이미 온보딩 정보가 서버에 있다는 뜻 -> 메인으로 이동
       if (response.statusCode == 200) {
         return true;
-      }
-      // 404 Not Found: 온보딩 정보가 없다는 뜻 -> 환영 페이지로 이동
-      // (혹은 400 등 다른 에러코드일 수도 있으니 200이 아니면 모두 false 처리)
-      else {
+      } else {
         return false;
       }
     } catch (e) {
       print("⚠️ 온보딩 확인 중 에러: $e");
-      // 에러가 나면 안전하게 온보딩 페이지로 보내서 다시 입력을 유도하거나,
-      // 혹은 false를 리턴합니다.
       return false;
     }
   }
@@ -80,14 +74,13 @@ class _LoginPageState extends State<LoginPage> {
 
       print("📩 [로그인 응답] 상태: ${response.statusCode}");
 
-      // 응답 본문 디코딩
       final String responseString = utf8.decode(response.bodyBytes);
       final responseBody = jsonDecode(responseString);
 
       if (response.statusCode == 200) {
         String? accessToken;
 
-        // 토큰 파싱 (서버 응답 구조에 따라 유연하게 처리)
+        // 토큰 파싱
         if (responseBody is Map && responseBody['data'] != null) {
           final data = responseBody['data'];
           if (data is Map) accessToken = data['accessToken'];
@@ -96,11 +89,19 @@ class _LoginPageState extends State<LoginPage> {
         }
 
         if (accessToken != null) {
-          // 1. 토큰 저장
-          await storage.write(key: 'ACCESS_TOKEN', value: accessToken);
-          print("✅ 로그인 성공! 토큰 저장 완료");
+          // ▼▼▼ [여기서 토큰 출력] ▼▼▼
+          print("\n==================================================");
+          print("🔑 [발급된 토큰]:");
+          print(accessToken);
+          print("==================================================\n");
+          // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
-          // 2. [핵심] 온보딩 API를 찔러서 기존 유저인지 확인
+          // 1. 토큰 저장
+          await Common.setToken(accessToken);
+
+          print("✅ 전역 변수에 토큰 저장됨: ${Common.token}");
+
+          // 2. 온보딩 확인
           bool isExistingUser = await _checkUserHasInfo(accessToken);
 
           if (!mounted) return;
