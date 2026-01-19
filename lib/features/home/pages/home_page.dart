@@ -15,21 +15,23 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: MainAppbar(
-        navIndex: 0, 
+        navIndex: 0,
         titleText: 'BodyBuddy',
+        imageUrl: 'assets/images/common/bell.svg',
+        onButtonPressed: () {},
       ),
       body: SingleChildScrollView(
-      child: Column(
-        children: [
-          AttendanceSection(),
-          SizedBox(height: 16),
-          Transform.translate(
-            offset: const Offset(0, -40),
-            child: const TodayDateHeader(),
-          ),
-        ],
+        child: Column(
+          children: [
+            AttendanceSection(),
+            SizedBox(height: 16),
+            Transform.translate(
+              offset: const Offset(0, -40),
+              child: const TodayDateHeader(),
+            ),
+          ],
+        ),
       ),
-    ),
     );
   }
 }

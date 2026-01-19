@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../create/group/pages/group_challenge_type_page.dart';
+import '../create/group/models/group_challenge_create_model.dart';
+
 class CreateGroupChallengeBanner extends StatelessWidget {
   const CreateGroupChallengeBanner({super.key});
 
@@ -9,7 +12,15 @@ class CreateGroupChallengeBanner extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: GestureDetector(
         onTap: () {
-          // TODO: 새로운 그룹 챌린지 만들기 페이지 이동
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => GroupChallengeTypePage(
+                model: GroupChallengeCreateModel(),
+              ),
+              
+            ),
+          );
         },
         child: Container(
           height: 140,
@@ -25,8 +36,8 @@ class CreateGroupChallengeBanner extends StatelessWidget {
                 Color(0xFF1EFAC0),
               ],
               stops: [
-                0.0,
-                0.7,
+                0.2,
+                0.8,
               ],
             ),
           ),

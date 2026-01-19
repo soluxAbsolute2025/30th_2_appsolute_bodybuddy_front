@@ -1,6 +1,9 @@
 // features/home/pages/home_page.dart
+import 'package:bodybuddy_frontend/features/buddyzone/pages/subPages/sub_newfeed_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../common/widgets/main_appbar.dart';
+import 'subPages/sub_feed_page.dart';
 
 import 'buddy_friends_page.dart';
 import 'buddy_feed_page.dart';
@@ -22,7 +25,7 @@ class _BuddyZoneState extends State<BuddyZonePage> {
       appBar: MainAppbar(
         navIndex: 3,
         titleText: '버디존',
-        imageUrl: 'assets/images/common/my.svg',
+        imageUrl: 'assets/images/common/shop.svg',
         buttonText: '친구 추가',
       ),
       body: Column(
@@ -105,6 +108,7 @@ class _BuddyZoneState extends State<BuddyZonePage> {
               child: SingleChildScrollView(
                 scrollDirection: Axis.vertical,
                 child: BuddyFeedPage(),
+                // child: SubFeedPages(),
               ),
             ),
           ] else if (_isBuddySelectIndex == 1) ...[
@@ -115,9 +119,37 @@ class _BuddyZoneState extends State<BuddyZonePage> {
               ),
             ),
           ],
-
           // Container(padding: EdgeInsets.all(16.0), child: FeedOnlyWidget()),
         ],
+      ),
+      floatingActionButton: Container(
+        margin: EdgeInsets.only(bottom: 40.0),
+        width: 40.0,
+        height: 40.0,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 7.5,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: TextButton(
+          style: TextButton.styleFrom(
+            backgroundColor: Color(0xFF1AEDB1),
+            foregroundColor: Color(0xFF669688),
+            elevation: 0.0,
+          ),
+          onPressed: () {
+            Navigator.of(
+              context,
+              rootNavigator: true,
+            ).push(MaterialPageRoute(builder: (context) => SubNewFeedPages()));
+          },
+          child: SvgPicture.asset('assets/buddyzone/newFeed.svg'),
+        ),
       ),
     );
   }

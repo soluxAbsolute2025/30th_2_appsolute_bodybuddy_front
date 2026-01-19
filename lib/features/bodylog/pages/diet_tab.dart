@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+// -------------------------------------------------------------------------
+// 1. 식단 탭 (DietTab)
+// -------------------------------------------------------------------------
 class DietTab extends StatefulWidget {
   const DietTab({super.key});
 
@@ -68,7 +71,7 @@ class _DietTabState extends State<DietTab> {
     );
   }
 
-  // 📅 날짜 아이템 하나 (동그라미)
+  // 📅 날짜 아이템 하나
   Widget _buildDateItem(String day, String weekDay, bool isSelected) {
     return Padding(
       padding: const EdgeInsets.only(right: 15),
@@ -76,9 +79,9 @@ class _DietTabState extends State<DietTab> {
         children: [
           Container(
             width: 45,
-            height: 45,
+            height: 45, // 이미지와 비슷하게 둥근 사각형 또는 원형 유지
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFF4BECBE) : Colors.white, // 선택되면 민트색
+              color: isSelected ? const Color(0xFF4BECBE) : Colors.white,
               shape: BoxShape.circle,
               boxShadow: isSelected
                   ? [
@@ -112,7 +115,7 @@ class _DietTabState extends State<DietTab> {
     );
   }
 
-  // 🍽️ 타임라인 아이템 (식사 기록 카드)
+  // 🍽️ 타임라인 아이템 (기록된 식사)
   Widget _buildTimelineItem({
     required String mealType,
     required String time,
@@ -124,95 +127,120 @@ class _DietTabState extends State<DietTab> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 왼쪽 타임라인 선과 점
-          Column(
-            children: [
-              Text(mealType.substring(0, 2), // "아침", "점심" 두 글자만 따오기
-                  style: const TextStyle(fontSize: 10, color: Color(0xFF4BECBE), fontWeight: FontWeight.bold)),
-              const SizedBox(height: 5),
-              Container(
-                width: 10,
-                height: 10,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF4BECBE), // 민트색 점
-                  shape: BoxShape.circle,
-                ),
-              ),
-              // 마지막 아이템이 아니면 아래로 선을 그음
-              if (!isLast)
-                Expanded(
-                  child: Container(
-                    width: 2,
-                    color: const Color(0xFF4BECBE).withOpacity(0.3), // 연한 민트색 선
+          SizedBox(
+            width: 30, // 너비 고정
+            child: Column(
+              children: [
+                Text(mealType.substring(0, 2),
+                    style: const TextStyle(
+                        fontSize: 10,
+                        color: Color(0xFF4BECBE),
+                        fontWeight: FontWeight.bold)),
+                const SizedBox(height: 5),
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF4BECBE),
+                    shape: BoxShape.circle,
                   ),
                 ),
-            ],
+                if (!isLast)
+                  Expanded(
+                    child: Container(
+                      width: 2,
+                      color: const Color(0xFF4BECBE).withOpacity(0.3),
+                    ),
+                  ),
+              ],
+            ),
           ),
           const SizedBox(width: 15),
 
           // 오른쪽 카드 내용
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 30), // 다음 아이템과의 간격
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey[50], // 아주 연한 회색 배경
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 카드 헤더 (제목 + 시간)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Text(mealType, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                            const SizedBox(width: 5),
-                            const Icon(Icons.edit, size: 14, color: Colors.grey),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            const Icon(Icons.access_time, size: 14, color: Color(0xFF4BECBE)),
-                            const SizedBox(width: 4),
-                            Text(time, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 15),
+            child: GestureDetector(
+              onTap: () {
+                // 카드 클릭 시 수정 페이지로 이동
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DietEditPage(isEditMode: true),
+                  ),
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 30),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 카드 헤더
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Text(mealType,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16)),
+                              const SizedBox(width: 5),
+                              const Icon(Icons.edit,
+                                  size: 14, color: Colors.grey),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              const Icon(Icons.access_time,
+                                  size: 14, color: Color(0xFF4BECBE)),
+                              const SizedBox(width: 4),
+                              Text(time,
+                                  style: const TextStyle(
+                                      color: Colors.grey, fontSize: 12)),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 15),
 
-                    // 음식 사진 + 메뉴 리스트
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // 사진 자리 (회색 박스)
-                        Container(
-                          width: 100,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[300],
-                            borderRadius: BorderRadius.circular(8),
+                      // 음식 사진 + 메뉴 리스트
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 15),
-                        // 메뉴 텍스트 리스트
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: menus
-                                .map((menu) => Padding(
-                              padding: const EdgeInsets.only(bottom: 4),
-                              child: Text('•  $menu', style: const TextStyle(fontSize: 13)),
-                            ))
-                                .toList(),
+                          const SizedBox(width: 15),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: menus
+                                  .map((menu) => Padding(
+                                padding:
+                                const EdgeInsets.only(bottom: 4),
+                                child: Text('•  $menu',
+                                    style: const TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.black87)),
+                              ))
+                                  .toList(),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -223,35 +251,40 @@ class _DietTabState extends State<DietTab> {
   }
 
   // 📝 기록하기 버튼이 있는 빈 타임라인
-  Widget _buildEmptyTimelineItem({required String mealType, required bool isLast}) {
+  Widget _buildEmptyTimelineItem(
+      {required String mealType, required bool isLast}) {
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 왼쪽 타임라인
-          Column(
-            children: [
-              Text(mealType.substring(0, 2),
-                  style: const TextStyle(fontSize: 10, color: Colors.grey, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 5),
-              Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: Colors.grey), // 빈 동그라미
-                  shape: BoxShape.circle,
+          SizedBox(
+            width: 30,
+            child: Column(
+              children: [
+                Text(mealType.substring(0, 2),
+                    style: const TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey,
+                        fontWeight: FontWeight.bold)),
+                const SizedBox(height: 5),
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: Colors.grey),
+                    shape: BoxShape.circle,
+                  ),
                 ),
-              ),
-              if (!isLast)
-                Expanded(
-                  child: Container(width: 2, color: Colors.grey.withOpacity(0.3)),
-                ),
-            ],
+                if (!isLast)
+                  Expanded(
+                    child: Container(
+                        width: 2, color: Colors.grey.withOpacity(0.3)),
+                  ),
+              ],
+            ),
           ),
           const SizedBox(width: 15),
-
-          // 오른쪽 빈 카드
           Expanded(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
@@ -262,9 +295,19 @@ class _DietTabState extends State<DietTab> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('아직 기록하지 않았어요!', style: TextStyle(color: Colors.grey)),
+                  const Text('아직 기록하지 않았어요!',
+                      style: TextStyle(color: Colors.grey, fontSize: 13)),
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      // 기록하기 버튼 클릭 시 추가 모드로 이동
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                          const DietEditPage(isEditMode: false),
+                        ),
+                      );
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF4BECBE),
                       foregroundColor: Colors.white,
@@ -272,14 +315,230 @@ class _DietTabState extends State<DietTab> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      minimumSize: const Size(80, 36),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 0),
+                      minimumSize: const Size(0, 36),
                     ),
-                    child: const Text('기록하기', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: const Text('기록하기',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+// -------------------------------------------------------------------------
+// 2. 식단 기록/수정 페이지 (DietEditPage)
+// -------------------------------------------------------------------------
+class DietEditPage extends StatefulWidget {
+  final bool isEditMode; // 수정 모드인지 여부
+
+  const DietEditPage({super.key, this.isEditMode = false});
+
+  @override
+  State<DietEditPage> createState() => _DietEditPageState();
+}
+
+class _DietEditPageState extends State<DietEditPage> {
+  String _selectedMealTime = '아침'; // 라디오 버튼 선택값
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: const Text('기록 편집',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        foregroundColor: Colors.black,
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // (1) 시간 입력
+                  _buildLabel('시간'),
+                  const SizedBox(height: 10),
+                  _buildTextField(
+                    hint: '오후 12:00',
+                  ),
+
+                  const SizedBox(height: 25),
+
+                  // (2) 메모 입력 (이미지상 드롭다운처럼 보이나 텍스트 필드로 구현)
+                  _buildLabel('메모'),
+                  const SizedBox(height: 10),
+                  _buildTextField(
+                    hint: '메뉴를 입력해주세요',
+                    initialValue: widget.isEditMode ? '김치찌개, 현미밥, 계란찜' : null,
+                    suffixIcon:
+                    const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+                  ),
+
+                  const SizedBox(height: 25),
+
+                  // (3) 사진 업로드 영역
+                  _buildLabel('사진'),
+                  const SizedBox(height: 10),
+                  Container(
+                    width: double.infinity,
+                    height: 150,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey[300]!),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.add, size: 30, color: Colors.grey[400]),
+                        const SizedBox(height: 8),
+                        Text(
+                          '식사 사진 올리기',
+                          style: TextStyle(
+                              color: Colors.grey[500],
+                              fontWeight: FontWeight.w500),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 25),
+
+                  // (4) 식사 시간 선택 (라디오 버튼)
+                  _buildLabel('식사 시간'),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      _buildRadioOption('아침'),
+                      const SizedBox(width: 20),
+                      _buildRadioOption('점심'),
+                      const SizedBox(width: 20),
+                      _buildRadioOption('저녁'),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // 하단 버튼들
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4BECBE),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                    ),
+                    child: Text(widget.isEditMode ? '수정하기' : '기록하기',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16)),
+                  ),
+                ),
+                if (widget.isEditMode) ...[
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Color(0xFFFF6B6B)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: const Text('삭제하기',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: Color(0xFFFF6B6B))),
+                    ),
+                  ),
+                ]
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- Helper Widgets for Edit Page ---
+
+  Widget _buildLabel(String text) {
+    return Text(text,
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14));
+  }
+
+  Widget _buildTextField(
+      {String? hint, String? initialValue, Widget? suffixIcon}) {
+    return TextFormField(
+      initialValue: initialValue,
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+        suffixIcon: suffixIcon,
+        contentPadding:
+        const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey[300]!)),
+        enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey[300]!)),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF4BECBE))),
+      ),
+    );
+  }
+
+  Widget _buildRadioOption(String value) {
+    bool isSelected = _selectedMealTime == value;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedMealTime = value),
+      child: Row(
+        children: [
+          Container(
+            width: 18,
+            height: 18,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isSelected ? const Color(0xFF4BECBE) : Colors.white,
+              border: Border.all(
+                  color: isSelected
+                      ? const Color(0xFF4BECBE)
+                      : Colors.grey[300]!),
+            ),
+            child: isSelected
+                ? const Icon(Icons.check, size: 12, color: Colors.white)
+                : null,
+          ),
+          const SizedBox(width: 8),
+          Text(value, style: const TextStyle(fontSize: 14)),
         ],
       ),
     );

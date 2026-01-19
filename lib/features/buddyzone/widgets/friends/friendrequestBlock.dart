@@ -15,11 +15,11 @@ class _FriendrequestState extends State<FriendrequestBlock> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Color(0xFFF8F8F8),
+        color: Color(0xFFFBFBFB),
         borderRadius: BorderRadius.circular(10.0),
       ),
       // margin: EdgeInsets.symmetric(horizontal: 16.0),
-      padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 6.0),
+      padding: EdgeInsets.only(top: 8.0, bottom: 8.0, right: 6.0, left: 6.0),
       child: Row(
         children: [
           SizedBox(
@@ -44,7 +44,7 @@ class _FriendrequestState extends State<FriendrequestBlock> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(width: 16.0),
+                    SizedBox(width: 10.0),
                     Container(
                       // height: 17.0,
                       child: Container(
@@ -53,13 +53,13 @@ class _FriendrequestState extends State<FriendrequestBlock> {
                           horizontal: 10.0,
                         ),
                         decoration: BoxDecoration(
-                          color: Color(0xFF1AEDB1),
+                          color: Color(0xFFE9FFF9),
                           borderRadius: BorderRadius.circular(5.0),
                         ),
                         child: Text(
                           'Lv.15',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: Color(0xFF1AEDB1),
                             fontSize: 11.0,
                             fontWeight: FontWeight.w500,
                           ),
@@ -87,38 +87,67 @@ class _FriendrequestState extends State<FriendrequestBlock> {
             ),
           ),
           Container(
-            padding: EdgeInsets.only(right: 15.0),
+            padding: EdgeInsets.only(right: 5.0),
             child: Row(
               children: [
                 Container(
-                  padding: EdgeInsets.symmetric(
-                    vertical: 6.0,
-                    horizontal: 14.0,
-                  ),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(5.0),
                     color: Color(0xFF1AEDB1),
                   ),
-                  child: Center(
-                    child: Text(
-                      '수락',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12.0,
+                  child: TextButton(
+                    onPressed: () {
+                      print("수락 클릭!");
+                    },
+                    style: TextButton.styleFrom(
+                      foregroundColor: Color(0xFF669688),
+                      padding: EdgeInsets.symmetric(
+                        vertical: 6.0,
+                        horizontal: 14.0,
+                      ),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      minimumSize: Size.zero,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5.0),
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '수락',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12.0,
+                        ),
                       ),
                     ),
                   ),
                 ),
                 SizedBox(width: 5.0),
                 Container(
-                  padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(5.0),
-                    color: Color(0xDBFFFFFF),
+                    color: Colors.white,
                   ),
-                  child: Center(
-                    child: SvgPicture.asset('assets/images/common/x.svg'),
+                  child: TextButton(
+                    onPressed: () {
+                      print("x 클릭!");
+                    },
+                    style: TextButton.styleFrom(
+                      foregroundColor: Color(0xFFF65A33),
+                      padding: EdgeInsets.symmetric(
+                        vertical: 8.0,
+                        horizontal: 8.0,
+                      ),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      minimumSize: Size.zero,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5.0),
+                      ),
+                    ),
+                    child: Center(
+                      child: SvgPicture.asset('assets/images/common/x.svg'),
+                    ),
                   ),
                 ),
               ],
