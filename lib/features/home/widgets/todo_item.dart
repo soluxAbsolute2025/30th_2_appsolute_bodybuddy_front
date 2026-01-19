@@ -33,13 +33,13 @@ class TodoItem extends StatelessWidget {
             _CheckCircle(isChecked: isDone),
             const SizedBox(width: 10),
             _CategoryIcon(category: todo.category),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
             Expanded(
               child: Text(
                 todo.title,
                 style: const TextStyle(
                   fontSize: 14,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w400,
                 ),
               ),
             ),
