@@ -44,7 +44,7 @@ class _OngoingChallengeSectionState extends State<OngoingChallengeSection> {
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
           /// 탭
           Row(
