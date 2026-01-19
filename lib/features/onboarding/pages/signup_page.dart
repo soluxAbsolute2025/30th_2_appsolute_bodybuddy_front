@@ -1,6 +1,8 @@
 // 파일 위치: lib/features/onboarding/pages/signup_page.dart
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'welcome_flow_page.dart';
+import 'package:http/http.dart' as http;
+import 'login_page.dart'; // [수정] 로그인 페이지로 이동하기 위해 임포트
 
 class SignUpFormScreen extends StatefulWidget {
   const SignUpFormScreen({super.key});
@@ -10,24 +12,31 @@ class SignUpFormScreen extends StatefulWidget {
 }
 
 class _SignUpFormScreenState extends State<SignUpFormScreen> {
-  // 1. 입력 감지를 위한 컨트롤러 생성
+  // 서버 주소
+  static const String baseUrl = "http://52.79.228.227:8080";
+
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _passwordConfirmController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
 
-  // 이메일 도메인 선택 변수
   String? _selectedDomain;
-  final List<String> _domains = ['naver.com', 'gmail.com', 'daum.net', '직접 입력'];
+  final List<String> _domains = ['naver.com', 'gmail.com', 'daum.net', 'sookmyung.ac.kr'];
 
-  // 2. 버튼 활성화 상태 변수
   bool _isFormValid = false;
+  bool _isIdVerified = false;
 
   @override
   void initState() {
     super.initState();
-    // 입력값이 변경될 때마다 상태 확인
-    _usernameController.addListener(_updateFormState);
+    _usernameController.addListener(() {
+      if (_isIdVerified) {
+        setState(() {
+          _isIdVerified = false; // 아이디 수정 시 중복확인 초기화
+        });
+      }
+      _updateFormState();
+    });
     _passwordController.addListener(_updateFormState);
     _passwordConfirmController.addListener(_updateFormState);
     _emailController.addListener(_updateFormState);
@@ -35,7 +44,6 @@ class _SignUpFormScreenState extends State<SignUpFormScreen> {
 
   @override
   void dispose() {
-    // 메모리 누수 방지를 위해 컨트롤러 해제
     _usernameController.dispose();
     _passwordController.dispose();
     _passwordConfirmController.dispose();
@@ -43,19 +51,125 @@ class _SignUpFormScreenState extends State<SignUpFormScreen> {
     super.dispose();
   }
 
-  // 3. 모든 항목이 채워졌는지 확인하는 함수
   void _updateFormState() {
     setState(() {
       _isFormValid = _usernameController.text.isNotEmpty &&
           _passwordController.text.isNotEmpty &&
           _passwordConfirmController.text.isNotEmpty &&
           _emailController.text.isNotEmpty &&
-          _selectedDomain != null; // 도메인까지 선택되어야 함
+          _selectedDomain != null &&
+          _isIdVerified;
     });
+  }
+
+  // [API] 아이디 중복 확인
+  Future<void> _checkIdDuplicate() async {
+    final loginId = _usernameController.text.trim();
+
+    if (loginId.length < 4 || loginId.length > 12) {
+      _showSnackBar("아이디는 4~12자 사이여야 합니다.");
+      return;
+    }
+
+    final url = Uri.parse('$baseUrl/api/users/check-id?loginId=$loginId');
+
+    try {
+      final response = await http.get(url);
+      final dynamic decodedBody = jsonDecode(utf8.decode(response.bodyBytes));
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _isIdVerified = true;
+        });
+        _updateFormState();
+        _showSnackBar("사용 가능한 아이디입니다.");
+      } else if (response.statusCode == 400) {
+        setState(() {
+          _isIdVerified = false;
+        });
+        if (decodedBody is Map && decodedBody.containsKey('message')) {
+          _showSnackBar(decodedBody['message']);
+        } else {
+          _showSnackBar("이미 사용 중인 아이디입니다.");
+        }
+      } else {
+        _showSnackBar("오류 발생: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("🔥 [에러] 중복 확인 중 오류: $e");
+      _showSnackBar("서버 연결에 실패했습니다.");
+    }
+  }
+
+  // [API] 회원가입 요청
+  Future<void> _signUp() async {
+    if (!_isIdVerified) {
+      _showSnackBar("아이디 중복 확인을 해주세요.");
+      return;
+    }
+    if (_passwordController.text != _passwordConfirmController.text) {
+      _showSnackBar("비밀번호가 일치하지 않습니다.");
+      return;
+    }
+
+    final fullEmail = "${_emailController.text.trim()}@$_selectedDomain";
+    final url = Uri.parse('$baseUrl/api/users/signup');
+
+    final Map<String, dynamic> requestBody = {
+      "loginId": _usernameController.text.trim(),
+      "password": _passwordController.text,
+      "email": fullEmail,
+    };
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(requestBody),
+      );
+
+      final String responseBodyString = utf8.decode(response.bodyBytes);
+
+      // 성공 처리 (200 OK 또는 201 Created)
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("회원가입 완료! 로그인을 진행해주세요.")),
+        );
+
+        // [수정] 가입 성공 시 로그인 페이지로 이동 (뒤로가기 시 가입페이지 안 나오게 pushReplacement)
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginPage()),
+        );
+      } else {
+        // 실패 처리
+        String errorMessage = "회원가입에 실패했습니다.";
+        try {
+          final decoded = jsonDecode(responseBodyString);
+          if (decoded is Map && decoded.containsKey('message')) {
+            errorMessage = decoded['message'];
+          }
+        } catch (_) {}
+        _showSnackBar(errorMessage);
+      }
+    } catch (e) {
+      print("🔥 [에러] 회원가입 중 오류: $e");
+      _showSnackBar("서버 연결 중 오류가 발생했습니다.");
+    }
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    const Color pointColor = Color(0xFF00E6BD);
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -66,6 +180,30 @@ class _SignUpFormScreenState extends State<SignUpFormScreen> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24, top: 12),
+          child: SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton(
+              onPressed: _isFormValid ? _signUp : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _isFormValid ? pointColor : const Color(0xFFE0E0E0),
+                foregroundColor: _isFormValid ? Colors.white : Colors.grey,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                '가입하기',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 10),
@@ -74,41 +212,79 @@ class _SignUpFormScreenState extends State<SignUpFormScreen> {
             children: [
               const Text(
                 '계정 만들기',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black),
+                style: TextStyle(
+                    fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black),
               ),
               const SizedBox(height: 30),
 
-              // 아이디 섹션
               _buildLabel('아이디'),
               const SizedBox(height: 8),
-              _buildTextField(hint: '아이디', controller: _usernameController),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTextField(
+                      hint: '아이디',
+                      controller: _usernameController,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    height: 52,
+                    width: 100,
+                    child: ElevatedButton(
+                      onPressed: _checkIdDuplicate,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFF5F5F5),
+                        foregroundColor: Colors.black,
+                        elevation: 0,
+                        padding: EdgeInsets.zero,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          side: const BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                      ),
+                      child: const Text('중복 확인', style: TextStyle(fontSize: 12)),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 8),
-              _buildHelperText('4~12자/영문 소문자(숫자 조합 가능)'),
+              if (_isIdVerified)
+                const Text('사용 가능한 아이디입니다.',
+                    style: TextStyle(color: pointColor, fontSize: 11))
+              else
+                _buildHelperText('4~12자/영문 소문자(숫자 조합 가능)'),
 
               const SizedBox(height: 24),
 
-              // 비밀번호 섹션
               _buildLabel('비밀번호'),
               const SizedBox(height: 8),
-              _buildTextField(hint: '비밀번호', controller: _passwordController, obscureText: true),
+              _buildTextField(
+                  hint: '비밀번호',
+                  controller: _passwordController,
+                  obscureText: true),
               const SizedBox(height: 8),
-              _buildTextField(hint: '비밀번호 확인', controller: _passwordConfirmController, obscureText: true),
+              _buildTextField(
+                  hint: '비밀번호 확인',
+                  controller: _passwordConfirmController,
+                  obscureText: true),
               const SizedBox(height: 8),
               _buildHelperText('6~20자/영문 대문자, 소문자, 숫자, 특수문자 중 2가지 이상 조합'),
 
               const SizedBox(height: 24),
 
-              // 이메일 섹션
               _buildLabel('이메일'),
               const SizedBox(height: 8),
               Row(
                 children: [
                   Expanded(
-                    child: _buildTextField(hint: '이메일', controller: _emailController),
+                    child: _buildTextField(
+                        hint: '이메일', controller: _emailController),
                   ),
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Text('@', style: TextStyle(fontSize: 16, color: Colors.grey)),
+                    child: Text('@',
+                        style: TextStyle(fontSize: 16, color: Colors.grey)),
                   ),
                   Expanded(
                     child: Container(
@@ -119,21 +295,24 @@ class _SignUpFormScreenState extends State<SignUpFormScreen> {
                       ),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
-                          hint: const Text('선택', style: TextStyle(color: Colors.grey)),
+                          hint: const Text('선택',
+                              style: TextStyle(color: Colors.grey, fontSize: 13)),
                           value: _selectedDomain,
                           isExpanded: true,
-                          icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+                          icon: const Icon(Icons.keyboard_arrow_down,
+                              color: Colors.grey),
                           items: _domains.map((String value) {
                             return DropdownMenuItem<String>(
                               value: value,
-                              child: Text(value, style: const TextStyle(fontSize: 14)),
+                              child: Text(value,
+                                  style: const TextStyle(fontSize: 14)),
                             );
                           }).toList(),
                           onChanged: (newValue) {
                             setState(() {
                               _selectedDomain = newValue;
                             });
-                            _updateFormState(); // 도메인 선택 시에도 검사 수행
+                            _updateFormState();
                           },
                         ),
                       ),
@@ -141,43 +320,7 @@ class _SignUpFormScreenState extends State<SignUpFormScreen> {
                   ),
                 ],
               ),
-
-              const SizedBox(height: 60),
-
-              // 4. 가입하기 버튼 (상태에 따라 색상 변경)
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    // _isFormValid가 true면 초록색, 아니면 회색
-                    backgroundColor: _isFormValid ? Colors.green : const Color(0xFFE0E0E0),
-                    // 텍스트 색상도 활성화 시 흰색, 아니면 진한 회색
-                    foregroundColor: _isFormValid ? Colors.white : const Color(0xFF9E9E9E),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  // 비활성 상태일 때 버튼 클릭을 막으려면 onPressed에 null을 주면 되지만,
-                  // 색상 제어를 위해 클릭 이벤트는 두되 동작만 안 하게 처리할 수도 있습니다.
-                  // 여기서는 디자인 요구사항(색상 변경)에 맞춰 null 처리합니다.
-                  onPressed: _isFormValid
-                      ? () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const OnboardingFlowScreen()),
-                    );
-                  }
-                      : null, // null이면 버튼이 기본 disabled 스타일을 따르려 하므로, 위 styleFrom에서 disabledBackgroundColor 등을 설정하거나
-                  // 단순히 조건문으로 처리하는 게 깔끔합니다. 위 style 코드가 우선 적용되도록 아래처럼 수정 가능합니다.
-                  child: const Text(
-                    '가입하기',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 40),
             ],
           ),
         ),
@@ -188,25 +331,26 @@ class _SignUpFormScreenState extends State<SignUpFormScreen> {
   Widget _buildLabel(String text) {
     return Text(
       text,
-      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black),
+      style: const TextStyle(
+          fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black),
     );
   }
 
-  // Controller를 인자로 받도록 수정
   Widget _buildTextField({
     required String hint,
     required TextEditingController controller,
     bool obscureText = false,
   }) {
     return TextFormField(
-      controller: controller, // 컨트롤러 연결
+      controller: controller,
       obscureText: obscureText,
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(color: Color(0xFF9E9E9E), fontSize: 14),
         filled: true,
         fillColor: const Color(0xFFF5F5F5),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding:
+        const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide.none,

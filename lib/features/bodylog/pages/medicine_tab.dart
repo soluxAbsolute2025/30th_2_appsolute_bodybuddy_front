@@ -11,27 +11,66 @@ class MedicineTab extends StatefulWidget {
 }
 
 class _MedicineTabState extends State<MedicineTab> {
-  // 예제용 데이터 리스트
-  final List<Map<String, dynamic>> _medicines = [
-    {
-      "name": "종합 비타민",
-      "frequency": "1일 1회",
-      "time": "식후",
-      "isTaken": true,
-    },
-    {
-      "name": "오메가3",
-      "frequency": "1일 2회",
-      "time": "식후",
-      "isTaken": false,
-    },
-    {
-      "name": "프로바이오틱스",
-      "frequency": "1일 1회",
-      "time": "공복",
-      "isTaken": false,
-    },
-  ];
+  // 날짜 관련 상태 변수
+  DateTime _selectedDate = DateTime.now(); // 현재 선택된 날짜 (기본: 오늘)
+  List<DateTime> _weekDays = []; // 이번 주 7일 날짜 리스트
+
+  // 약 데이터 리스트 (API에서 받아온 데이터라고 가정)
+  List<Map<String, dynamic>> _medicines = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _generateWeekDays(); // 1. 이번 주 날짜 생성
+    _fetchMedicineData(_selectedDate); // 2. 오늘 날짜 데이터 로드
+  }
+
+  // [기능 1] 이번 주 날짜 7개 자동 생성 (월요일 ~ 일요일)
+  void _generateWeekDays() {
+    DateTime now = DateTime.now();
+    // 오늘이 무슨 요일인지 (1:월 ~ 7:일)
+    int currentWeekday = now.weekday;
+    // 이번 주 월요일 구하기
+    DateTime thisMonday = now.subtract(Duration(days: currentWeekday - 1));
+
+    // 월요일부터 7일치 날짜 리스트 생성
+    _weekDays = List.generate(7, (index) {
+      return thisMonday.add(Duration(days: index));
+    });
+  }
+
+  // [기능 2] API 조회 시뮬레이션 (날짜 변경 시 호출)
+  void _fetchMedicineData(DateTime date) {
+    // 💡 실제 API 연동 시:
+    // String dateStr = "${date.year}-${date.month.toString().padLeft(2,'0')}-${date.day.toString().padLeft(2,'0')}";
+    // var response = await http.get(Uri.parse('.../api/medicines?date=$dateStr'));
+
+    print("API 조회 요청 날짜: ${date.toString().split(' ')[0]}");
+
+    setState(() {
+      // 날짜에 따라 다른 데이터가 오는 척 시뮬레이션
+      if (date.day % 2 == 0) {
+        // 짝수 날짜 데이터
+        _medicines = [
+          {"name": "종합 비타민", "frequency": "1일 1회", "time": "식후", "isTaken": true},
+          {"name": "오메가3", "frequency": "1일 2회", "time": "식후", "isTaken": false},
+        ];
+      } else {
+        // 홀수 날짜 데이터
+        _medicines = [
+          {"name": "프로바이오틱스", "frequency": "1일 1회", "time": "공복", "isTaken": false},
+          {"name": "루테인", "frequency": "1일 1회", "time": "취침 전", "isTaken": false},
+          {"name": "비타민 D", "frequency": "1일 1회", "time": "점심", "isTaken": false},
+        ];
+      }
+    });
+  }
+
+  // 요일 숫자를 한글로 변환하는 헬퍼 함수
+  String _getWeekdayName(int weekday) {
+    const days = ['월', '화', '수', '목', '금', '토', '일'];
+    return days[weekday - 1];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,19 +79,44 @@ class _MedicineTabState extends State<MedicineTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // (1) 주간 달력 (상단)
           const SizedBox(height: 10),
+
+          // (1) 주간 달력 (동적 생성)
           _buildWeeklyCalendar(),
+
           const SizedBox(height: 30),
 
-          // (2) 약 & 영양제 리스트 헤더
-          const Text('약 & 영양제', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          // (2) 날짜 헤더 및 새로고침
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '${_selectedDate.month}월 ${_selectedDate.day}일 약 & 영양제',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              // 데이터가 제대로 바뀌는지 확인용 새로고침 버튼
+              InkWell(
+                onTap: () => _fetchMedicineData(_selectedDate),
+                child: const Padding(
+                  padding: EdgeInsets.all(4.0),
+                  child: Icon(Icons.refresh, size: 20, color: Colors.grey),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 15),
 
-          // (3) 약 리스트 아이템들
-          ..._medicines.map((med) => _buildMedicineCard(med)),
+          // (3) 약 리스트 아이템들 (데이터가 없으면 안내 문구)
+          if (_medicines.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 40),
+              child: Center(child: Text("복용할 약이 없습니다.", style: TextStyle(color: Colors.grey))),
+            )
+          else
+            ..._medicines.map((med) => _buildMedicineCard(med)),
 
           // (4) 추가하기 버튼 (맨 아래)
+          const SizedBox(height: 20),
           GestureDetector(
             onTap: () {
               Navigator.push(
@@ -86,38 +150,61 @@ class _MedicineTabState extends State<MedicineTab> {
     );
   }
 
-  // 주간 달력 위젯
+  // ⭐️ 동적 주간 달력 위젯
   Widget _buildWeeklyCalendar() {
-    final days = ['25\n월', '26\n화', '27\n수', '28\n목', '29\n금', '30\n토', '31\n일'];
-    int selectedIndex = 5; // '30 토'를 선택된 상태로 가정
-
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: List.generate(days.length, (index) {
-        bool isSelected = index == selectedIndex;
-        return Container(
-          width: 45,
-          height: 70,
-          decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF4BECBE) : Colors.grey[50],
-            borderRadius: BorderRadius.circular(25),
-            boxShadow: isSelected
-                ? [BoxShadow(color: const Color(0xFF4BECBE).withOpacity(0.4), blurRadius: 8, offset: const Offset(0, 4))]
-                : [],
-          ),
-          child: Center(
-            child: Text(
-              days[index],
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: isSelected ? Colors.white : Colors.grey,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                height: 1.5,
-              ),
+      children: _weekDays.map((date) {
+        // 현재 렌더링 중인 날짜가 선택된 날짜와 같은지 비교
+        bool isSelected = date.year == _selectedDate.year &&
+            date.month == _selectedDate.month &&
+            date.day == _selectedDate.day;
+
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              _selectedDate = date; // 선택된 날짜 변경
+            });
+            _fetchMedicineData(date); // 해당 날짜 데이터 API 요청
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200), // 부드러운 애니메이션
+            width: 45,
+            height: isSelected ? 80 : 70, // 선택되면 살짝 길어짐
+            decoration: BoxDecoration(
+              color: isSelected ? const Color(0xFF4BECBE) : const Color(0xFFF7F8F9),
+              borderRadius: BorderRadius.circular(25),
+              boxShadow: isSelected
+                  ? [BoxShadow(color: const Color(0xFF4BECBE).withOpacity(0.4), blurRadius: 8, offset: const Offset(0, 4))]
+                  : [],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // 날짜 (일)
+                Text(
+                  '${date.day}',
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : Colors.grey[400],
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                // 요일 (한글)
+                Text(
+                  _getWeekdayName(date.weekday),
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : Colors.grey[400],
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
             ),
           ),
         );
-      }),
+      }).toList(),
     );
   }
 
@@ -125,7 +212,6 @@ class _MedicineTabState extends State<MedicineTab> {
   Widget _buildMedicineCard(Map<String, dynamic> med) {
     return GestureDetector(
       onTap: () {
-        // 카드 클릭 시 수정 페이지로 이동
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => MedicineEditPage(initialName: med['name'])),
@@ -181,6 +267,7 @@ class _MedicineTabState extends State<MedicineTab> {
               onTap: () {
                 setState(() {
                   med['isTaken'] = !med['isTaken'];
+                  // TODO: 여기서 API로 복용 완료 상태 전송
                 });
               },
               child: Container(
@@ -190,7 +277,7 @@ class _MedicineTabState extends State<MedicineTab> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  med['isTaken'] ? '복용완료' : '복용하기',
+                  med['isTaken'] ? '취소' : '복용',
                   style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
                 ),
               ),
@@ -232,7 +319,7 @@ class _MedicineAddPageState extends State<MedicineAddPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: _buildAppBar('약 & 영양제 추가', context), // 여기서 _buildAppBar 호출
+      appBar: _buildAppBar('약 & 영양제 추가', context),
       body: Column(
         children: [
           Expanded(
@@ -292,6 +379,7 @@ class _MedicineAddPageState extends State<MedicineAddPage> {
     );
   }
 
+  // (Helper 위젯들은 기존과 동일, 생략 없이 포함)
   Widget _buildLabel(String text) => Text(text, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14));
 
   InputDecoration _inputDecoration(String hint) {
@@ -379,7 +467,7 @@ class _MedicineEditPageState extends State<MedicineEditPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: _buildAppBar('약 & 영양제 수정', context), // 여기서도 _buildAppBar 호출
+      appBar: _buildAppBar('약 & 영양제 수정', context),
       body: Column(
         children: [
           Expanded(
@@ -456,7 +544,7 @@ class _MedicineEditPageState extends State<MedicineEditPage> {
     );
   }
 
-  // 내부 위젯들 (AddPage와 동일한 로직)
+  // 내부 위젯들 (AddPage와 동일한 로직 복사)
   Widget _buildLabel(String text) => Text(text, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14));
 
   InputDecoration _inputDecoration(String hint) {
@@ -513,8 +601,7 @@ class _MedicineEditPageState extends State<MedicineEditPage> {
 }
 
 // -------------------------------------------------------------------------
-// [핵심] 공통으로 사용하는 AppBar 함수
-// 이 함수가 클래스 밖에 있어야(Top-level) 양쪽 페이지에서 모두 부를 수 있습니다.
+// [공통] AppBar 함수
 // -------------------------------------------------------------------------
 AppBar _buildAppBar(String title, BuildContext context) {
   return AppBar(
