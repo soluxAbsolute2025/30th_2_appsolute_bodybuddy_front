@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../../../../pages/main_page.dart';
 import 'login_page.dart';
+import 'start_page.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -27,9 +28,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
 
-    // 화면 크기에 따른 동적 사이즈 조절 (Code A의 디자인 유지)
+    // 화면 크기에 따른 동적 사이즈 조절
     final double initialIconSize = size.width * 0.6; // 초기 캐릭터 크기
-    final double finalIconSize = size.width * 0.25; // 줄어든 캐릭터 크기
+    final double finalIconSize = size.width * 0.20; // 줄어든 캐릭터 크기
+
+    // 로고와 동일한 민트색 포인트 컬러
+    const Color pointColor = Color(0xFF00E6BD);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -38,14 +42,22 @@ class _OnboardingPageState extends State<OnboardingPage> {
         children: [
 
           // ---------------------------------------------------------
-          // 1. 캐릭터 아이콘 (Code A의 애니메이션 유지)
+          // 1. 캐릭터 아이콘
           // ---------------------------------------------------------
           AnimatedPositioned(
             duration: const Duration(milliseconds: 1000),
             curve: Curves.elasticOut,
-            top: _isConverted ? size.height * 0.18 : size.height * 0.35,
-            left: 0,
-            right: 0,
+            // [수정] 초기 상태일 때(false) 화면 정중앙(세로) 위치 계산
+            // (전체 높이 - 아이콘 크기) / 2 = 정중앙 Top 좌표
+            top: _isConverted
+                ? size.height * 0.22
+                : (size.height - initialIconSize) / 2,
+
+            // [수정] 초기 상태일 때(false) 화면 정중앙(가로) 위치 계산
+            left: _isConverted
+                ? 40
+                : (size.width - initialIconSize) / 2,
+
             child: GestureDetector(
               onTap: _onCharaterTap,
               child: AnimatedContainer(
@@ -56,17 +68,20 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 child: Image.asset(
                   'assets/images/common/BodyBuddy_icon.png',
                   fit: BoxFit.contain,
+                  // [수정] 이미지가 컨테이너 안에서 한쪽으로 쏠리지 않게 center로 변경
+                  alignment: Alignment.center,
                 ),
               ),
             ),
           ),
 
           // ---------------------------------------------------------
-          // 2. 터치 유도 텍스트 (초기 화면에만 보임)
+          // 2. 터치 유도 텍스트 (초기 화면)
           // ---------------------------------------------------------
           AnimatedPositioned(
             duration: const Duration(milliseconds: 300),
-            top: size.height * 0.65,
+            // 캐릭터 밑에 적당히 위치하도록 조정 (화면의 75% 지점)
+            top: size.height * 0.75,
             left: 0,
             right: 0,
             child: AnimatedOpacity(
@@ -83,42 +98,40 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     ),
                   ),
                   SizedBox(height: 10),
-                  Icon(Icons.touch_app, color: Color(0xFF00E676)),
+                  Icon(Icons.touch_app, color: pointColor),
                 ],
               ),
             ),
           ),
 
           // ---------------------------------------------------------
-          // 3. BodyBuddy 로고 텍스트 (캐릭터 바로 아래)
+          // 3. BodyBuddy 로고 텍스트 (변환 후 등장)
           // ---------------------------------------------------------
           AnimatedPositioned(
             duration: const Duration(milliseconds: 800),
             curve: Curves.easeOutBack,
             top: size.height * 0.33,
-            left: 0,
-            right: 0,
+            left: 40,
             child: AnimatedOpacity(
               duration: const Duration(milliseconds: 500),
               opacity: _isConverted ? 1.0 : 0.0,
-              child: Center(
-                child: Image.asset(
-                  'assets/images/common/BodyBuddy_logo.png',
-                  width: 140,
-                  fit: BoxFit.contain,
-                ),
+              child: Image.asset(
+                'assets/images/common/BodyBuddy_logo.png',
+                width: 180,
+                fit: BoxFit.contain,
+                alignment: Alignment.centerLeft,
               ),
             ),
           ),
 
           // ---------------------------------------------------------
-          // 4. 슬로건 이미지 (Code A 디자인 유지)
+          // 4. 슬로건 이미지 (변환 후 등장)
           // ---------------------------------------------------------
           AnimatedPositioned(
             duration: const Duration(milliseconds: 800),
             curve: Curves.easeOut,
-            top: size.height * 0.45,
-            left: 20,
+            top: size.height * 0.41,
+            left: 40,
             right: 20,
             child: AnimatedOpacity(
               duration: const Duration(milliseconds: 600),
@@ -128,8 +141,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 children: [
                   Image.asset(
                     'assets/images/common/onboarding_logo.png',
-                    height: 40,
+                    height: 80,
                     fit: BoxFit.contain,
+                    alignment: Alignment.centerLeft,
                   ),
                 ],
               ),
@@ -137,7 +151,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
           ),
 
           // ---------------------------------------------------------
-          // 5. 하단 버튼 영역 (기능 및 클래스명 Code B 적용)
+          // 5. 하단 버튼 영역 (변환 후 등장)
           // ---------------------------------------------------------
           AnimatedPositioned(
             duration: const Duration(milliseconds: 600),
@@ -148,7 +162,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // [시작하기 버튼] -> LoginMethodScreen으로 이동 (Code B 로직)
+                // [시작하기 버튼] -> StartPage로 이동
                 SizedBox(
                   height: 56,
                   child: ElevatedButton(
@@ -156,11 +170,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (_) => const LoginMethodScreen()),
+                            builder: (_) => const StartPage()),
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF00E676),
+                      backgroundColor: pointColor,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12)),
                       elevation: 0,
@@ -176,13 +190,13 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 ),
                 const SizedBox(height: 16),
 
-                // [로그인 텍스트] -> MainPage로 이동 (Code B 로직)
+                // [로그인 텍스트] -> LoginPage로 이동
                 GestureDetector(
                   onTap: () {
-                    Navigator.pushAndRemoveUntil(
+                    // [수정] MainPage 대신 LoginPage로 이동하도록 변경
+                    Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const MainPage()),
-                          (route) => false,
+                      MaterialPageRoute(builder: (_) => const LoginPage()),
                     );
                   },
                   child: RichText(
@@ -193,7 +207,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                         TextSpan(
                           text: "로그인",
                           style: TextStyle(
-                              color: Color(0xFF00E676),
+                              color: pointColor,
                               fontWeight: FontWeight.bold),
                         ),
                       ],
