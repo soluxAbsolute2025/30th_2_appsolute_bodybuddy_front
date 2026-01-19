@@ -1,79 +1,160 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import '../data/dummy_body_status.dart';
+import 'package:dio/dio.dart';
 import 'today_body_components.dart';
 
-class TodayBodyCard extends StatelessWidget {
+import '../api/body_api.dart';
+import '../models/body_today_model.dart';
+
+class TodayBodyCard extends StatefulWidget {
   const TodayBodyCard({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final body = dummyBodyStatus;
+  State<TodayBodyCard> createState() => _TodayBodyCardState();
+}
 
-    final completedCount = [
-      body.water.progress,
-      body.meal.progress,
-      body.sleep.progress,
-    ].where((p) => p >= 1.0).length;
+class _TodayBodyCardState extends State<TodayBodyCard> {
+  late Future<BodyToday> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = BodyApi().fetchTodayBody(); 
+  }
+
+  double _progress(int current, int goal) {
+    if (goal <= 0) return 0.0;
+    return (current / goal).clamp(0.0, 1.0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<BodyToday>(
+      future: _future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return _loadingCard();
+        }
+
+        if (snapshot.hasError || !snapshot.hasData) {
+          return _errorCard(snapshot.error);
+        }
+
+        final body = snapshot.data!;
+
+        final waterP = _progress(body.water.current, body.water.goal);
+        final mealP = _progress(body.meal.current, body.meal.goal);
+        final sleepP = _progress(body.sleep.current, body.sleep.goal);
+
+        final completedCount = [waterP, mealP, sleepP].where((p) => p >= 1.0).length;
+
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: const Color(0xFFD8D8D8),
+              width: 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              /// 타이틀
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    '오늘의 바디',
+                    style: TextStyle(
+                      fontFamily: 'Pretendard',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  StatusDots(completedCount: completedCount),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              MetricRow(
+                iconPath: 'assets/home/water.svg',
+                label: '수분',
+                unitText: '${body.water.current} / ${body.water.goal} ml',
+                progress: waterP,
+              ),
+              const SizedBox(height: 10),
+
+              MetricRow(
+                iconPath: 'assets/home/meal.svg',
+                label: '식단',
+                unitText: '${body.meal.current} / ${body.meal.goal} kcal',
+                progress: mealP,
+              ),
+              const SizedBox(height: 10),
+
+              MetricRow(
+                iconPath: 'assets/home/sleep.svg',
+                label: '수면',
+                unitText: '${body.sleep.current} / ${body.sleep.goal}',
+                progress: sleepP,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _loadingCard() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFD8D8D8), width: 1),
+      ),
+      child: const SizedBox(
+        height: 110,
+        child: Center(child: CircularProgressIndicator()),
+      ),
+    );
+  }
+
+  Widget _errorCard(Object? error) {
+    String msg = '오늘의 바디 정보를 불러오지 못했어요';
+
+    if (error is DioException) {
+      final status = error.response?.statusCode;
+
+      if (status == 404 || status == 204) {
+        msg = '오늘의 바디 정보가 없어요';
+      }
+    }
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: const Color(0xFFD8D8D8),
-          width: 1,
-        ),
+        border: Border.all(color: const Color(0xFFD8D8D8), width: 1),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          /// 타이틀
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                '오늘의 바디',
-                style: TextStyle(
-                  fontFamily: 'Pretendard',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              StatusDots(
-                completedCount: completedCount, 
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          MetricRow(
-            iconPath: 'assets/home/water.svg',
-            label: '수분',
-            unitText: '${body.water.current} / ${body.water.goal} ml',
-            progress: body.water.progress,
-          ),
-
-          const SizedBox(height: 10),
-
-          MetricRow(
-            iconPath: 'assets/home/meal.svg',
-            label: '식단',
-            unitText: '${body.meal.current} / ${body.meal.goal} kcal',
-            progress: body.meal.progress,
-          ),
-
-          const SizedBox(height: 10),
-
-          MetricRow(
-            iconPath: 'assets/home/sleep.svg',
-            label: '수면',
-            unitText: '${body.sleep.current} / ${body.sleep.goal}',
-            progress: body.sleep.progress,
+          Expanded(child: Text(msg)),
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _future = BodyApi().fetchTodayBody();
+              });
+            },
+            child: const Text('재시도'),
           ),
         ],
       ),
