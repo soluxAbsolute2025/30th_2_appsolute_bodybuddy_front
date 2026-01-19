@@ -2,13 +2,8 @@
     <application
         android:label="BodyBuddy"
         android:name="${applicationName}"
-<<<<<<< HEAD
-        android:icon="@mipmap/ic_launcher"
-        android:usesCleartextTraffic="true">
-=======
         android:icon="@mipmap/ic_launcher">
         android:usesCleartextTraffic="true"
->>>>>>> feature/onboarding
         <activity
             android:name=".MainActivity"
             android:exported="true"
