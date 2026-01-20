@@ -18,7 +18,7 @@ class _TodayBodyCardState extends State<TodayBodyCard> {
   @override
   void initState() {
     super.initState();
-    _future = BodyApi().fetchTodayBody(); 
+    _future = BodyApi().fetchTodayBody();
   }
 
   double _progress(int current, int goal) {
@@ -45,7 +45,11 @@ class _TodayBodyCardState extends State<TodayBodyCard> {
         final mealP = _progress(body.meal.current, body.meal.goal);
         final sleepP = _progress(body.sleep.current, body.sleep.goal);
 
-        final completedCount = [waterP, mealP, sleepP].where((p) => p >= 1.0).length;
+        final completedCount = [
+          waterP,
+          mealP,
+          sleepP,
+        ].where((p) => p >= 1.0).length;
 
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -54,10 +58,7 @@ class _TodayBodyCardState extends State<TodayBodyCard> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: const Color(0xFFD8D8D8),
-              width: 1,
-            ),
+            border: Border.all(color: const Color(0xFFD8D8D8), width: 1),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,7 +91,7 @@ class _TodayBodyCardState extends State<TodayBodyCard> {
               MetricRow(
                 iconPath: 'assets/home/meal.svg',
                 label: '식단',
-                unitText: '${body.meal.current} / ${body.meal.goal} kcal',
+                unitText: '${body.meal.current} / ${body.meal.goal} 회',
                 progress: mealP,
               ),
               const SizedBox(height: 10),
@@ -98,7 +99,7 @@ class _TodayBodyCardState extends State<TodayBodyCard> {
               MetricRow(
                 iconPath: 'assets/home/sleep.svg',
                 label: '수면',
-                unitText: '${body.sleep.current} / ${body.sleep.goal}',
+                unitText: '${body.sleep.current} / ${body.sleep.goal} 시간',
                 progress: sleepP,
               ),
             ],

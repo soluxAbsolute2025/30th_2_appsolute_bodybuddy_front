@@ -7,7 +7,7 @@ class BodyApi {
 
   // GET /api/body/today
   Future<BodyToday> fetchTodayBody() async {
-    final res = await _dio.get('/api/body/today');
+    final res = await _dio.get('/api/home');
 
     return BodyToday.fromJson(
       res.data as Map<String, dynamic>,

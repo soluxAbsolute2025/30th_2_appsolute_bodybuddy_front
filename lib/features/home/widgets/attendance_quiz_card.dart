@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/attendance_api.dart';
 import '../models/attendance_question_model.dart';
@@ -12,45 +14,152 @@ class AttendanceQuizCard extends StatefulWidget {
 }
 
 class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
-  late Future<AttendanceQuestion> _future;
+  late Future<AttendanceQuestion?> _future;
+
   int? selectedOptionId;
   bool isSubmitting = false;
   bool isAnswered = false;
 
+  static const _kAnsweredDate = 'attendance_quiz_answered_date';
+  static const _kSelectedOption = 'attendance_quiz_selected_option';
+  static const _kQuizCache = 'attendance_quiz_cache_json';
+
   @override
   void initState() {
     super.initState();
-    _future = AttendanceApi().fetchQuestion();
+    _future = _init();
   }
 
-  Future<void> _submit(AttendanceQuestion quiz) async {
-    if (isSubmitting || isAnswered) return;
-    if (selectedOptionId == null) return;
+  String _todayKey() {
+    final now = DateTime.now();
+    final y = now.year.toString().padLeft(4, '0');
+    final m = now.month.toString().padLeft(2, '0');
+    final d = now.day.toString().padLeft(2, '0');
+    return '$y-$m-$d';
+  }
 
-    setState(() => isSubmitting = true);
+  AttendanceQuestion? _decodeQuiz(String? raw) {
+    if (raw == null) return null;
+    try {
+      final map = jsonDecode(raw) as Map<String, dynamic>;
+      return AttendanceQuestion.fromJson(map);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _saveQuizCache(SharedPreferences prefs, AttendanceQuestion quiz) async {
+    await prefs.setString(_kQuizCache, jsonEncode(quiz.toJson()));
+  }
+
+  Future<void> _clearIfNewDay(SharedPreferences prefs) async {
+    final savedDate = prefs.getString(_kAnsweredDate);
+    final today = _todayKey();
+
+    if (savedDate != null && savedDate != today) {
+      // ✅ 날짜 바뀐 경우에만 초기화
+      await prefs.remove(_kAnsweredDate);
+      await prefs.remove(_kSelectedOption);
+      await prefs.remove(_kQuizCache);
+    }
+  }
+
+  Future<AttendanceQuestion?> _init() async {
+    final prefs = await SharedPreferences.getInstance();
+    await _clearIfNewDay(prefs);
+
+    final today = _todayKey();
+    final savedDate = prefs.getString(_kAnsweredDate);
+    final savedOption = prefs.getInt(_kSelectedOption);
+    final cachedQuiz = _decodeQuiz(prefs.getString(_kQuizCache));
+
+    // ✅ 오늘 이미 풀었으면: 캐시 퀴즈로 UI 그대로 + 선택 유지
+    if (savedDate == today) {
+      setState(() {
+        isAnswered = true;
+        selectedOptionId = savedOption;
+      });
+
+      // 캐시가 있으면 그대로 렌더
+      if (cachedQuiz != null) return cachedQuiz;
+
+      // ✅ (중요) 캐시가 없으면: 서버에서 받아서 캐시 채워놓기 시도
+      // 서버가 A002면 null 올 수 있는데, 그럼 어쩔 수 없이 fallback UI로 감
+      final q = await AttendanceApi().fetchQuestion();
+      if (q != null) {
+        await _saveQuizCache(prefs, q);
+        return q;
+      }
+      return null;
+    }
+
+    // ✅ 오늘 아직 안 풀었으면: 서버에서 가져오고 캐시 저장
+    setState(() {
+      isAnswered = false;
+      selectedOptionId = null;
+    });
+
+    final quiz = await AttendanceApi().fetchQuestion();
+    if (quiz != null) {
+      await _saveQuizCache(prefs, quiz);
+    }
+    return quiz;
+  }
+
+  void _showComeTomorrowModal() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('이미 참여했어요'),
+        content: const Text('오늘은 이미 퀴즈를 완료했어요. 내일 다시 참여할 수 있어요!'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('확인'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _submitOnTap({
+    required AttendanceQuestion quiz,
+    required int optionId,
+  }) async {
+    if (isSubmitting) return;
+
+    // ✅ 이미 푼 상태면: 선택 유지 + 모달만
+    if (isAnswered) {
+      _showComeTomorrowModal();
+      return;
+    }
+
+    setState(() {
+      isSubmitting = true;
+      selectedOptionId = optionId;
+    });
 
     try {
       final AttendanceAnswerResult result = await AttendanceApi().submitAnswer(
         questionId: quiz.questionId,
-        optionId: selectedOptionId!,
+        optionId: optionId,
       );
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_kAnsweredDate, _todayKey());
+      await prefs.setInt(_kSelectedOption, optionId);
+      await _saveQuizCache(prefs, quiz); // ✅ 제출 성공 시에도 캐시 확실히 저장
+
+      if (!mounted) return;
 
       setState(() {
         isAnswered = true;
       });
 
-      if (!mounted) return;
-
-      // ✅ 여기 모달/오버레이 네 기존 UI로 바꿔 끼우면 됨
       showDialog(
         context: context,
         builder: (_) => AlertDialog(
           title: Text(result.correct ? '정답이에요 🎉' : '틀렸어요 😢'),
-          content: Text(
-            result.correct
-                ? '+${result.earnedPoint} XP 획득!'
-                : '획득 XP: ${result.earnedPoint}',
-          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -61,6 +170,11 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
       );
     } catch (e) {
       if (!mounted) return;
+
+      setState(() {
+        isAnswered = false;
+      });
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('제출 실패: $e')),
       );
@@ -71,17 +185,22 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<AttendanceQuestion>(
+    return FutureBuilder<AttendanceQuestion?>(
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return _loadingCard();
         }
-        if (snapshot.hasError || !snapshot.hasData) {
+        if (snapshot.hasError) {
           return _errorCard();
         }
 
-        final quiz = snapshot.data!;
+        final quiz = snapshot.data;
+
+        // ✅ 캐시도 없고 서버도 null(A002)일 때만 어쩔 수 없이 안내 카드
+        if (quiz == null) {
+          return _fallbackDoneCard();
+        }
 
         return Container(
           padding: const EdgeInsets.all(16),
@@ -112,34 +231,6 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
                       ),
                     ),
                   ),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFFFFFBBE),
-                          Color(0xFFE8FFF9),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(5),
-                      border: Border.all(
-                        color: const Color(0xFF1AEDB1),
-                        width: 1,
-                      ),
-                    ),
-                    child: Text(
-                      '+ ${quiz.rewardPoint} XP',
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF1AEDB1),
-                        height: 1.2,
-                      ),
-                    ),
-                  ),
                 ],
               ),
               const SizedBox(height: 10),
@@ -151,25 +242,16 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
                 final isLast = index == quiz.options.length - 1;
 
                 return GestureDetector(
-                  onTap: (isAnswered || isSubmitting)
-                      ? null
-                      : () => setState(() {
-                            selectedOptionId = option.id;
-                          }),
+                  onTap: () => _submitOnTap(quiz: quiz, optionId: option.id),
                   child: Container(
                     width: double.infinity,
                     margin: EdgeInsets.only(bottom: isLast ? 0 : 8),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
                       color: isSelected ? const Color(0xFFE9FFF9) : Colors.white,
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(
-                        color: isSelected
-                            ? const Color(0xFF21EAB0)
-                            : const Color(0xFFD8D8D8),
+                        color: isSelected ? const Color(0xFF21EAB0) : const Color(0xFFD8D8D8),
                         width: 0.7,
                       ),
                     ),
@@ -178,41 +260,19 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w400,
-                        color:
-                            isSelected ? const Color(0xFF18D9A2) : Colors.black,
+                        color: isSelected ? const Color(0xFF18D9A2) : Colors.black,
                       ),
                     ),
                   ),
                 );
               }),
 
-              const SizedBox(height: 12),
-
-              SizedBox(
-                width: double.infinity,
-                height: 36,
-                child: ElevatedButton(
-                  onPressed: (selectedOptionId == null || isSubmitting || isAnswered)
-                      ? null
-                      : () => _submit(quiz),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1AEDB1),
-                    disabledBackgroundColor: const Color(0xFFBFEFE3),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    isSubmitting
-                        ? '제출 중...'
-                        : (isAnswered ? '제출 완료' : '제출하기'),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
+              const SizedBox(height: 10),
+              Text(
+                isAnswered ? '오늘은 이미 퀴즈를 완료했어요.' : '보기를 누르면 바로 제출돼요.',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFF7D7C7C),
                 ),
               ),
             ],
@@ -222,13 +282,21 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
     );
   }
 
+  Widget _fallbackDoneCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+      child: const Text(
+        '오늘은 이미 참여했어요. 내일 다시 할 수 있어요!',
+        style: TextStyle(fontSize: 12, color: Color(0xFF7D7C7C)),
+      ),
+    );
+  }
+
   Widget _loadingCard() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
       child: const SizedBox(
         height: 80,
         child: Center(child: CircularProgressIndicator()),
@@ -239,19 +307,12 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
   Widget _errorCard() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
       child: Row(
         children: [
           const Expanded(child: Text('퀴즈를 불러오지 못했어요.')),
           TextButton(
-            onPressed: () {
-              setState(() {
-                _future = AttendanceApi().fetchQuestion();
-              });
-            },
+            onPressed: () => setState(() => _future = _init()),
             child: const Text('재시도'),
           ),
         ],
