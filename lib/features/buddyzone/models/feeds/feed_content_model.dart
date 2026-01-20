@@ -63,7 +63,7 @@ class FeedPost {
   final DateTime updatedAt;
   final List<String> hashtags;
   List<FeedComment> comments;
-  int? commentCount;
+  int commentCount;
   bool liked;
   final bool edited;
 

@@ -5,18 +5,18 @@ import '../../models/feeds/feed_content_model.dart';
 
 class FeedCommentWidget extends StatefulWidget {
   final FeedComment comment;
-  final String profileName;
-  final int profileTime;
-  final int profileLevel;
-  final String text;
+  // final String profileName;
+  // final int profileTime;
+  // final int profileLevel;
+  // final String text;
 
   const FeedCommentWidget({
     super.key,
     required this.comment,
-    this.profileName = '익명',
-    this.profileTime = 30,
-    this.profileLevel = 15,
-    this.text = '열심히 운동하시는 모습 너무 멋있습니다~^^',
+    // this.profileName = '익명',
+    // this.profileTime = 30,
+    // this.profileLevel = 15,
+    // this.text = '열심히 운동하시는 모습 너무 멋있습니다~^^',
   });
 
   @override
@@ -46,7 +46,7 @@ class _FeedCommentWidgetState extends State<FeedCommentWidget> {
                   Row(
                     children: [
                       Text(
-                        widget.profileName,
+                        widget.comment.writerNickname,
                         style: TextStyle(
                           fontSize: 14.0,
                           fontWeight: FontWeight.bold,
@@ -65,7 +65,7 @@ class _FeedCommentWidgetState extends State<FeedCommentWidget> {
                             borderRadius: BorderRadius.circular(5.0),
                           ),
                           child: Text(
-                            'Lv.${widget.profileLevel}',
+                            'Lv.${widget.comment.id}',
                             style: TextStyle(
                               color: Color(0xFF1AEDB1),
                               fontSize: 11.0,
@@ -81,7 +81,7 @@ class _FeedCommentWidgetState extends State<FeedCommentWidget> {
                     alignment: Alignment.centerLeft,
                     child: Text(
                       textAlign: TextAlign.left,
-                      '${widget.profileTime}분 전',
+                      '${widget.comment.createdAt.hour}분 전',
                       style: TextStyle(color: Colors.grey[600], fontSize: 14.0),
                     ),
                   ),
@@ -93,7 +93,7 @@ class _FeedCommentWidgetState extends State<FeedCommentWidget> {
         Container(
           padding: EdgeInsets.only(top: 6.0, left: 53.0),
           alignment: Alignment.centerLeft,
-          child: Text('${widget.text} ', style: TextStyle()),
+          child: Text('${widget.comment.content} ', style: TextStyle()),
         ),
         SizedBox(height: 30.0),
       ],

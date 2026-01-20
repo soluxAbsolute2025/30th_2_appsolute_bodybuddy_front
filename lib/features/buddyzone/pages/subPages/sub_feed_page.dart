@@ -10,11 +10,13 @@ import '../../../../common/widgets/sub_appbar.dart';
 
 class SubFeedPages extends StatefulWidget {
   final FeedPost feed;
-  final VoidCallback? onCommentAdd;
+  final Function(String)? onCommentAdd;
+  final VoidCallback? onLikeToggle;
   const SubFeedPages({
     super.key,
     required this.feed,
     required this.onCommentAdd,
+    this.onLikeToggle,
   });
 
   @override
@@ -41,10 +43,11 @@ class _SubFeedPagesState extends State<SubFeedPages> {
       textController.clear();
       return;
     }
+
     await FeedsApi().postFeedComment(widget.feed.id, text);
 
     if (widget.onCommentAdd != null) {
-      widget.onCommentAdd!();
+      widget.onCommentAdd!(text);
     }
 
     setState(() {});
@@ -68,6 +71,16 @@ class _SubFeedPagesState extends State<SubFeedPages> {
                     padding: EdgeInsets.only(left: 16.0, right: 16.0),
                     child: FeedOnlyWidget(
                       feed: widget.feed,
+                      onLikeToggle: () {
+                        setState(() {
+                          if (widget.feed.liked) {
+                            widget.feed.likeCount--;
+                          } else {
+                            widget.feed.likeCount++;
+                          }
+                          widget.feed.liked = !widget.feed.liked;
+                        });
+                      },
                       profileSize: 37.0,
                       fontSize: 14.0,
                     ),
