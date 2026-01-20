@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
-
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../../models/feeds/feed_content_model.dart';
+
 class FeedCommentWidget extends StatefulWidget {
+  final FeedComment comment;
   final String profileName;
   final int profileTime;
   final int profileLevel;
-  final String comment;
+  final String text;
 
   const FeedCommentWidget({
     super.key,
+    required this.comment,
     this.profileName = '익명',
     this.profileTime = 30,
     this.profileLevel = 15,
-    this.comment = '열심히 운동하시는 모습 너무 멋있습니다~^^',
+    this.text = '열심히 운동하시는 모습 너무 멋있습니다~^^',
   });
 
   @override
@@ -90,7 +93,7 @@ class _FeedCommentWidgetState extends State<FeedCommentWidget> {
         Container(
           padding: EdgeInsets.only(top: 6.0, left: 53.0),
           alignment: Alignment.centerLeft,
-          child: Text('${widget.comment} ', style: TextStyle()),
+          child: Text('${widget.text} ', style: TextStyle()),
         ),
         SizedBox(height: 30.0),
       ],

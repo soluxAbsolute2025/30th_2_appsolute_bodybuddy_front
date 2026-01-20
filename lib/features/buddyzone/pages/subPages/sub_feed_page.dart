@@ -62,11 +62,15 @@ class _SubFeedPagesState extends State<SubFeedPages> {
                     alignment: Alignment.centerLeft,
                     child: Column(
                       children: [
-                        if (false) _nullCommentText(),
-                        FeedCommentWidget(),
-                        FeedCommentWidget(),
-                        FeedCommentWidget(),
-                        _nullCommentText(),
+                        if (widget.feed.comments.isEmpty)
+                          Container(
+                            width: double.infinity,
+                            child: _nullCommentText(),
+                          ),
+                        ...widget.feed.comments.map((comment) {
+                          return FeedCommentWidget(comment: comment);
+                        }).toList(),
+                        // FeedCommentWidget(widget.feed),
                       ],
                     ),
                   ),
@@ -126,7 +130,7 @@ class _SubFeedPagesState extends State<SubFeedPages> {
 
   Widget _nullCommentText() {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 70.0),
+      padding: EdgeInsets.symmetric(vertical: 55.0),
       child: Text(
         '아직 댓글이 없어요\n'
         '가장 먼저 댓글을 남겨보세요',
