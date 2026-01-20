@@ -27,9 +27,9 @@ class FeedOnlyWidget extends StatefulWidget {
 }
 
 class _FeedOnlyWidgetState extends State<FeedOnlyWidget> {
+  int commentCount = 0;
   void _clickHeart() async {
     FeedsApi().postFeedLike(widget.feed.id);
-
     widget.onLikeToggle!();
   }
 
@@ -164,7 +164,23 @@ class _FeedOnlyWidgetState extends State<FeedOnlyWidget> {
               onPressed: () {
                 Navigator.of(context, rootNavigator: true).push(
                   MaterialPageRoute(
-                    builder: (context) => SubFeedPages(feed: widget.feed),
+                    builder: (context) => SubFeedPages(
+                      feed: widget.feed,
+                      onCommentAdd: () {
+                        setState(() {
+                          widget.feed.comments.add(
+                            FeedComment(
+                              id: widget.feed.comments.length + 1,
+                              content: '댓글 내용',
+                              writerNickname: '닉네임',
+                              createdAt: DateTime.now(),
+                              updatedAt: DateTime.now(),
+                              edited: false,
+                            ),
+                          );
+                        });
+                      },
+                    ),
                   ),
                 );
               },
@@ -182,7 +198,7 @@ class _FeedOnlyWidgetState extends State<FeedOnlyWidget> {
                   SvgPicture.asset('assets/buddyzone/talk.svg'),
                   SizedBox(width: 8.0),
                   Text(
-                    '8',
+                    widget.feed.comments.length.toString(),
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 12,

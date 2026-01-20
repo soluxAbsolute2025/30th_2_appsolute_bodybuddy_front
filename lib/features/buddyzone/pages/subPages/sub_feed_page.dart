@@ -1,4 +1,5 @@
 import 'package:bodybuddy_frontend/common/widgets/sub_appbar.dart';
+import 'package:bodybuddy_frontend/features/buddyzone/api/buddyzone_hottag_api.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/models/feeds/feed_content_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -9,13 +10,49 @@ import '../../../../common/widgets/sub_appbar.dart';
 
 class SubFeedPages extends StatefulWidget {
   final FeedPost feed;
-  const SubFeedPages({super.key, required this.feed});
+  final VoidCallback? onCommentAdd;
+  const SubFeedPages({
+    super.key,
+    required this.feed,
+    required this.onCommentAdd,
+  });
 
   @override
   State<SubFeedPages> createState() => _SubFeedPagesState();
 }
 
 class _SubFeedPagesState extends State<SubFeedPages> {
+  final textController = TextEditingController();
+  bool isButtonEnabled = false;
+
+  void initState() {
+    super.initState();
+
+    textController.addListener(() {
+      setState(() {
+        isButtonEnabled = textController.text.isNotEmpty;
+      });
+    });
+  }
+
+  void _sendMessage() async {
+    final text = textController.text.trim();
+    if (text.isEmpty || text.length < 2) {
+      textController.clear();
+      return;
+    }
+    await FeedsApi().postFeedComment(widget.feed.id, text);
+
+    if (widget.onCommentAdd != null) {
+      widget.onCommentAdd!();
+    }
+
+    setState(() {});
+
+    print('text : ' + text);
+    textController.clear();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,8 +79,7 @@ class _SubFeedPagesState extends State<SubFeedPages> {
                     padding: EdgeInsets.symmetric(horizontal: 16.0),
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      '댓글 '
-                      '0',
+                      '댓글 ${widget.feed.comments.length}',
                       style: TextStyle(
                         color: Colors.black,
                         fontSize: 14,
@@ -87,16 +123,21 @@ class _SubFeedPagesState extends State<SubFeedPages> {
               ),
             ),
             child: Container(
-              decoration: ShapeDecoration(
+              // 배경색과 둥근 모서리 설정
+              decoration: BoxDecoration(
                 color: const Color(0xFFF5F5F5),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(127),
-                ), // 둥근 타원형
+                borderRadius: BorderRadius.circular(30.0),
               ),
               child: TextField(
+                controller: textController,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (value) {
+                  _sendMessage();
+                },
+                maxLines: 1,
                 style: const TextStyle(fontSize: 14.0),
                 decoration: InputDecoration(
-                  hintText: '댓글을 작성해 보세요',
+                  hintText: '댓글을 작성해보세요',
                   hintStyle: const TextStyle(
                     color: Color(0xFFA7A7A7),
                     fontSize: 14.0,
@@ -106,19 +147,11 @@ class _SubFeedPagesState extends State<SubFeedPages> {
                     vertical: 12.0,
                   ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: BorderRadius.circular(30.0),
                     borderSide: BorderSide.none,
                   ),
-                  suffixIcon: IconButton(
-                    icon: SvgPicture.asset(
-                      'assets/carebuddy/send.svg', // 전송 아이콘 경로
-                      width: 20,
-                      height: 20,
-                    ),
-                    onPressed: () {
-                      print("전송 클릭!");
-                    },
-                  ),
+                  // 2. TextField 내부에 전송 아이콘(SuffixIcon) 배치
+                  suffixIcon: _textFieldButton(),
                 ),
               ),
             ),
@@ -141,6 +174,31 @@ class _SubFeedPagesState extends State<SubFeedPages> {
           fontFamily: 'Pretendard Variable',
           fontWeight: FontWeight.w400,
           height: 1.50,
+        ),
+      ),
+    );
+  }
+
+  Widget _textFieldButton() {
+    return Container(
+      margin: EdgeInsets.all(5.0),
+      child: TextButton(
+        style: TextButton.styleFrom(
+          foregroundColor: Color(0xFF669688),
+          backgroundColor: isButtonEnabled
+              ? Color(0xFF1AEDB1)
+              : Color(0xFFF8F8F8),
+          padding: EdgeInsets.fromLTRB(2.0, 0.0, 0.0, 0.0),
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          shape: CircleBorder(),
+        ),
+        onPressed: isButtonEnabled ? _sendMessage : null,
+        child: SvgPicture.asset(
+          isButtonEnabled
+              ? 'assets/carebuddy/send_active.svg'
+              : 'assets/carebuddy/send.svg',
+          key: ValueKey(isButtonEnabled),
         ),
       ),
     );

@@ -45,6 +45,14 @@ class FeedsApi {
     final response = await _dio.post('/api/posts/${feedId}/likes');
     print(response);
   }
+
+  Future<void> postFeedComment(int feedId, String content) async {
+    final response = await _dio.post(
+      '/api/feeds/${feedId}/comments',
+      data: {'content': content},
+    );
+    print(response);
+  }
 }
 
 class FeedRequestAPI {
