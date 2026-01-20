@@ -31,18 +31,37 @@ class _BuddyFeedPageState extends State<BuddyFeedPage> {
   }
 
   Future<void> _setHashtagList() async {
-    try {
-      final data = await FeedsApi().getHashtag();
-      print("해시태그 데이터: $data");
+    final data = await FeedsApi().getHashtag();
 
-      if (data != null) {
-        setState(() {
-          hashtags = List<String>.from(data);
-        });
-      }
-    } catch (e) {
-      print("해시태그 로딩 에러: $e");
+    if (data != null) {
+      setState(() {
+        hashtags = List<String>.from(data);
+      });
     }
+  }
+
+  void onSearchFeed({required String keyword}) {
+    if (keyword.isEmpty || keyword.length < 2) return;
+    _currentRequest = FeedRequest(mode: FeedMode.search, keyword: keyword);
+    _resetAndFetch();
+  }
+
+  void onTagFeed({required String tag}) {
+    _currentRequest = FeedRequest(mode: FeedMode.tag, tag: tag);
+    _resetAndFetch();
+  }
+
+  void onNormalFeed() {
+    _currentRequest = FeedRequest(mode: FeedMode.normal);
+    _resetAndFetch();
+  }
+
+  void _resetAndFetch() {
+    currentPage = 0;
+    isLast = false;
+    feeds.clear();
+
+    _setFeedList();
   }
 
   Future<void> _setFeedList() async {
@@ -51,7 +70,6 @@ class _BuddyFeedPageState extends State<BuddyFeedPage> {
       isLoading = true;
     });
 
-    print("일단 들어오기는 했음");
     final response = await FeedRequestAPI().getFeedRequest(
       request: _currentRequest,
     );
@@ -80,11 +98,14 @@ class _BuddyFeedPageState extends State<BuddyFeedPage> {
             sliver: SliverToBoxAdapter(
               child: Column(
                 children: [
-                  FeedSearchWidget(),
+                  FeedSearchWidget(onSearchFeed: onSearchFeed),
                   SizedBox(height: 16.0),
                   hashtags.isEmpty
                       ? Container()
-                      : FeedHottagWidget(hashList: hashtags),
+                      : FeedHottagWidget(
+                          onTagFeed: onTagFeed,
+                          hashList: hashtags,
+                        ),
                 ],
               ),
             ),

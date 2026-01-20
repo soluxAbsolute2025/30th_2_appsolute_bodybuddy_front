@@ -68,14 +68,14 @@ class FeedRequestAPI {
           '/api/feeds/search',
           queryParameters: {'keyword': request.keyword, 'page': 0, 'size': 10},
         );
-        print(response.data);
+        print("검색 API : " + response.data.toString());
         break;
       case FeedMode.tag:
         response = await _dio.get(
           '/api/feeds/hashtag',
           queryParameters: {'tagName': request.tag, 'page': 0, 'size': 10},
         );
-        print(response.data);
+        print("태그 API : " + response.data.toString());
         break;
     }
     return FeedPageResponse.fromJson(response.data);
