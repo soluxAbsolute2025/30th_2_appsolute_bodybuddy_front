@@ -21,6 +21,8 @@ class CareBuddyPage extends StatefulWidget {
 class _CareBuddyPageState extends State<CareBuddyPage> {
   final textController = TextEditingController();
   final scrollController = ScrollController();
+  final String accessToken =
+      'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJoaWhpaGkiLCJ1c2VySWQiOjM0MSwiaWF0IjoxNzY4ODk4OTA2LCJleHAiOjE3Njg5MDI1MDZ9.un0Dkd-_81-PwTS6PmLoNfzNhmrbTNoUOre5mVvxdAI';
 
   bool isButtonEnabled = false;
   int selectedIndex = -1;
@@ -59,9 +61,7 @@ class _CareBuddyPageState extends State<CareBuddyPage> {
   }
 
   Future<void> _getSuggest() async {
-    final result = await CarebuddyApi().getSuggest(
-      'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0aGEiLCJ1c2VySWQiOjMzMCwiaWF0IjoxNzY4NzUyMzczLCJleHAiOjE3Njg3NTU5NzN9.UCq3B2XXMpJeUC6nD_V2kmcZISi-rC7OJWAURNQhhvc',
-    );
+    final result = await CarebuddyApi().getSuggest(accessToken);
 
     if (!mounted) return;
 
@@ -204,10 +204,7 @@ class _CareBuddyPageState extends State<CareBuddyPage> {
       _scrollToBottom();
     });
 
-    final String answer = await CarebuddyApi().postMessage(
-      'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0aGEiLCJ1c2VySWQiOjMzMCwiaWF0IjoxNzY4Njg0NjA1LCJleHAiOjE3Njg2ODgyMDV9.9_YLiKzuf65baWTTI8qH-4wf7L8mX2G_gvyalxSmQ30',
-      text,
-    );
+    final String answer = await CarebuddyApi().postMessage(accessToken, text);
     if (text.isEmpty) return;
 
     setState(() {

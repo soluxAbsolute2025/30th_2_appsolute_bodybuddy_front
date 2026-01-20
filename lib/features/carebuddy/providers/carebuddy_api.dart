@@ -19,7 +19,7 @@ class CarebuddyApi {
       'api/chat/suggest',
       options: Options(headers: {"Authorization": "Bearer ${accessToken}"}),
     );
-    print("getSuggest : " + response.data);
+    print("getSuggest : " + response.data.toString());
     return TagSuggest.fromJson(response.data);
   }
 }
