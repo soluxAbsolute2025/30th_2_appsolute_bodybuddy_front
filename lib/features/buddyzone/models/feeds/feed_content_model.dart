@@ -50,16 +50,20 @@ class FeedPageResponse {
 // 피드 Cotent 클래스
 class FeedPost {
   final int id;
-  final String title;
+  // final String title;
   final String content;
   final String writerNickname;
-  // final String imageUrl;
+  final String? writerProfileImageUrl;
+  final int? writerLevel;
+  final String? imageUrl;
+  final String? place;
   int likeCount;
   final String visibility;
   final DateTime createdAt;
   final DateTime updatedAt;
   final List<String> hashtags;
   List<FeedComment> comments;
+  int? commentCount;
   bool liked;
   final bool edited;
 
@@ -68,16 +72,20 @@ class FeedPost {
 
   FeedPost({
     required this.id,
-    required this.title,
+    // required this.title,
     required this.content,
     required this.writerNickname,
-    // required this.imageUrl,
+    required this.writerProfileImageUrl,
+    required this.writerLevel,
+    required this.imageUrl,
+    required this.place,
     required this.likeCount,
     required this.visibility,
     required this.createdAt,
     required this.updatedAt,
     required this.hashtags,
     required this.comments,
+    required this.commentCount,
     required this.liked,
     required this.edited,
 
@@ -88,10 +96,13 @@ class FeedPost {
   factory FeedPost.fromJson(Map<String, dynamic> json) {
     return FeedPost(
       id: json['id'],
-      title: json['title'],
+      // title: json['title'],
       content: json['content'],
       writerNickname: json['writerNickname'],
-      // imageUrl: json['imageUrl'],
+      writerProfileImageUrl: json['writerProfileImageUrl'],
+      writerLevel: json['writerLevel'],
+      imageUrl: json['imageUrl'],
+      place: json['place'],
       likeCount: json['likeCount'],
       visibility: json['visibility'],
       createdAt: DateTime.parse(json['createdAt']),
@@ -100,6 +111,7 @@ class FeedPost {
       comments: (json['comments'] as List)
           .map((e) => FeedComment.fromJson(e))
           .toList(),
+      commentCount: json['commentCount'],
       liked: json['liked'],
       edited: json['edited'],
       // viewCount: json['viewCount'],
