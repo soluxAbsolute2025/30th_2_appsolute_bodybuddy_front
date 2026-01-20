@@ -1,18 +1,16 @@
 import 'package:dio/dio.dart';
 import '../../../api/dio_client.dart';
-import '../models/today_todo_model.dart';
+import '../models/todo_model.dart';
 
 class TodoApi {
   final Dio _dio = DioClient.dio;
 
   // GET /api/todos/today
-  Future<List<TodayTodo>> fetchTodayTodos() async {
+  Future<List<Todo>> fetchTodayTodos() async {
     final res = await _dio.get('/api/todos/today');
 
     final list = res.data as List;
-    return list
-        .map((e) => TodayTodo.fromJson(e as Map<String, dynamic>))
-        .toList();
+    return list.map((e) => Todo.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   // PATCH /api/todos/{todoId}

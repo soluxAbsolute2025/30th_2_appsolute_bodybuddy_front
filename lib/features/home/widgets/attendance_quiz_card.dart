@@ -19,10 +19,12 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
   int? selectedOptionId;
   bool isSubmitting = false;
   bool isAnswered = false;
+  bool? lastCorrect;
 
   static const _kAnsweredDate = 'attendance_quiz_answered_date';
   static const _kSelectedOption = 'attendance_quiz_selected_option';
   static const _kQuizCache = 'attendance_quiz_cache_json';
+  static const _kLastCorrect = 'attendance_quiz_last_correct';
 
   @override
   void initState() {
@@ -31,7 +33,7 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
   }
 
   String _todayKey() {
-    final now = DateTime.now();
+    final now = DateTime.now().toLocal();
     final y = now.year.toString().padLeft(4, '0');
     final m = now.month.toString().padLeft(2, '0');
     final d = now.day.toString().padLeft(2, '0');
@@ -48,7 +50,10 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
     }
   }
 
-  Future<void> _saveQuizCache(SharedPreferences prefs, AttendanceQuestion quiz) async {
+  Future<void> _saveQuizCache(
+    SharedPreferences prefs,
+    AttendanceQuestion quiz,
+  ) async {
     await prefs.setString(_kQuizCache, jsonEncode(quiz.toJson()));
   }
 
@@ -57,10 +62,10 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
     final today = _todayKey();
 
     if (savedDate != null && savedDate != today) {
-      // ✅ 날짜 바뀐 경우에만 초기화
       await prefs.remove(_kAnsweredDate);
       await prefs.remove(_kSelectedOption);
       await prefs.remove(_kQuizCache);
+      await prefs.remove(_kLastCorrect);
     }
   }
 
@@ -73,18 +78,17 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
     final savedOption = prefs.getInt(_kSelectedOption);
     final cachedQuiz = _decodeQuiz(prefs.getString(_kQuizCache));
 
-    // ✅ 오늘 이미 풀었으면: 캐시 퀴즈로 UI 그대로 + 선택 유지
     if (savedDate == today) {
+      final savedCorrect = prefs.getBool(_kLastCorrect);
+
       setState(() {
         isAnswered = true;
         selectedOptionId = savedOption;
+        lastCorrect = savedCorrect; 
       });
 
-      // 캐시가 있으면 그대로 렌더
       if (cachedQuiz != null) return cachedQuiz;
 
-      // ✅ (중요) 캐시가 없으면: 서버에서 받아서 캐시 채워놓기 시도
-      // 서버가 A002면 null 올 수 있는데, 그럼 어쩔 수 없이 fallback UI로 감
       final q = await AttendanceApi().fetchQuestion();
       if (q != null) {
         await _saveQuizCache(prefs, q);
@@ -93,10 +97,10 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
       return null;
     }
 
-    // ✅ 오늘 아직 안 풀었으면: 서버에서 가져오고 캐시 저장
     setState(() {
       isAnswered = false;
       selectedOptionId = null;
+      lastCorrect = null;
     });
 
     final quiz = await AttendanceApi().fetchQuestion();
@@ -107,14 +111,19 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
   }
 
   void _showComeTomorrowModal() {
+    if (!mounted) return;
+
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      useRootNavigator: true,
+      builder: (dialogCtx) => AlertDialog(
         title: const Text('이미 참여했어요'),
         content: const Text('오늘은 이미 퀴즈를 완료했어요. 내일 다시 참여할 수 있어요!'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              Navigator.of(dialogCtx).pop();
+            },
             child: const Text('확인'),
           ),
         ],
@@ -128,7 +137,6 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
   }) async {
     if (isSubmitting) return;
 
-    // ✅ 이미 푼 상태면: 선택 유지 + 모달만
     if (isAnswered) {
       _showComeTomorrowModal();
       return;
@@ -148,21 +156,24 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_kAnsweredDate, _todayKey());
       await prefs.setInt(_kSelectedOption, optionId);
-      await _saveQuizCache(prefs, quiz); // ✅ 제출 성공 시에도 캐시 확실히 저장
+      await prefs.setBool(_kLastCorrect, result.correct); 
+      await _saveQuizCache(prefs, quiz);
 
       if (!mounted) return;
 
       setState(() {
         isAnswered = true;
+        lastCorrect = result.correct;
       });
 
       showDialog(
         context: context,
-        builder: (_) => AlertDialog(
-          title: Text(result.correct ? '정답이에요 🎉' : '틀렸어요 😢'),
+        useRootNavigator: true,
+        builder: (dialogCtx) => AlertDialog(
+          title: Text(result.correct ? '정답' : '틀렸어요'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.of(dialogCtx).pop(),
               child: const Text('확인'),
             ),
           ],
@@ -175,9 +186,9 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
         isAnswered = false;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('제출 실패: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('제출 실패: $e')));
     } finally {
       if (mounted) setState(() => isSubmitting = false);
     }
@@ -231,50 +242,111 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
                       ),
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 10),
 
-              ...quiz.options.asMap().entries.map((entry) {
-                final index = entry.key;
-                final option = entry.value;
-                final isSelected = selectedOptionId == option.id;
-                final isLast = index == quiz.options.length - 1;
-
-                return GestureDetector(
-                  onTap: () => _submitOnTap(quiz: quiz, optionId: option.id),
-                  child: Container(
-                    width: double.infinity,
-                    margin: EdgeInsets.only(bottom: isLast ? 0 : 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 5,
+                      vertical: 5,
+                    ),
                     decoration: BoxDecoration(
-                      color: isSelected ? const Color(0xFFE9FFF9) : Colors.white,
-                      borderRadius: BorderRadius.circular(6),
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFFFBBE), Color(0xFFE8FFF9)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(5),
                       border: Border.all(
-                        color: isSelected ? const Color(0xFF21EAB0) : const Color(0xFFD8D8D8),
-                        width: 0.7,
+                        color: const Color(0xFF1AEDB1),
+                        width: 1,
                       ),
                     ),
                     child: Text(
-                      option.text,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w400,
-                        color: isSelected ? const Color(0xFF18D9A2) : Colors.black,
+                      '+ ${quiz.rewardPoint} XP',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1AEDB1),
+                        height: 1.2,
                       ),
                     ),
                   ),
-                );
-              }),
+                ],
+              ),
 
               const SizedBox(height: 10),
-              Text(
-                isAnswered ? '오늘은 이미 퀴즈를 완료했어요.' : '보기를 누르면 바로 제출돼요.',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF7D7C7C),
+
+              ...quiz.options.asMap().entries.map((entry) {
+              final option = entry.value;
+              final isLast = entry.key == quiz.options.length - 1;
+
+              final isSelected = selectedOptionId == option.id;
+              final isCorrectSelected = isAnswered && isSelected && lastCorrect == true;
+              final isWrongSelected = isAnswered && isSelected && lastCorrect == false;
+
+              Color bgColor = Colors.white;
+              Color borderColor = const Color(0xFFD8D8D8);
+              Color textColor = Colors.black;
+
+              if (isCorrectSelected) {
+                bgColor = const Color(0xFFE9FFF9);
+                borderColor = const Color(0xFF21EAB0);
+                textColor = const Color(0xFF18D9A2);
+              }
+
+              if (isWrongSelected) {
+                bgColor = Colors.white;
+                borderColor = const Color(0xFFFF3B09);
+                textColor = const Color(0xFFFF3B09);
+              }
+
+              return GestureDetector(
+                onTap: () => _submitOnTap(quiz: quiz, optionId: option.id),
+                child: Container(
+                  width: double.infinity,
+                  margin: EdgeInsets.only(bottom: isLast ? 0 : 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: borderColor, width: 0.7),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          option.text,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                            color: textColor,
+                          ),
+                        ),
+                      ),
+
+                      if (isCorrectSelected)
+                        const Text(
+                          '정답',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF18D9A2),
+                          ),
+                        ),
+
+                      if (isWrongSelected)
+                        const Text(
+                          '오답',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFFFF3B09),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
+              );
+            }),
             ],
           ),
         );
@@ -285,7 +357,10 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
   Widget _fallbackDoneCard() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+      ),
       child: const Text(
         '오늘은 이미 참여했어요. 내일 다시 할 수 있어요!',
         style: TextStyle(fontSize: 12, color: Color(0xFF7D7C7C)),
@@ -296,7 +371,10 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
   Widget _loadingCard() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+      ),
       child: const SizedBox(
         height: 80,
         child: Center(child: CircularProgressIndicator()),
@@ -307,7 +385,10 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
   Widget _errorCard() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+      ),
       child: Row(
         children: [
           const Expanded(child: Text('퀴즈를 불러오지 못했어요.')),
