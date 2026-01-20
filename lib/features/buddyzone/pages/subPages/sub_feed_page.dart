@@ -1,4 +1,5 @@
 import 'package:bodybuddy_frontend/common/widgets/sub_appbar.dart';
+import 'package:bodybuddy_frontend/features/buddyzone/models/feeds/feed_content_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -6,9 +7,15 @@ import '../../widgets/feeds/feed_only_widget.dart';
 import '../../widgets/feeds/feed_comment_widget.dart';
 import '../../../../common/widgets/sub_appbar.dart';
 
-class SubFeedPages extends StatelessWidget {
-  const SubFeedPages({super.key});
+class SubFeedPages extends StatefulWidget {
+  final FeedPost feed;
+  const SubFeedPages({super.key, required this.feed});
 
+  @override
+  State<SubFeedPages> createState() => _SubFeedPagesState();
+}
+
+class _SubFeedPagesState extends State<SubFeedPages> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,7 +29,11 @@ class SubFeedPages extends StatelessWidget {
                 children: [
                   Container(
                     padding: EdgeInsets.only(left: 16.0, right: 16.0),
-                    child: FeedOnlyWidget(profileSize: 37.0, fontSize: 14.0),
+                    child: FeedOnlyWidget(
+                      feed: widget.feed,
+                      profileSize: 37.0,
+                      fontSize: 14.0,
+                    ),
                   ),
                   SizedBox(height: 12.0),
                   Divider(),
@@ -32,7 +43,7 @@ class SubFeedPages extends StatelessWidget {
                     alignment: Alignment.centerLeft,
                     child: Text(
                       '댓글 '
-                      '8',
+                      '0',
                       style: TextStyle(
                         color: Colors.black,
                         fontSize: 14,
@@ -81,7 +92,7 @@ class SubFeedPages extends StatelessWidget {
               child: TextField(
                 style: const TextStyle(fontSize: 14.0),
                 decoration: InputDecoration(
-                  hintText: '건강에 관해 궁금한 점을 물어보세요',
+                  hintText: '댓글을 작성해 보세요',
                   hintStyle: const TextStyle(
                     color: Color(0xFFA7A7A7),
                     fontSize: 14.0,

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 class FeedHottagWidget extends StatefulWidget {
-  const FeedHottagWidget({super.key});
+  final List<String> hashList;
+  const FeedHottagWidget({super.key, required this.hashList});
 
   @override
   State<FeedHottagWidget> createState() => _FeedHottagState();
@@ -14,15 +15,14 @@ class _FeedHottagState extends State<FeedHottagWidget> {
   @override
   void initState() {
     super.initState();
+    _tags.clear();
+    _tags.addAll(widget.hashList);
   }
 
   @override
   void dispose() {
     super.dispose();
   }
-
-  @override
-  void _getHottag() {}
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +52,6 @@ class _FeedHottagState extends State<FeedHottagWidget> {
               mainAxisSize: MainAxisSize.max,
               children: List.generate(_tags.length, (index) {
                 bool isSelected = index == selectedIndex;
-
                 return Container(
                   margin: EdgeInsets.only(right: 8.0),
                   decoration: BoxDecoration(

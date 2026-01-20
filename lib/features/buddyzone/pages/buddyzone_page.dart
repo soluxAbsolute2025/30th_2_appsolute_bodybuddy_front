@@ -104,13 +104,7 @@ class _BuddyZoneState extends State<BuddyZonePage> {
             ),
           ),
           if (_isBuddySelectIndex == 0) ...[
-            Expanded(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.vertical,
-                child: BuddyFeedPage(),
-                // child: SubFeedPages(),
-              ),
-            ),
+            Expanded(child: BuddyFeedPage()),
           ] else if (_isBuddySelectIndex == 1) ...[
             Expanded(
               child: SingleChildScrollView(

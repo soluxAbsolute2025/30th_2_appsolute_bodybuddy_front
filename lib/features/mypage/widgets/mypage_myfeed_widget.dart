@@ -10,6 +10,7 @@ class MypageMyFeedWidget extends StatefulWidget {
 
   const MypageMyFeedWidget({
     super.key,
+
     this.profileSize = 33.0,
     this.fontSize = 12.0,
     this.isCommentOpen = true,
@@ -217,11 +218,12 @@ class _MypageMyFeedWidget extends State<MypageMyFeedWidget> {
                       SizedBox(width: 10.0),
                       TextButton(
                         onPressed: () {
-                          Navigator.of(context, rootNavigator: true).push(
-                            MaterialPageRoute(
-                              builder: (context) => const SubFeedPages(),
-                            ),
-                          );
+                          // Navigator.of(context, rootNavigator: true).push(
+                          //   MaterialPageRoute(
+                          //     builder: (context) =>
+                          //         SubFeedPages(feedId: widget.feedId),
+                          //   ),
+                          // );
                         },
                         style: TextButton.styleFrom(
                           foregroundColor: Color(0xFF87D2BD),

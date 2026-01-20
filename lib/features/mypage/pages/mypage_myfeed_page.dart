@@ -16,13 +16,7 @@ class _MypageMyfeedPageState extends State<MypageMyfeedPage> {
     return Scaffold(
       appBar: SubAppbar(titleText: '내가 쓴 글'),
       body: SingleChildScrollView(
-        child: Column(
-          children: [
-            MypageMyFeedWidget(),
-            MypageMyFeedWidget(),
-            MypageMyFeedWidget(),
-          ],
-        ),
+        child: Column(children: [MypageMyFeedWidget()]),
       ),
     );
   }

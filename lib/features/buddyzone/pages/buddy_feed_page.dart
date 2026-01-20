@@ -19,13 +19,30 @@ class _BuddyFeedPageState extends State<BuddyFeedPage> {
   FeedRequest _currentRequest = FeedRequest(mode: FeedMode.normal);
 
   List<FeedPost> feeds = [];
+  List<String> hashtags = [];
   int currentPage = 0;
   bool isLoading = false;
   bool isLast = false;
 
   void initState() {
     super.initState();
+    _setHashtagList();
     _setFeedList();
+  }
+
+  Future<void> _setHashtagList() async {
+    try {
+      final data = await FeedsApi().getHashtag();
+      print("해시태그 데이터: $data");
+
+      if (data != null) {
+        setState(() {
+          hashtags = List<String>.from(data);
+        });
+      }
+    } catch (e) {
+      print("해시태그 로딩 에러: $e");
+    }
   }
 
   Future<void> _setFeedList() async {
@@ -36,8 +53,6 @@ class _BuddyFeedPageState extends State<BuddyFeedPage> {
 
     print("일단 들어오기는 했음");
     final response = await FeedRequestAPI().getFeedRequest(
-      accessToken:
-          'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJycnJyIiwidXNlcklkIjozMzksImlhdCI6MTc2ODgxMTUyMywiZXhwIjoxNzY4ODE1MTIzfQ.1ODFmXvhfa7Xbb6Q0DyDgwlZdSjGylbdz2fqm8ewnEo',
       request: _currentRequest,
     );
 
@@ -54,35 +69,59 @@ class _BuddyFeedPageState extends State<BuddyFeedPage> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(16.0),
       color: Colors.white,
-      child: Column(
-        children: <Widget>[
-          FeedSearchWidget(),
-          SizedBox(height: 16.0),
-          FeedHottagWidget(),
-          SizedBox(height: 24.0),
-          TextButton(
-            onPressed: () {
-              _setFeedList();
-            },
-            child: Text('임시 확인 버튼'),
+      child: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(
+              vertical: 16.0,
+              horizontal: 16.0,
+            ),
+            sliver: SliverToBoxAdapter(
+              child: Column(
+                children: [
+                  FeedSearchWidget(),
+                  SizedBox(height: 16.0),
+                  hashtags.isEmpty
+                      ? Container()
+                      : FeedHottagWidget(hashList: hashtags),
+                ],
+              ),
+            ),
           ),
-          TextButton(
-            onPressed: () {
-              FeedsApi().postFeeds(
-                'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ3d3d3IiwidXNlcklkIjozMzgsImlhdCI6MTc2ODgxMDU1OCwiZXhwIjoxNzY4ODE0MTU4fQ.D1MEwdTfXHJaGddkxJLKMQpW-GE_0nFPR_qEqxaa3mU',
-              );
-            },
-            child: Text('임시 생성 버튼'),
+
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(
+              vertical: 8.0,
+              horizontal: 16.0,
+            ),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate((context, index) {
+                return Container(
+                  margin: EdgeInsets.only(bottom: 10.0),
+                  child: FeedFrameWidget(
+                    onLikeToggle: () {
+                      setState(() {
+                        if (feeds[index].liked) {
+                          feeds[index].likeCount--;
+                        } else {
+                          feeds[index].likeCount++;
+                        }
+                        feeds[index].liked = !feeds[index].liked;
+                      });
+                    },
+                    feed: feeds[index],
+                  ),
+                );
+              }, childCount: feeds.length),
+            ),
           ),
-          ListView.builder(
-            shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
-            itemCount: feeds.length,
-            itemBuilder: (context, index) {
-              return FeedFrameWidget();
-            },
+
+          // 로딩 중 또는 마지막 페이지에 도달한 경우
+          SliverToBoxAdapter(
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : (isLast ? _endFeeds() : const SizedBox(height: 80)),
           ),
         ],
       ),
@@ -111,7 +150,7 @@ class _BuddyFeedPageState extends State<BuddyFeedPage> {
             ],
           ),
         ),
-        SizedBox(height: 75.0),
+        SizedBox(height: 80.0),
       ],
     );
   }

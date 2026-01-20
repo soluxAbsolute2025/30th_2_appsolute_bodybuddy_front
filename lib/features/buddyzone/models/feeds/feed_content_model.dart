@@ -1,45 +1,47 @@
 // 최상위 데이터 클래스
 class FeedPageResponse {
-  final List<FeedPost> content;
-  final Pageable? pageable;
-  final bool last;
   final int totalPages;
   final int totalElements;
-  final bool? first;
   final int? size;
+  final List<FeedPost> content;
   final int number;
-  final int? numberOfElements;
   final Sort? sort;
+  final int? numberOfElements;
+  final Pageable? pageable;
+  final bool? first;
+  final bool last;
   final bool? empty;
 
   FeedPageResponse({
-    required this.content,
-    this.pageable,
-    required this.last,
     required this.totalPages,
     required this.totalElements,
-    required this.first,
-    required this.size,
+    this.size,
+    required this.content,
     required this.number,
-    required this.numberOfElements,
-    required this.sort,
-    required this.empty,
+    this.sort,
+    this.numberOfElements,
+    this.pageable,
+    this.first,
+    required this.last,
+    this.empty,
   });
 
   factory FeedPageResponse.fromJson(Map<String, dynamic> json) {
     return FeedPageResponse(
+      totalPages: json['totalPages'],
+      totalElements: json['totalElements'],
+      size: json['size'] != null ? json['size'] : null,
       content: (json['content'] as List)
           .map((e) => FeedPost.fromJson(e))
           .toList(),
-      pageable: json['pageable'] ? Pageable.fromJson(json['pageable']) : null,
-      last: json['last'],
-      totalPages: json['totalPages'],
-      totalElements: json['totalElements'],
-      first: json['first'] ?? null,
-      size: json['size'] ?? null,
       number: json['number'],
+      sort: json['sort'] != null ? Sort.fromJson(json['sort']) : null,
       numberOfElements: json['numberOfElements'],
-      sort: json['sort'] ? Sort.fromJson(json['sort']) : null,
+      pageable: json['pageable'] != null
+          ? Pageable.fromJson(json['pageable'])
+          : null,
+      first: json['first'] != null ? json['first'] : null,
+      last: json['last'],
       empty: json['empty'],
     );
   }
@@ -51,34 +53,36 @@ class FeedPost {
   final String title;
   final String content;
   final String writerNickname;
-  final int viewCount;
-  final int likeCount;
-  final bool isLiked;
+  // final String imageUrl;
+  int likeCount;
   final String visibility;
-  final String place;
-  final bool isEdited;
   final DateTime createdAt;
   final DateTime updatedAt;
   final List<String> hashtags;
-  final List<String> imageUrls;
   final List<FeedComment> comments;
+  bool liked;
+  final bool edited;
+
+  // final String place; // 장소 관련 저장 변수
+  // final int viewCount; // 댓글 개수 저장 변수
 
   FeedPost({
     required this.id,
     required this.title,
     required this.content,
     required this.writerNickname,
-    required this.viewCount,
+    // required this.imageUrl,
     required this.likeCount,
-    required this.isLiked,
     required this.visibility,
-    required this.place,
-    required this.isEdited,
     required this.createdAt,
     required this.updatedAt,
     required this.hashtags,
-    required this.imageUrls,
     required this.comments,
+    required this.liked,
+    required this.edited,
+
+    // required this.viewCount,
+    // required this.place,
   });
 
   factory FeedPost.fromJson(Map<String, dynamic> json) {
@@ -87,19 +91,79 @@ class FeedPost {
       title: json['title'],
       content: json['content'],
       writerNickname: json['writerNickname'],
-      viewCount: json['viewCount'],
+      // imageUrl: json['imageUrl'],
       likeCount: json['likeCount'],
-      isLiked: json['isLiked'],
       visibility: json['visibility'],
-      place: json['place'],
-      isEdited: json['isEdited'],
       createdAt: DateTime.parse(json['createdAt']),
       updatedAt: DateTime.parse(json['updatedAt']),
       hashtags: List<String>.from(json['hashtags']),
-      imageUrls: List<String>.from(json['imageUrls']),
       comments: (json['comments'] as List)
           .map((e) => FeedComment.fromJson(e))
           .toList(),
+      liked: json['liked'],
+      edited: json['edited'],
+      // viewCount: json['viewCount'],
+      // place: json['place'],
+    );
+  }
+}
+
+// 댓글 클래스
+class FeedComment {
+  final int id;
+  final String content;
+  final String writerNickname;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool edited;
+
+  FeedComment({
+    required this.id,
+    required this.content,
+    required this.writerNickname,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.edited,
+  });
+
+  factory FeedComment.fromJson(Map<String, dynamic> json) {
+    return FeedComment(
+      id: json['id'],
+      content: json['content'],
+      writerNickname: json['writerNickname'],
+      createdAt: DateTime.parse(json['createdAt']),
+      updatedAt: DateTime.parse(json['updatedAt']),
+      edited: json['edited'],
+    );
+  }
+}
+
+// 페이징 관련 변수 클래스
+class Pageable {
+  final int pageNumber;
+  final int offset;
+  final Sort? sort;
+  final int pageSize;
+  final bool paged;
+  final bool unpaged;
+
+  Pageable({
+    required this.pageNumber,
+    required this.offset,
+    this.sort,
+    required this.pageSize,
+    required this.paged,
+    required this.unpaged,
+  });
+
+  factory Pageable.fromJson(Map<String, dynamic> json) {
+    return Pageable(
+      pageNumber: json['pageNumber'],
+      offset: json['offset'],
+      sort: json['sort'] != null ? Sort.fromJson(json['sort']) : null,
+      pageSize: json['pageSize'],
+      paged: json['paged'],
+      unpaged: json['unpaged'],
     );
   }
 }
@@ -121,54 +185,3 @@ class Sort {
 }
 
 class Pagination {}
-
-// 댓글 클래스
-class FeedComment {
-  final int id;
-  final String content;
-  final String nickname;
-  final DateTime createdAt;
-
-  FeedComment({
-    required this.id,
-    required this.content,
-    required this.nickname,
-    required this.createdAt,
-  });
-
-  factory FeedComment.fromJson(Map<String, dynamic> json) {
-    return FeedComment(
-      id: json['id'],
-      content: json['content'],
-      nickname: json['nickname'],
-      createdAt: DateTime.parse(json['createdAt']),
-    );
-  }
-}
-
-// 페이징 관련 변수 클래스
-class Pageable {
-  final int pageNumber;
-  final int pageSize;
-  final int offset;
-  final bool paged;
-  final bool unpaged;
-
-  Pageable({
-    required this.pageNumber,
-    required this.pageSize,
-    required this.offset,
-    required this.paged,
-    required this.unpaged,
-  });
-
-  factory Pageable.fromJson(Map<String, dynamic> json) {
-    return Pageable(
-      pageNumber: json['pageNumber'],
-      pageSize: json['pageSize'],
-      offset: json['offset'],
-      paged: json['paged'],
-      unpaged: json['unpaged'],
-    );
-  }
-}
