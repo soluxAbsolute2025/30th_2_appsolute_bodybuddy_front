@@ -7,10 +7,17 @@ class BodyMetric {
     required this.goal,
   });
 
-  factory BodyMetric.fromJson(Map<String, dynamic> json) {
+  factory BodyMetric.fromJson(Map<String, dynamic>? json) {
+    final currentRaw = json?['current'];
+    final goalRaw = json?['goal'];
+
     return BodyMetric(
-      current: json['current'] as int,
-      goal: json['goal'] as int,
+      current: currentRaw is int
+          ? currentRaw
+          : int.tryParse(currentRaw?.toString() ?? '') ?? 0,
+      goal: goalRaw is int
+          ? goalRaw
+          : int.tryParse(goalRaw?.toString() ?? '') ?? 0,
     );
   }
 }
@@ -29,11 +36,16 @@ class BodyToday {
   });
 
   factory BodyToday.fromJson(Map<String, dynamic> json) {
+    final date = json['date']?.toString() ?? '';
+
+    Map<String, dynamic>? asMap(dynamic v) =>
+        (v is Map) ? v.cast<String, dynamic>() : null;
+
     return BodyToday(
-      date: json['date'] as String,
-      water: BodyMetric.fromJson(json['water']),
-      meal: BodyMetric.fromJson(json['meal']),
-      sleep: BodyMetric.fromJson(json['sleep']),
+      date: date,
+      water: BodyMetric.fromJson(asMap(json['water'])),
+      meal: BodyMetric.fromJson(asMap(json['meal'])),
+      sleep: BodyMetric.fromJson(asMap(json['sleep'])),
     );
   }
 }

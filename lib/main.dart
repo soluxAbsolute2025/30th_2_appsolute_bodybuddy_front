@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'features/onboarding/pages/onboarding_page.dart';
-import 'pages/main_page.dart';
+import 'pages/main_page.dart';                                                                                                                                                                                                                                                                                                  
 import 'common/common.dart';
 
 void main() async {

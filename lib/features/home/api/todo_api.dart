@@ -5,14 +5,12 @@ import '../models/todo_model.dart';
 class TodoApi {
   final Dio _dio = DioClient.dio;
 
-  /// GET /api/todos
-  /// - null 또는 빈 데이터면 [] 반환 (에러 UI X)
+  /// GET /api/home/todos
   Future<List<Todo>> fetchTodayTodos() async {
-    final res = await _dio.get('/api/todos');
+    final res = await _dio.get('/api/home/todos');
 
     if (res.data == null) return [];
 
-    // 기대 형태: { "medicine": [...], "water": [...], ... }
     if (res.data is! Map<String, dynamic>) return [];
 
     final data = res.data as Map<String, dynamic>;
@@ -42,13 +40,13 @@ class TodoApi {
     return todos;
   }
 
-  /// PATCH /api/todos/check/{todoId}
+  /// PATCH /api/home/todos/check/{todoId}
   Future<void> updateTodoCompleted({
     required int todoId,
     required bool completed,
   }) async {
     await _dio.patch(
-      '/api/todos/check/$todoId',
+      '/api/home/todos/check/$todoId',
       data: {'completed': completed},
     );
   }
