@@ -104,18 +104,7 @@ class _FeedOnlyWidgetState extends State<FeedOnlyWidget> {
         //       ),
         //     ),
         //     SizedBox(width: 8.0),
-        //     Text(
-        //       '#텍스트',
-        //       style: TextStyle(
-        //         fontSize: widget.fontSize,
-        //         height: 1.5,
-        //         fontWeight: FontWeight.w400,
-        //         color: Color(0xFF18D9A2),
-        //         fontFamily: 'Pretendard',
-        //       ),
-        //     ),
-        //     SizedBox(width: 8.0),
-        //   ],
+
         // ),
         SizedBox(height: 16.0),
         Container(
@@ -164,37 +153,41 @@ class _FeedOnlyWidgetState extends State<FeedOnlyWidget> {
             ),
             SizedBox(width: 10.0),
             TextButton(
-              onPressed: () async {
-                await Navigator.of(context, rootNavigator: true).push(
-                  MaterialPageRoute(
-                    builder: (context) => SubFeedPages(
-                      feed: widget.feed,
-                      onLikeToggle: () {
-                        _clickHeart();
-                      },
-                      onCommentAdd: (String userContent) {
-                        if (userContent == null) return;
-                        setState(() {
-                          widget.feed.comments.add(
-                            FeedComment(
-                              id: widget.feed.comments.length + 1,
-                              content: userContent!, // 2. 전달받은 진짜 내용 저장
-                              writerNickname: '나(테스트)', // 실제 유저 닉네임 연동 필요
-                              createdAt: DateTime.now(),
-                              updatedAt: DateTime.now(),
-                              edited: false,
-                            ),
-                          );
-                          widget.feed.commentCount++;
-                        });
-                      },
-                    ),
-                  ),
-                );
-                setState(() {});
-              },
+              onPressed: widget.isCommentOpen == true
+                  ? () async {
+                      await Navigator.of(context, rootNavigator: true).push(
+                        MaterialPageRoute(
+                          builder: (context) => SubFeedPages(
+                            feed: widget.feed,
+                            onLikeToggle: () {
+                              _clickHeart();
+                            },
+                            onCommentAdd: (String userContent) {
+                              if (userContent == null) return;
+                              setState(() {
+                                widget.feed.comments.add(
+                                  FeedComment(
+                                    id: widget.feed.comments.length + 1,
+                                    content: userContent!, // 2. 전달받은 진짜 내용 저장
+                                    writerNickname: '나(테스트)', // 실제 유저 닉네임 연동 필요
+                                    createdAt: DateTime.now(),
+                                    updatedAt: DateTime.now(),
+                                    edited: false,
+                                  ),
+                                );
+                                widget.feed.commentCount++;
+                              });
+                            },
+                          ),
+                        ),
+                      );
+                      setState(() {});
+                    }
+                  : null,
               style: TextButton.styleFrom(
-                foregroundColor: Color(0xFF87D2BD),
+                foregroundColor: widget.isCommentOpen == true
+                    ? Color(0xFF87D2BD)
+                    : null,
                 padding: EdgeInsets.symmetric(vertical: 6.0, horizontal: 6.0),
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 minimumSize: Size.zero,
