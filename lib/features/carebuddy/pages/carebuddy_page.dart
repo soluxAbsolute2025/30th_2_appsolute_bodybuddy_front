@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:bodybuddy_frontend/common/widgets/realtime_text_widget.dart';
 import 'package:bodybuddy_frontend/common/widgets/sub_appbar.dart';
 import 'package:bodybuddy_frontend/features/carebuddy/models/carebuddy_tag_suggest.dart';
 import 'package:bodybuddy_frontend/features/carebuddy/widgets/carebuddy_bottom_buttons.dart';
@@ -8,6 +11,8 @@ import 'package:bodybuddy_frontend/features/carebuddy/models/carebuddy_chat_mode
 import 'package:bodybuddy_frontend/features/carebuddy/providers/carebuddy_api.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:timeago/timeago.dart' as timeago;
+import 'package:bodybuddy_frontend/features/carebuddy/providers/custom_ko_messages.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class CareBuddyPage extends StatefulWidget {
@@ -21,11 +26,13 @@ class CareBuddyPage extends StatefulWidget {
 class _CareBuddyPageState extends State<CareBuddyPage> {
   final textController = TextEditingController();
   final scrollController = ScrollController();
-
+  final String accessToken =
+      "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJoYWhhaGEiLCJ1c2VySWQiOjM0MiwiaWF0IjoxNzY4OTY1OTYyLCJleHAiOjE3Njg5Njk1NjJ9.gV9nHhbTwARQSEJX2mCe7nfzb1cLsLVm99vIwLuKuQM";
   bool isButtonEnabled = false;
   int selectedIndex = -1;
-  List<String> tags = ['다이어트 식단 추천', '운동 후 근육통 완화', '수면 개선 방법', '스트레스 관리법'];
+  List<String> tags = ['다이어트', '운동', '수면', '스트레스'];
   TagSuggest tagSuggest = TagSuggest(success: false, data: []);
+  bool isLoading = false;
 
   final List<ChatMessage> _messages = [];
 
@@ -33,7 +40,11 @@ class _CareBuddyPageState extends State<CareBuddyPage> {
   void initState() {
     super.initState();
 
-    // _getSuggest();
+    // 한국어 메시지 설정
+    timeago.setLocaleMessages('ko', timeago.KoMessages());
+
+    // 추천 질문 가지고 오기
+    _getSuggest();
 
     textController.addListener(() {
       setState(() {
@@ -59,7 +70,7 @@ class _CareBuddyPageState extends State<CareBuddyPage> {
   }
 
   Future<void> _getSuggest() async {
-    final result = await CarebuddyApi().getSuggest('accessToken');
+    final result = await CarebuddyApi().getSuggest(accessToken);
 
     if (!mounted) return;
 
@@ -101,15 +112,7 @@ class _CareBuddyPageState extends State<CareBuddyPage> {
                       ),
                     ),
                     SizedBox(height: 14.0),
-                    Text(
-                      '방금전',
-                      style: TextStyle(
-                        color: const Color(0xFFA6A6A6),
-                        fontSize: 12,
-                        fontFamily: 'Pretendard Variable',
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                    RealTimeText(dateTime: DateTime.now()),
                     ListView.builder(
                       shrinkWrap: true,
                       physics: NeverScrollableScrollPhysics(),
@@ -134,7 +137,6 @@ class _CareBuddyPageState extends State<CareBuddyPage> {
               children: [
                 Row(
                   children: [
-                    // 1. Expanded를 사용해 TextField가 남은 너비를 꽉 채우게 합니다.
                     Expanded(
                       child: Container(
                         // 배경색과 둥근 모서리 설정
@@ -182,9 +184,8 @@ class _CareBuddyPageState extends State<CareBuddyPage> {
     );
   }
 
-  void _sendMessage({String? tagText}) {
+  void _sendMessage({String? tagText}) async {
     final text = tagText ?? textController.text.trim();
-    if (text.isEmpty) return;
 
     setState(() {
       _messages.add(
@@ -194,17 +195,27 @@ class _CareBuddyPageState extends State<CareBuddyPage> {
           createdAt: DateTime.now(),
         ),
       );
+    });
 
+    textController.clear();
+
+    // 렌더링 끝난 다음 스크롤
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToBottom();
+    });
+
+    final String answer = await CarebuddyApi().postMessage(accessToken, text);
+    if (text.isEmpty) return;
+
+    setState(() {
       _messages.add(
         ChatMessage(
-          text: text,
+          text: answer,
           sender: ChatSender.ai,
           createdAt: DateTime.now(),
         ),
       );
     });
-
-    textController.clear();
 
     // 렌더링 끝난 다음 스크롤
     WidgetsBinding.instance.addPostFrameCallback((_) {
