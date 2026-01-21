@@ -20,7 +20,7 @@ class _FeedHottagState extends State<FeedHottagWidget> {
   @override
   void initState() {
     super.initState();
-    // _tags.clear();
+    _tags.clear();
     _tags.addAll(widget.hashList);
   }
 
@@ -72,7 +72,7 @@ class _FeedHottagState extends State<FeedHottagWidget> {
                       setState(() {
                         selectedIndex = index;
                       });
-                      print("선택된 태그 : " + _tags[index]);
+                      // print("선택된 태그 : " + _tags[index]);
                       widget.onTagFeed(tag: _tags[index]);
                     },
                     style: TextButton.styleFrom(
