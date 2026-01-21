@@ -1,10 +1,11 @@
 import 'package:bodybuddy_frontend/common/widgets/sub_appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-
-import '../../widgets/feeds/feed_only_widget.dart';
-import '../../widgets/feeds/feed_comment_widget.dart';
-import '../../../../common/widgets/sub_appbar.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'dart:io';
 
 class SubNewFeedPages extends StatefulWidget {
   const SubNewFeedPages({super.key});
@@ -14,15 +15,30 @@ class SubNewFeedPages extends StatefulWidget {
 }
 
 class _SubNewFeedPagesState extends State<SubNewFeedPages> {
-  final TextEditingController postController = TextEditingController();
+  late final HashtagEditingController postController;
   final TextEditingController locationController = TextEditingController();
   String visible = "PUBLIC";
+
   bool get _isFormValid =>
       postController.text.isNotEmpty && locationController.text.isNotEmpty;
+
+  // 이미지 저장 변수
+  File? _selectedImage;
+
+  // 추출된 해시태그를 저장할 리스트
+  List<String> _tags = [];
 
   @override
   void initState() {
     super.initState();
+    postController = HashtagEditingController();
+  }
+
+  void dispose() {
+    // 컨트롤러는 꼭 해제해줘야 메모리 누수가 없습니다.
+    postController.dispose();
+    locationController.dispose();
+    super.dispose();
   }
 
   void switchVisible() {
@@ -30,6 +46,55 @@ class _SubNewFeedPagesState extends State<SubNewFeedPages> {
       visible = "FRIEND";
     } else {
       visible = "PUBLIC";
+    }
+  }
+
+  void _extractHashTags(String text) {
+    final RegExp regExp = RegExp(r'#[^\s#]+');
+    final matches = regExp.allMatches(text);
+
+    setState(() {
+      _tags = matches.map((m) => m.group(0)!.substring(1)).toList();
+    });
+  }
+
+  Future<void> _pickAndProcessImage() async {
+    final XFile? pickedFile = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+    );
+    if (pickedFile == null) return;
+
+    final CroppedFile? croppedFile = await ImageCropper().cropImage(
+      sourcePath: pickedFile.path,
+      uiSettings: [
+        AndroidUiSettings(
+          toolbarTitle: '사진 자르기',
+          toolbarColor: Colors.black,
+          toolbarWidgetColor: Colors.white,
+          initAspectRatio: CropAspectRatioPreset.original,
+          lockAspectRatio: false,
+        ),
+        IOSUiSettings(title: '사진 자르기'),
+      ],
+    );
+    if (croppedFile == null) return;
+
+    final String targetPath = croppedFile.path.replaceFirst(
+      RegExp(r'\.jpg$|\.png$'),
+      '_out.jpg',
+    );
+
+    var result = await FlutterImageCompress.compressAndGetFile(
+      croppedFile.path,
+      targetPath,
+      quality: 80, // 압축 품질 (0~100)
+    );
+
+    // 4. 화면 갱신
+    if (result != null) {
+      setState(() {
+        _selectedImage = File(result.path);
+      });
     }
   }
 
@@ -54,8 +119,51 @@ class _SubNewFeedPagesState extends State<SubNewFeedPages> {
                     child: _textField(
                       controller: postController,
                       hintText: '오늘도 운동하셨나요? 친구들과 공유해보세요!',
+                      onChanged: (value) => _extractHashTags(value),
                     ),
                   ),
+                  if (_selectedImage != null) ...[
+                    Stack(
+                      children: [
+                        Container(
+                          margin: EdgeInsets.only(left: 49.0, right: 16.0),
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10.0),
+                          ),
+                          clipBehavior: Clip.hardEdge,
+                          child: AspectRatio(
+                            aspectRatio: 1 / 1,
+                            child: Image.file(
+                              _selectedImage!,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+
+                        Positioned(
+                          top: 10,
+                          right: 26,
+                          child: GestureDetector(
+                            onTap: () {
+                              // [삭제 로직] 변수를 비우고 화면을 갱신합니다.
+                              setState(() {
+                                _selectedImage = null;
+                              });
+                              print("이미지 삭제됨");
+                            },
+                            child: Image(
+                              width: 20,
+                              height: 20,
+                              image: AssetImage(
+                                'assets/buddyzone/del_image.png',
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                   Container(
                     width: double.infinity,
                     height: 12.0,
@@ -91,13 +199,14 @@ class _SubNewFeedPagesState extends State<SubNewFeedPages> {
                   child: TextButton(
                     onPressed: () {
                       print("사진 버튼 클릭");
+                      _pickAndProcessImage();
                     },
                     style: TextButton.styleFrom(
                       foregroundColor: Color(0x1188D3BD),
                       padding: EdgeInsets.zero,
                       minimumSize: Size.zero,
-                      tapTargetSize:
-                          MaterialTapTargetSize.shrinkWrap, // 터치 영역을 내용물에 맞춤
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      // 터치 영역을 내용물에 맞춤
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(5.0),
                       ),
@@ -123,6 +232,7 @@ class _SubNewFeedPagesState extends State<SubNewFeedPages> {
     String? content,
     int minLines = 5,
     bool isImage = false,
+    Function(String)? onChanged,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -145,6 +255,9 @@ class _SubNewFeedPagesState extends State<SubNewFeedPages> {
             controller: controller,
             onChanged: (value) {
               setState(() {});
+              if (onChanged != null) {
+                onChanged(value);
+              }
             },
             style: TextStyle(
               color: Colors.black,
@@ -278,5 +391,39 @@ class _SubNewFeedPagesState extends State<SubNewFeedPages> {
         ),
       ),
     );
+  }
+}
+
+class HashtagEditingController extends TextEditingController {
+  @override
+  TextSpan buildTextSpan({
+    required BuildContext context,
+    TextStyle? style,
+    required bool withComposing,
+  }) {
+    final String content = text;
+    final RegExp regExp = RegExp(r'#[^\s#]+|[^#]+');
+    final matches = regExp.allMatches(content);
+
+    List<TextSpan> spans = [];
+
+    for (final match in matches) {
+      final String word = match.group(0)!;
+
+      if (word.startsWith('#')) {
+        spans.add(
+          TextSpan(
+            text: word,
+            style: style?.copyWith(
+              color: const Color(0xFF18D9A2), // 민트색 (원하는 색으로 변경 가능)
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        );
+      } else {
+        spans.add(TextSpan(text: word, style: style));
+      }
+    }
+    return TextSpan(style: style, children: spans);
   }
 }

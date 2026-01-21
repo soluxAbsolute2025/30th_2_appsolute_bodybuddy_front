@@ -157,10 +157,11 @@ class _FeedOnlyWidgetState extends State<FeedOnlyWidget> {
                                 widget.feed.comments.add(
                                   FeedComment(
                                     id: widget.feed.comments.length + 1,
-                                    content: userContent!,
-                                    // 2. 전달받은 진짜 내용 저장
+                                    content: userContent,
+                                    writerProfileImageUrl:
+                                        'assets/buddyzone/myprofile.png',
                                     writerNickname: '나(테스트)',
-                                    // 실제 유저 닉네임 연동 필요
+                                    writerLevel: 1,
                                     createdAt: DateTime.now(),
                                     updatedAt: DateTime.now(),
                                     edited: false,

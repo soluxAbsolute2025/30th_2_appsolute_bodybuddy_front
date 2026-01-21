@@ -32,7 +32,9 @@ class _FeedCommentWidgetState extends State<FeedCommentWidget> {
               height: 37.0,
               child: ClipOval(
                 child: Image(
-                  image: AssetImage('assets/images/common/profile1.jpg'),
+                  image: widget.comment.writerProfileImageUrl == null
+                      ? AssetImage('assets/buddyzone/myprofile.png')
+                      : NetworkImage(widget.comment.writerProfileImageUrl!),
                 ),
               ),
             ),
@@ -62,7 +64,7 @@ class _FeedCommentWidgetState extends State<FeedCommentWidget> {
                             borderRadius: BorderRadius.circular(5.0),
                           ),
                           child: Text(
-                            'Lv.${widget.comment.id}',
+                            'Lv.${widget.comment.writerLevel}',
                             style: TextStyle(
                               color: Color(0xFF1AEDB1),
                               fontSize: 11.0,
