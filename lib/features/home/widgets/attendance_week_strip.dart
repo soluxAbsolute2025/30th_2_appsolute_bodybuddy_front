@@ -23,7 +23,7 @@ class _AttendanceWeekStripState extends State<AttendanceWeekStrip> {
     final today = DateTime.now();
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 18),
+      padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),

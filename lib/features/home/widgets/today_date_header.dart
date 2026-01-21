@@ -34,11 +34,11 @@ class TodayDateHeader extends StatelessWidget {
 
         // 오늘의 바디 카드
         const TodayBodyCard(),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
 
         /// 오늘의 할 일
         const TodayTodoSection(),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
 
         /// 진행 중인 챌린지
         const OngoingChallengeSection(),
