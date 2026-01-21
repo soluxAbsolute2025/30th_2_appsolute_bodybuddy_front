@@ -23,7 +23,7 @@ class GroupChallengeBottomButtons extends StatelessWidget {
           children: [
             Expanded(
               child: SizedBox(
-                height: 36,
+                height: 40,
                 child: OutlinedButton(
                   onPressed: () {},
                   style: OutlinedButton.styleFrom(
@@ -31,7 +31,7 @@ class GroupChallengeBottomButtons extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(5),
                     ),
-                    backgroundColor: Colors.white,
+                    backgroundColor: Color(0xFFEFEFEF),
                   ),
                   child: const Text(
                     '챌린지 공유',
@@ -39,7 +39,7 @@ class GroupChallengeBottomButtons extends StatelessWidget {
                       fontFamily: 'Pretendard',
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF464646),
+                      color: Color(0xFF747474),
                     ),
                   ),
                 ),
@@ -48,7 +48,7 @@ class GroupChallengeBottomButtons extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: SizedBox(
-                height: 36,
+                height: 40,
                 child: isVerified
                     ? OutlinedButton(
                         onPressed: null,

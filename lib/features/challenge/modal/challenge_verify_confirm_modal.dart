@@ -53,6 +53,7 @@ Future<void> showChallengeVerifyConfirmModal({
                   '오늘의 챌린지 활동을 인증할까요?',
                   style: TextStyle(
                     fontSize: 16,
+                    fontWeight: FontWeight.w400,
                     color: Color(0xFF000000),
                   ),
                 ),
@@ -61,6 +62,7 @@ Future<void> showChallengeVerifyConfirmModal({
                   challengeTitle,
                   style: const TextStyle(
                     fontSize: 12,
+                    fontWeight: FontWeight.w400,
                     color: Color(0xFF7D7C7C),
                   ),
                 ),
@@ -92,7 +94,7 @@ Future<void> showChallengeVerifyConfirmModal({
                     const SizedBox(width: 12),
                     Expanded(
                       child: SizedBox(
-                        height: 44,
+                        height: 40,
                         child: ElevatedButton(
                           onPressed: () async {
                             Navigator.of(context, rootNavigator: true).pop();
