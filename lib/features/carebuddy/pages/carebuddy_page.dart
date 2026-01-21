@@ -26,8 +26,8 @@ class CareBuddyPage extends StatefulWidget {
 class _CareBuddyPageState extends State<CareBuddyPage> {
   final textController = TextEditingController();
   final scrollController = ScrollController();
-  final String accessToken =
-      "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJoYWhhaGEiLCJ1c2VySWQiOjM0MiwiaWF0IjoxNzY4OTY1OTYyLCJleHAiOjE3Njg5Njk1NjJ9.gV9nHhbTwARQSEJX2mCe7nfzb1cLsLVm99vIwLuKuQM";
+  // final String accessToken =
+  //     "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJoYWhhaGEiLCJ1c2VySWQiOjM0MiwiaWF0IjoxNzY4OTY1OTYyLCJleHAiOjE3Njg5Njk1NjJ9.gV9nHhbTwARQSEJX2mCe7nfzb1cLsLVm99vIwLuKuQM";
   bool isButtonEnabled = false;
   int selectedIndex = -1;
   List<String> tags = ['다이어트', '운동', '수면', '스트레스'];
@@ -70,7 +70,7 @@ class _CareBuddyPageState extends State<CareBuddyPage> {
   }
 
   Future<void> _getSuggest() async {
-    final result = await CarebuddyApi().getSuggest(accessToken);
+    final result = await CarebuddyApi().getSuggest();
 
     if (!mounted) return;
 
@@ -204,7 +204,7 @@ class _CareBuddyPageState extends State<CareBuddyPage> {
       _scrollToBottom();
     });
 
-    final String answer = await CarebuddyApi().postMessage(accessToken, text);
+    final String answer = await CarebuddyApi().postMessage(text);
     if (text.isEmpty) return;
 
     setState(() {
