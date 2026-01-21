@@ -1,9 +1,10 @@
+import 'package:bodybuddy_frontend/common/widgets/realtime_text_widget.dart';
 import 'package:bodybuddy_frontend/features/carebuddy/models/carebuddy_chat_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class AiChatBubble extends StatelessWidget {
-  final ChatMessage? message;
+  final ChatMessage message;
 
   const AiChatBubble({required this.message, super.key});
 
@@ -76,16 +77,7 @@ class AiChatBubble extends StatelessWidget {
             ),
           ),
           SizedBox(height: 10.0),
-          // Text(
-          //   "방금전",
-          //   // message.createdAt.toString(),
-          //   style: TextStyle(
-          //     color: const Color(0xFFA6A6A6),
-          //     fontSize: 12,
-          //     fontFamily: 'Pretendard Variable',
-          //     fontWeight: FontWeight.w500,
-          //   ),
-          // ),
+          RealTimeText(dateTime: message.createdAt),
         ],
       ),
     );
