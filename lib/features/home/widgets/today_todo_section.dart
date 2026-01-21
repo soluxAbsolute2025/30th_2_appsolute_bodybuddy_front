@@ -24,17 +24,26 @@ class _TodayTodoSectionState extends State<TodayTodoSection> {
   }
 
   Future<void> _loadTodos() async {
+    setState(() {
+      isLoading = true;
+      hasError = false;
+    });
+
     try {
       final result = await _api.fetchTodayTodos();
+      if (!mounted) return;
+
       setState(() {
-        todos = result;
+        todos = result; // 빈 리스트면 "오늘의 할 일이 없어요."
         isLoading = false;
         hasError = false;
       });
     } catch (_) {
+      if (!mounted) return;
+
       setState(() {
         isLoading = false;
-        hasError = true;
+        hasError = true; // 500/네트워크 등 “진짜 에러”
       });
     }
   }
@@ -42,7 +51,7 @@ class _TodayTodoSectionState extends State<TodayTodoSection> {
   Future<void> _toggleTodo(Todo todo) async {
     final next = !todo.completed;
 
-    // optimistic
+    // optimistic update
     setState(() {
       todos = todos.map((t) {
         if (t.todoId == todo.todoId) return t.copyWith(completed: next);
@@ -90,6 +99,28 @@ class _TodayTodoSectionState extends State<TodayTodoSection> {
       );
     }
 
+    // ✅ null/빈 데이터면 여기로 옴
+    if (todos.isEmpty) {
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFD8D8D8)),
+        ),
+        child: const Text(
+          '오늘의 할 일이 없어요.',
+          style: TextStyle(
+            fontFamily: 'Pretendard',
+            fontSize: 14,
+            color: Color(0xFF7D7C7C),
+          ),
+        ),
+      );
+    }
+
+    // ✅ 정상 리스트
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),

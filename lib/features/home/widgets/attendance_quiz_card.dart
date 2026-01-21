@@ -322,26 +322,6 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
                           ),
                         ),
                       ),
-
-                      if (isCorrectSelected)
-                        const Text(
-                          '정답',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF18D9A2),
-                          ),
-                        ),
-
-                      if (isWrongSelected)
-                        const Text(
-                          '오답',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFFFF3B09),
-                          ),
-                        ),
                     ],
                   ),
                 ),

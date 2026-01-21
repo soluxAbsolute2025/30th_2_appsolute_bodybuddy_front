@@ -10,6 +10,15 @@ AttendanceStatus attendanceStatusFrom(String v) {
   }
 }
 
+AttendanceStatus attendanceStatusFromChecked(bool checked) {
+  return checked ? AttendanceStatus.success : AttendanceStatus.none;
+}
+
+DateTime parseDateOnly(String s) {
+  final parts = s.split('-').map(int.parse).toList();
+  return DateTime(parts[0], parts[1], parts[2]);
+}
+
 class WeeklyAttendance {
   final DateTime date;
   final AttendanceStatus status;
@@ -19,10 +28,17 @@ class WeeklyAttendance {
     required this.status,
   });
 
-  factory WeeklyAttendance.fromJson(Map<String, dynamic> json) {
+  factory WeeklyAttendance.fromWeekJson(Map<String, dynamic> json) {
     return WeeklyAttendance(
-      date: DateTime.parse(json['date'] as String),
+      date: parseDateOnly(json['date'] as String),
       status: attendanceStatusFrom(json['status'] as String),
+    );
+  }
+
+  factory WeeklyAttendance.fromAttendanceJson(Map<String, dynamic> json) {
+    return WeeklyAttendance(
+      date: parseDateOnly(json['date'] as String),
+      status: attendanceStatusFromChecked(json['checked'] as bool),
     );
   }
 }
