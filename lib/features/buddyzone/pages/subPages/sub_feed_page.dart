@@ -83,6 +83,7 @@ class _SubFeedPagesState extends State<SubFeedPages> {
                       },
                       profileSize: 37.0,
                       fontSize: 14.0,
+                      isCommentOpen: false,
                     ),
                   ),
                   SizedBox(height: 12.0),
