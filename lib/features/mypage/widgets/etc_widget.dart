@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:bodybuddy_frontend/api/auth_api.dart';
 
 class EtcWidget extends StatelessWidget {
   const EtcWidget({super.key});
@@ -242,7 +243,8 @@ class EtcWidget extends StatelessWidget {
                       height: 40.0,
                       child: TextButton(
                         style: TextButton.styleFrom(
-                          foregroundColor: const Color(0xFFE3E3E3),
+                          // foregroundColor: const Color(0xFFE3E3E3),
+                          foregroundColor: const Color(0xFFF65A33),
                           padding: const EdgeInsets.symmetric(
                             vertical: 8.0,
                             horizontal: 16.0,
@@ -271,7 +273,6 @@ class EtcWidget extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 10.0),
-                  // 로그아웃 버튼
                   Expanded(
                     child: SizedBox(
                       height: 40.0,
@@ -292,9 +293,10 @@ class EtcWidget extends StatelessWidget {
                         onPressed: () {
                           Navigator.of(context).pop();
                           // 여기에 회원 탈퇴 로직 추가
+                          // AuthApi().deleteUser('accessToken');
                         },
                         child: const Text(
-                          '로그아웃',
+                          '회원탈퇴',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 14,

@@ -1,8 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-class FeedSearchWidget extends StatelessWidget {
-  const FeedSearchWidget({super.key});
+class FeedSearchWidget extends StatefulWidget {
+  final Function({required String keyword}) onSearchFeed;
+
+  const FeedSearchWidget({super.key, required this.onSearchFeed});
+
+  @override
+  State<FeedSearchWidget> createState() => _FeedSearchState();
+}
+
+class _FeedSearchState extends State<FeedSearchWidget> {
+  TextEditingController textController = TextEditingController();
+
+  void _onSearchText() async {
+    String text = textController.text.trim();
+    if (text.isEmpty || text.length < 2) return;
+
+    await widget.onSearchFeed(keyword: text);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,6 +32,8 @@ class FeedSearchWidget extends StatelessWidget {
             height: 15,
           ),
         ),
+        controller: textController,
+
         constraints: BoxConstraints(maxHeight: 40, minHeight: 40),
         backgroundColor: MaterialStatePropertyAll(Color(0xFFEFEFEF)),
         elevation: MaterialStatePropertyAll(0),
@@ -37,8 +55,8 @@ class FeedSearchWidget extends StatelessWidget {
           ),
         ),
         onSubmitted: (value) {
-          // setState(() => inputText = value);
-          // print('Input Text = $inputText');
+          _onSearchText();
+          textController.clear();
         },
       ),
     );

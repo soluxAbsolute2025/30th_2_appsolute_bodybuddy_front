@@ -1,15 +1,33 @@
 import 'package:flutter/material.dart';
 
 class FeedHottagWidget extends StatefulWidget {
-  const FeedHottagWidget({super.key});
+  final List<String> hashList;
+  final Function({required String tag}) onTagFeed;
+  const FeedHottagWidget({
+    super.key,
+    required this.hashList,
+    required this.onTagFeed,
+  });
 
   @override
   State<FeedHottagWidget> createState() => _FeedHottagState();
 }
 
 class _FeedHottagState extends State<FeedHottagWidget> {
-  int selectedIndex = 0;
+  int selectedIndex = -1;
   final List<String> _tags = ['다이어트', '홈트레이닝', '러닝', '요가', '필라테스'];
+
+  @override
+  void initState() {
+    super.initState();
+    // _tags.clear();
+    _tags.addAll(widget.hashList);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +57,6 @@ class _FeedHottagState extends State<FeedHottagWidget> {
               mainAxisSize: MainAxisSize.max,
               children: List.generate(_tags.length, (index) {
                 bool isSelected = index == selectedIndex;
-
                 return Container(
                   margin: EdgeInsets.only(right: 8.0),
                   decoration: BoxDecoration(
@@ -55,6 +72,8 @@ class _FeedHottagState extends State<FeedHottagWidget> {
                       setState(() {
                         selectedIndex = index;
                       });
+                      print("선택된 태그 : " + _tags[index]);
+                      widget.onTagFeed(tag: _tags[index]);
                     },
                     style: TextButton.styleFrom(
                       foregroundColor: Color(0x1188D3BD),
