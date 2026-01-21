@@ -17,6 +17,7 @@ class BuddyFeedPage extends StatefulWidget {
 
 class _BuddyFeedPageState extends State<BuddyFeedPage> {
   FeedRequest _currentRequest = FeedRequest(mode: FeedMode.normal);
+  final TextEditingController searchController = TextEditingController();
 
   List<FeedPost> feeds = [];
   List<String> hashtags = [];
@@ -74,7 +75,7 @@ class _BuddyFeedPageState extends State<BuddyFeedPage> {
       request: _currentRequest,
     );
 
-    print(response.content);
+    // print(response.content);
 
     setState(() {
       feeds.addAll(response.content);
@@ -98,7 +99,10 @@ class _BuddyFeedPageState extends State<BuddyFeedPage> {
             sliver: SliverToBoxAdapter(
               child: Column(
                 children: [
-                  FeedSearchWidget(onSearchFeed: onSearchFeed),
+                  FeedSearchWidget(
+                    onSearchFeed: onSearchFeed,
+                    controller: searchController,
+                  ),
                   SizedBox(height: 16.0),
                   hashtags.isEmpty
                       ? Container()
