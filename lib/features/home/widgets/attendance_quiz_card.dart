@@ -16,7 +16,7 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
     final quiz = dummyAttendanceQuiz;
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
@@ -40,23 +40,34 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
                   quiz.question,
                   style: const TextStyle(
                     fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w400,
                   ),
                 ),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1AEDB1),
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color(0xFFFFFBBE),
+                      Color(0xFFE8FFF9),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: BorderRadius.circular(5),
+                  border: Border.all(
+                    color: Color(0xFF1AEDB1),
+                    width: 1,
+                  ),
                 ),
                 child: Text(
                   '+ ${quiz.rewardPoint} XP',
                   style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFFFFF43D),
+                    color: Color(0xFF1AEDB1),
+                    height: 1.2,
                   ),
                 ),
               ),
@@ -90,14 +101,14 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
                     color: isSelected
                         ? const Color(0xFF21EAB0)
                         : const Color(0xFFD8D8D8),
-                    width: 1.5,
+                    width: 0.7,
                   ),
                 ),
                 child: Text(
                   option.text,
                   style: TextStyle(
                     fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w400,
                     color: isSelected
                         ? const Color(0xFF18D9A2)
                         : Colors.black,

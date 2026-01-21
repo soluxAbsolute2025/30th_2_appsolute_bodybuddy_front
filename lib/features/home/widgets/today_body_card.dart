@@ -22,7 +22,7 @@ class TodayBodyCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: const Color(0xFFD8D8D8),
           width: 1,
@@ -58,7 +58,7 @@ class TodayBodyCard extends StatelessWidget {
             progress: body.water.progress,
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
 
           MetricRow(
             iconPath: 'assets/home/meal.svg',
@@ -67,7 +67,7 @@ class TodayBodyCard extends StatelessWidget {
             progress: body.meal.progress,
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
 
           MetricRow(
             iconPath: 'assets/home/sleep.svg',
