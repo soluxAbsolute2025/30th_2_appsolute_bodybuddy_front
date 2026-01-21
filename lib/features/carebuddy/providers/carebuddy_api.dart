@@ -5,12 +5,13 @@ import 'package:bodybuddy_frontend/features/carebuddy/models/carebuddy_tag_sugge
 class CarebuddyApi {
   final Dio _dio = DioClient.dio;
 
-  Future<void> postMessage(String accessToken, String message) async {
-    await _dio.post(
+  Future<String> postMessage(String accessToken, String message) async {
+    final response = await _dio.post(
       'api/chat',
       options: Options(headers: {"Authorization": "Bearer ${accessToken}"}),
-      data: {"message": message},
+      data: {"question": message},
     );
+    return response.data.toString();
   }
 
   Future<TagSuggest> getSuggest(String accessToken) async {
@@ -18,7 +19,7 @@ class CarebuddyApi {
       'api/chat/suggest',
       options: Options(headers: {"Authorization": "Bearer ${accessToken}"}),
     );
-
+    print("getSuggest : " + response.data.toString());
     return TagSuggest.fromJson(response.data);
   }
 }
