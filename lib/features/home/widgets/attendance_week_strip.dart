@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import '../models/weekly_attendance_model.dart';
 import '../api/attendance_api.dart';
+import '../../../common/kst_time.dart';
 
 class AttendanceWeekStrip extends StatefulWidget {
-  const AttendanceWeekStrip({super.key});
+  final bool forceStampToday;
+
+  const AttendanceWeekStrip({super.key, this.forceStampToday = false});
 
   @override
   State<AttendanceWeekStrip> createState() => _AttendanceWeekStripState();
@@ -18,9 +21,15 @@ class _AttendanceWeekStripState extends State<AttendanceWeekStrip> {
     _future = AttendanceApi().fetchWeekly();
   }
 
+  void refresh() {
+    setState(() {
+      _future = AttendanceApi().fetchWeekly();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final today = DateTime.now();
+    final today = nowKST();
 
     return FutureBuilder<List<WeeklyAttendance>>(
       future: _future,
@@ -43,11 +52,15 @@ class _AttendanceWeekStripState extends State<AttendanceWeekStrip> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: weeklyAttendance.map((attendance) {
-              final isSuccess = attendance.status == AttendanceStatus.success;
-              final isToday = _isSameDate(attendance.date, today);
+              final isToday = _isSameKstDate(attendance.date, today);
+
+              // ✅ 핵심: 서버 SUCCESS OR (오늘이고 forceStampToday면) 도장
+              final isStamped =
+                  attendance.status == AttendanceStatus.success ||
+                  (widget.forceStampToday && isToday);
 
               return GestureDetector(
-                onTap: isToday && !isSuccess
+                onTap: isToday && !isStamped
                     ? () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('퀴즈를 완료하면 출석 체크돼요!')),
@@ -75,14 +88,14 @@ class _AttendanceWeekStripState extends State<AttendanceWeekStrip> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: const Color(0xFFF3F3F3),
-                        border: isSuccess
+                        border: isStamped
                             ? Border.all(
                                 color: const Color(0xFF1AEDB1),
                                 width: 1.5,
                               )
                             : null,
                       ),
-                      child: isSuccess
+                      child: isStamped
                           ? Image.asset(
                               'assets/home/bodybuddy_logo.png',
                               width: 20,
@@ -143,8 +156,8 @@ class _AttendanceWeekStripState extends State<AttendanceWeekStrip> {
     );
   }
 
-  bool _isSameDate(DateTime a, DateTime b) {
-    return a.year == b.year && a.month == b.month && a.day == b.day;
+  bool _isSameKstDate(DateTime a, DateTime kstNow) {
+    return a.year == kstNow.year && a.month == kstNow.month && a.day == kstNow.day;
   }
 
   String _weekday(DateTime date) {

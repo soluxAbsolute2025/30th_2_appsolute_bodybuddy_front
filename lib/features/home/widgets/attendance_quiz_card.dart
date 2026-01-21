@@ -3,11 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/attendance_api.dart';
+import '../../../common/kst_time.dart';
 import '../models/attendance_question_model.dart';
 import '../models/attendance_answer_result_model.dart';
 
 class AttendanceQuizCard extends StatefulWidget {
-  const AttendanceQuizCard({super.key});
+  final VoidCallback? onSolved;
+
+  const AttendanceQuizCard({super.key, this.onSolved});
 
   @override
   State<AttendanceQuizCard> createState() => _AttendanceQuizCardState();
@@ -21,10 +24,16 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
   bool isAnswered = false;
   bool? lastCorrect;
 
+  String? correctAnswer;
+  int? earnedPoint;
+
   static const _kAnsweredDate = 'attendance_quiz_answered_date';
   static const _kSelectedOption = 'attendance_quiz_selected_option';
   static const _kQuizCache = 'attendance_quiz_cache_json';
   static const _kLastCorrect = 'attendance_quiz_last_correct';
+
+  static const _kCorrectAnswer = 'attendance_quiz_correct_answer';
+  static const _kEarnedPoint = 'attendance_quiz_earned_point';
 
   @override
   void initState() {
@@ -33,7 +42,7 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
   }
 
   String _todayKey() {
-    final now = DateTime.now().toLocal();
+    final now = nowKST();
     final y = now.year.toString().padLeft(4, '0');
     final m = now.month.toString().padLeft(2, '0');
     final d = now.day.toString().padLeft(2, '0');
@@ -66,6 +75,8 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
       await prefs.remove(_kSelectedOption);
       await prefs.remove(_kQuizCache);
       await prefs.remove(_kLastCorrect);
+      await prefs.remove(_kCorrectAnswer);
+      await prefs.remove(_kEarnedPoint);
     }
   }
 
@@ -80,11 +91,15 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
 
     if (savedDate == today) {
       final savedCorrect = prefs.getBool(_kLastCorrect);
+      final savedCorrectAnswer = prefs.getString(_kCorrectAnswer);
+      final savedEarnedPoint = prefs.getInt(_kEarnedPoint);
 
       setState(() {
         isAnswered = true;
         selectedOptionId = savedOption;
-        lastCorrect = savedCorrect; 
+        lastCorrect = savedCorrect;
+        correctAnswer = savedCorrectAnswer;
+        earnedPoint = savedEarnedPoint;
       });
 
       if (cachedQuiz != null) return cachedQuiz;
@@ -101,6 +116,8 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
       isAnswered = false;
       selectedOptionId = null;
       lastCorrect = null;
+      correctAnswer = null;
+      earnedPoint = null;
     });
 
     final quiz = await AttendanceApi().fetchQuestion();
@@ -121,9 +138,7 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
         content: const Text('오늘은 이미 퀴즈를 완료했어요. 내일 다시 참여할 수 있어요!'),
         actions: [
           TextButton(
-            onPressed: () {
-              Navigator.of(dialogCtx).pop();
-            },
+            onPressed: () => Navigator.of(dialogCtx).pop(),
             child: const Text('확인'),
           ),
         ],
@@ -156,7 +171,9 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_kAnsweredDate, _todayKey());
       await prefs.setInt(_kSelectedOption, optionId);
-      await prefs.setBool(_kLastCorrect, result.correct); 
+      await prefs.setBool(_kLastCorrect, result.correct);
+      await prefs.setString(_kCorrectAnswer, result.correctAnswer);
+      await prefs.setInt(_kEarnedPoint, result.earnedPoint);
       await _saveQuizCache(prefs, quiz);
 
       if (!mounted) return;
@@ -164,13 +181,27 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
       setState(() {
         isAnswered = true;
         lastCorrect = result.correct;
+        correctAnswer = result.correctAnswer;
+        earnedPoint = result.earnedPoint;
       });
+
+      // ✅ 핵심: 정답/오답 상관없이 "오늘 퀴즈 참여 완료"를 부모에 알림
+      widget.onSolved?.call();
 
       showDialog(
         context: context,
         useRootNavigator: true,
         builder: (dialogCtx) => AlertDialog(
           title: Text(result.correct ? '정답' : '틀렸어요'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('정답: ${result.correctAnswer}'),
+              const SizedBox(height: 8),
+              Text('획득 XP: ${result.earnedPoint}'),
+            ],
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogCtx).pop(),
@@ -184,11 +215,12 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
 
       setState(() {
         isAnswered = false;
+        correctAnswer = null;
+        earnedPoint = null;
       });
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('제출 실패: $e')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('제출 실패: $e')));
     } finally {
       if (mounted) setState(() => isSubmitting = false);
     }
@@ -207,11 +239,11 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
         }
 
         final quiz = snapshot.data;
+        if (quiz == null) return _fallbackDoneCard();
 
-        // ✅ 캐시도 없고 서버도 null(A002)일 때만 어쩔 수 없이 안내 카드
-        if (quiz == null) {
-          return _fallbackDoneCard();
-        }
+        final xpText = (isAnswered && earnedPoint != null)
+            ? '+ $earnedPoint XP'
+            : '+ ${quiz.rewardPoint} XP';
 
         return Container(
           padding: const EdgeInsets.all(16),
@@ -242,7 +274,6 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
                       ),
                     ),
                   ),
-
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 5,
@@ -261,7 +292,7 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
                       ),
                     ),
                     child: Text(
-                      '+ ${quiz.rewardPoint} XP',
+                      xpText,
                       style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
@@ -272,61 +303,64 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 10),
-
               ...quiz.options.asMap().entries.map((entry) {
-              final option = entry.value;
-              final isLast = entry.key == quiz.options.length - 1;
+                final option = entry.value;
+                final isLast = entry.key == quiz.options.length - 1;
 
-              final isSelected = selectedOptionId == option.id;
-              final isCorrectSelected = isAnswered && isSelected && lastCorrect == true;
-              final isWrongSelected = isAnswered && isSelected && lastCorrect == false;
+                final isSelected = selectedOptionId == option.id;
+                final isCorrectSelected =
+                    isAnswered && isSelected && lastCorrect == true;
+                final isWrongSelected =
+                    isAnswered && isSelected && lastCorrect == false;
 
-              Color bgColor = Colors.white;
-              Color borderColor = const Color(0xFFD8D8D8);
-              Color textColor = Colors.black;
+                Color bgColor = Colors.white;
+                Color borderColor = const Color(0xFFD8D8D8);
+                Color textColor = Colors.black;
 
-              if (isCorrectSelected) {
-                bgColor = const Color(0xFFE9FFF9);
-                borderColor = const Color(0xFF21EAB0);
-                textColor = const Color(0xFF18D9A2);
-              }
+                if (isCorrectSelected) {
+                  bgColor = const Color(0xFFE9FFF9);
+                  borderColor = const Color(0xFF21EAB0);
+                  textColor = const Color(0xFF18D9A2);
+                }
 
-              if (isWrongSelected) {
-                bgColor = Colors.white;
-                borderColor = const Color(0xFFFF3B09);
-                textColor = const Color(0xFFFF3B09);
-              }
+                if (isWrongSelected) {
+                  bgColor = Colors.white;
+                  borderColor = const Color(0xFFFF3B09);
+                  textColor = const Color(0xFFFF3B09);
+                }
 
-              return GestureDetector(
-                onTap: () => _submitOnTap(quiz: quiz, optionId: option.id),
-                child: Container(
-                  width: double.infinity,
-                  margin: EdgeInsets.only(bottom: isLast ? 0 : 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: bgColor,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: borderColor, width: 0.7),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          option.text,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                            color: textColor,
+                return GestureDetector(
+                  onTap: () => _submitOnTap(quiz: quiz, optionId: option.id),
+                  child: Container(
+                    width: double.infinity,
+                    margin: EdgeInsets.only(bottom: isLast ? 0 : 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: bgColor,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: borderColor, width: 0.7),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            option.text,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: textColor,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              );
-            }),
+                );
+              }),
             ],
           ),
         );

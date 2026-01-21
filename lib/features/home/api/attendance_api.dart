@@ -25,47 +25,39 @@ class AttendanceApi {
   }) async {
     final res = await _dio.post(
       '/api/attendance/answer',
-      data: {'questionId': questionId, 'optionId': optionId},
+      data: {
+        'questionId': questionId,
+        'optionId': optionId,
+      },
     );
-    return AttendanceAnswerResult.fromJson(res.data as Map<String, dynamic>);
+
+    return AttendanceAnswerResult.fromJson(
+      res.data as Map<String, dynamic>,
+    );
   }
 
+  // ✅ 서버 week 응답 그대로 사용 (숫자/도장 변경 반영)
   Future<List<WeeklyAttendance>> fetchWeekly() async {
     final res = await _dio.get('/api/attendance/weekly');
-
     final data = res.data as Map<String, dynamic>;
 
-    List<WeeklyAttendance> raw;
     final week = data['week'];
     if (week is List) {
-      raw = week
+      return week
           .whereType<Map<String, dynamic>>()
           .map(WeeklyAttendance.fromWeekJson)
           .toList();
-    } else {
-      final attendance = data['attendance'];
-      raw = (attendance as List)
+    }
+
+    // (optional) 구버전 포맷 방어
+    final attendance = data['attendance'];
+    if (attendance is List) {
+      return attendance
           .whereType<Map<String, dynamic>>()
           .map(WeeklyAttendance.fromAttendanceJson)
           .toList();
     }
 
-    // --- ✅ 여기부터 "현재 주 날짜로 보정" (임시) ---
-    final today = DateTime.now();
-    final startOfWeek = DateTime(today.year, today.month, today.day)
-        .subtract(Duration(days: today.weekday - DateTime.monday)); // 월요일
-
-    // 서버에서 받은 status를 weekday(1~7) 기준으로 맵핑
-    final statusByWeekday = <int, AttendanceStatus>{};
-    for (final a in raw) {
-      statusByWeekday[a.date.weekday] = a.status;
-    }
-
-    // 현재 주(월~일) 7칸을 만들고, weekday에 맞는 status를 끼워넣기
-    return List.generate(7, (i) {
-      final date = startOfWeek.add(Duration(days: i));
-      final status = statusByWeekday[date.weekday] ?? AttendanceStatus.none;
-      return WeeklyAttendance(date: date, status: status);
-    });
+    return const [];
   }
 }

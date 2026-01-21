@@ -203,22 +203,44 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            if (_currentPage > 0) {
-              _pageController.previousPage(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.ease,
-              );
-            } else {
-              Navigator.pop(context);
-            }
-          },
+  backgroundColor: Colors.white,
+  elevation: 0,
+  leading: IconButton(
+    icon: const Icon(Icons.arrow_back, color: Colors.black),
+    onPressed: () {
+      if (_currentPage > 0) {
+        _pageController.previousPage(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.ease,
+        );
+      } else {
+        Navigator.pop(context);
+      }
+    },
+  ),
+  actions: [
+    TextButton(
+      onPressed: () {
+        // ✅ 온보딩 건너뛰기: 메인으로 이동 + 이전 스택 제거
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const MainPage()),
+          (route) => false,
+        );
+      },
+      child: const Text(
+        '건너뛰기',
+        style: TextStyle(
+          color: Color(0xFF9E9E9E),
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          fontFamily: 'Pretendard',
         ),
       ),
+    ),
+  ],
+),
+
       body: SafeArea(
         child: Column(
           children: [
