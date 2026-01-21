@@ -1,4 +1,6 @@
 import 'package:bodybuddy_frontend/features/buddyzone/api/buddyzone_hottag_api.dart';
+import 'package:timeago/timeago.dart' as timeago;
+import 'package:bodybuddy_frontend/features/carebuddy/providers/custom_ko_messages.dart';
 
 import '../../pages/subPages/sub_feed_page.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/pages/subPages/sub_feed_page.dart';
@@ -28,6 +30,13 @@ class FeedOnlyWidget extends StatefulWidget {
 
 class _FeedOnlyWidgetState extends State<FeedOnlyWidget> {
   int commentCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    timeago.setLocaleMessages('ko_custom', MyCustomKomassages());
+  }
+
   void _clickHeart() async {
     await FeedsApi().postFeedLike(widget.feed.id);
     if (widget.onLikeToggle != null) {
@@ -47,7 +56,10 @@ class _FeedOnlyWidgetState extends State<FeedOnlyWidget> {
               height: widget.profileSize,
               child: ClipOval(
                 child: Image(
-                  image: AssetImage('assets/buddyzone/myprofile.png'),
+                  fit: BoxFit.fitWidth,
+                  image: widget.feed.writerProfileImageUrl != null
+                      ? NetworkImage(widget.feed.writerProfileImageUrl!)
+                      : AssetImage('assets/buddyzone/myprofile.png'),
                 ),
               ),
             ),
@@ -76,48 +88,25 @@ class _FeedOnlyWidgetState extends State<FeedOnlyWidget> {
         SizedBox(height: 16.0),
         Row(
           children: [
-            Expanded(
-              child: Text(
-                widget.feed.content,
-                softWrap: true,
-                style: TextStyle(
-                  fontSize: widget.fontSize,
-                  height: 1.5,
-                  fontWeight: FontWeight.w400,
-                  fontFamily: 'Pretendard',
-                ),
-              ),
-            ),
+            // content 부부분
+            Expanded(child: _contentText(content: widget.feed.content)),
           ],
         ),
-        SizedBox(height: 8.0),
-        // Row(
-        //   children: [
-        //     Text(
-        //       '#텍스트',
-        //       style: TextStyle(
-        //         fontSize: widget.fontSize,
-        //         height: 1.5,
-        //         fontWeight: FontWeight.w400,
-        //         fontFamily: 'Pretendard',
-        //         color: Color(0xFF18D9A2),
-        //       ),
-        //     ),
-        //     SizedBox(width: 8.0),
-
-        // ),
         SizedBox(height: 16.0),
-        Container(
-          width: double.infinity,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(10.0),
-            child: Image(
-              fit: BoxFit.fitWidth,
-              image: AssetImage('assets/images/common/profile1.jpg'),
+        if (widget.feed.writerProfileImageUrl != null) ...[
+          Container(
+            width: double.infinity,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10.0),
+              child: Image(
+                fit: BoxFit.fitWidth,
+                image: NetworkImage(widget.feed.writerProfileImageUrl!),
+              ),
             ),
           ),
-        ),
-        SizedBox(height: 16.0),
+          SizedBox(height: 16.0),
+        ],
+
         Row(
           children: [
             TextButton(
@@ -168,8 +157,11 @@ class _FeedOnlyWidgetState extends State<FeedOnlyWidget> {
                                 widget.feed.comments.add(
                                   FeedComment(
                                     id: widget.feed.comments.length + 1,
-                                    content: userContent!, // 2. 전달받은 진짜 내용 저장
-                                    writerNickname: '나(테스트)', // 실제 유저 닉네임 연동 필요
+                                    content: userContent,
+                                    writerProfileImageUrl:
+                                        'assets/buddyzone/myprofile.png',
+                                    writerNickname: '나(테스트)',
+                                    writerLevel: 1,
                                     createdAt: DateTime.now(),
                                     updatedAt: DateTime.now(),
                                     edited: false,
@@ -229,7 +221,7 @@ class _FeedOnlyWidgetState extends State<FeedOnlyWidget> {
         borderRadius: BorderRadius.circular(5.0),
       ),
       child: Text(
-        'Lv.15',
+        'Lv.${widget.feed.writerLevel}',
         style: TextStyle(
           color: Color(0xFF1AEDB1),
           fontSize: 11.0,
@@ -246,8 +238,7 @@ class _FeedOnlyWidgetState extends State<FeedOnlyWidget> {
         SvgPicture.asset('assets/buddyzone/time.svg'),
         SizedBox(width: 5.0),
         Text(
-          '30'
-          '분 전',
+          timeago.format(widget.feed.createdAt, locale: 'ko_custom'),
           style: TextStyle(
             fontSize: 12.0,
             fontWeight: FontWeight.w400,
@@ -255,29 +246,80 @@ class _FeedOnlyWidgetState extends State<FeedOnlyWidget> {
             fontFamily: 'Pretendard',
           ),
         ),
-        SizedBox(width: 5.0),
-        Text(
-          '·',
-          style: TextStyle(
-            fontSize: 12.0,
-            fontWeight: FontWeight.w400,
-            color: Color(0xFF7D7C7C),
-            fontFamily: 'Pretendard',
+
+        if (widget.feed.place != null) ...[
+          SizedBox(width: 5.0),
+          Text(
+            '·',
+            style: TextStyle(
+              fontSize: 12.0,
+              fontWeight: FontWeight.w400,
+              color: Color(0xFF7D7C7C),
+              fontFamily: 'Pretendard',
+            ),
           ),
-        ),
-        SizedBox(width: 5.0),
-        SvgPicture.asset('assets/buddyzone/gps.svg'),
-        SizedBox(width: 5.0),
-        Text(
-          '헬스장',
-          style: TextStyle(
-            fontSize: 12.0,
-            fontWeight: FontWeight.w400,
-            color: Color(0xFF7D7C7C),
-            fontFamily: 'Pretendard',
+          SizedBox(width: 5.0),
+          SvgPicture.asset('assets/buddyzone/gps.svg'),
+          SizedBox(width: 5.0),
+          Text(
+            widget.feed.place.toString(),
+            style: TextStyle(
+              fontSize: 12.0,
+              fontWeight: FontWeight.w400,
+              color: Color(0xFF7D7C7C),
+              fontFamily: 'Pretendard',
+            ),
           ),
-        ),
+        ],
       ],
+    );
+  }
+
+  Widget _contentText({required String content}) {
+    final List<String> hashTags = [];
+
+    final RegExp regExp = RegExp(r'#[^\s#]+|[^#]+');
+    final matches = regExp.allMatches(content);
+
+    List<TextSpan> spans = [];
+
+    for (final match in matches) {
+      final text = match.group(0)!;
+
+      if (text.startsWith('#')) {
+        // # 제거 후 저장
+        hashTags.add(text.substring(1));
+
+        spans.add(
+          TextSpan(
+            text: text,
+            style: TextStyle(
+              fontSize: widget.fontSize,
+              height: 1.5,
+              fontWeight: FontWeight.w400,
+              fontFamily: 'Pretendard',
+              color: Color(0xFF18D9A2),
+            ),
+          ),
+        );
+      } else {
+        spans.add(
+          TextSpan(
+            text: text,
+            style: const TextStyle(color: Colors.black),
+          ),
+        );
+      }
+    }
+
+    // 필요하다면 여기서 hashTags 사용 가능
+    debugPrint(hashTags.toString());
+
+    return Text.rich(
+      TextSpan(
+        style: TextStyle(fontSize: widget.fontSize, color: Colors.black),
+        children: spans,
+      ),
     );
   }
 }

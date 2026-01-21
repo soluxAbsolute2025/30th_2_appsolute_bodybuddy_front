@@ -1,7 +1,11 @@
+import 'dart:io';
+
+import 'package:bodybuddy_frontend/features/buddyzone/models/feeds/feed_post_model.dart';
 import 'package:dio/dio.dart';
 import 'package:bodybuddy_frontend/api/dio_client.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/models/feeds/feed_content_model.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/models/feeds/feed_type_model.dart';
+import 'package:http_parser/http_parser.dart';
 import '../../../common/common.dart';
 
 class HattagApi {
@@ -17,15 +21,21 @@ class HattagApi {
 class FeedsApi {
   final Dio _dio = DioClient.dio;
 
-  Future<void> postFeeds() async {
+  Future<void> postFeeds({
+    required String content,
+    required String place,
+    required String visibility,
+    required List<String> hashtags,
+  }) async {
     final response = await _dio.post(
       '/api/feeds',
       data: {
-        'title': '오늘의 하체 운동 루틴',
-        'content': '오늘은 스쿼트와 런지를 중점적으로 했습니다.',
-        'visibility': 'PUBLIC',
-        'hashtags': ["오운완", "하체운동", "스쿼트"],
+        'content': content,
+        'place': place,
+        'visibility': visibility,
+        'hashtags': hashtags,
       },
+      // options: Options(contentType: Header),
     );
     print(response);
   }
@@ -87,5 +97,37 @@ class FeedRequestAPI {
         break;
     }
     return FeedPageResponse.fromJson(response.data);
+  }
+}
+
+class FeedPostRequst {
+  final Dio _dio = DioClient.dio;
+
+  Future<void> uplodePost({
+    required PostFeedModel request,
+    File? imageFile,
+  }) async {
+    try {
+      final formData = FormData.fromMap({
+        "request": MultipartFile.fromString(
+          request.toJsonString(),
+          contentType: MediaType('application/json', 'utf-8'),
+        ),
+        // 이미지 파일이 있을 경우 추가
+        if (imageFile != null)
+          "image": await MultipartFile.fromFile(
+            imageFile.path,
+            filename: "post_image.jpg",
+            contentType: MediaType('image', 'jpeg'), // 파일 형식에 맞게 설정
+          ),
+      });
+
+      // 3. 서버로 전송
+      final response = await _dio.post('/api/feeds', data: formData);
+
+      print("업로드 성공: ${response.data}");
+    } catch (e) {
+      print("업로드 실패: $e");
+    }
   }
 }

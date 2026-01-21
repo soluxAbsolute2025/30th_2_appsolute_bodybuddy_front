@@ -125,6 +125,8 @@ class FeedComment {
   final int id;
   final String content;
   final String writerNickname;
+  final String? writerProfileImageUrl;
+  final int writerLevel;
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool edited;
@@ -133,6 +135,8 @@ class FeedComment {
     required this.id,
     required this.content,
     required this.writerNickname,
+    required this.writerProfileImageUrl,
+    required this.writerLevel,
     required this.createdAt,
     required this.updatedAt,
     required this.edited,
@@ -143,6 +147,8 @@ class FeedComment {
       id: json['id'],
       content: json['content'],
       writerNickname: json['writerNickname'],
+      writerProfileImageUrl: json['writerProfileImageUrl'],
+      writerLevel: json['writerLevel'],
       createdAt: DateTime.parse(json['createdAt']),
       updatedAt: DateTime.parse(json['updatedAt']),
       edited: json['edited'],

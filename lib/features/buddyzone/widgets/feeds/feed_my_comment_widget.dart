@@ -5,16 +5,16 @@ import 'package:bodybuddy_frontend/features/carebuddy/providers/custom_ko_messag
 
 import '../../models/feeds/feed_content_model.dart';
 
-class FeedCommentWidget extends StatefulWidget {
+class FeedMyCommentWidget extends StatefulWidget {
   final FeedComment comment;
 
-  const FeedCommentWidget({super.key, required this.comment});
+  const FeedMyCommentWidget({super.key, required this.comment});
 
   @override
-  State<FeedCommentWidget> createState() => _FeedCommentWidgetState();
+  State<FeedMyCommentWidget> createState() => _FeedMyCommentWidgetState();
 }
 
-class _FeedCommentWidgetState extends State<FeedCommentWidget> {
+class _FeedMyCommentWidgetState extends State<FeedMyCommentWidget> {
   @override
   void initState() {
     super.initState();
@@ -32,9 +32,7 @@ class _FeedCommentWidgetState extends State<FeedCommentWidget> {
               height: 37.0,
               child: ClipOval(
                 child: Image(
-                  image: widget.comment.writerProfileImageUrl == null
-                      ? AssetImage('assets/buddyzone/myprofile.png')
-                      : NetworkImage(widget.comment.writerProfileImageUrl!),
+                  image: AssetImage('assets/images/common/profile1.jpg'),
                 ),
               ),
             ),
@@ -64,7 +62,7 @@ class _FeedCommentWidgetState extends State<FeedCommentWidget> {
                             borderRadius: BorderRadius.circular(5.0),
                           ),
                           child: Text(
-                            'Lv.${widget.comment.writerLevel}',
+                            'Lv.${widget.comment.id}',
                             style: TextStyle(
                               color: Color(0xFF1AEDB1),
                               fontSize: 11.0,
