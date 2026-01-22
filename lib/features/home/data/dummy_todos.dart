@@ -7,7 +7,6 @@ final dummyTodos = [
     title: '비타민 먹기',
     time: '17:00',
     completed: true,
-    repeatDays: ['MON', 'TUE', 'WED', 'THU', 'FRI'],
   ),
   Todo(
     todoId: 2,
@@ -15,7 +14,6 @@ final dummyTodos = [
     title: '물 마시기',
     time: '14:00',
     completed: false,
-    repeatDays: ['MON', 'TUE', 'WED', 'THU', 'FRI'],
   ),
   Todo(
     todoId: 3,
@@ -23,7 +21,6 @@ final dummyTodos = [
     title: '런닝하기',
     time: '07:00',
     completed: false,
-    repeatDays: ['MON', 'WED', 'FRI'],
   ),
   Todo(
     todoId: 4,
@@ -31,6 +28,5 @@ final dummyTodos = [
     title: '단백질 쉐이크',
     time: '19:00',
     completed: false,
-    repeatDays: ['MON', 'WED', 'FRI'],
   ),
 ];
