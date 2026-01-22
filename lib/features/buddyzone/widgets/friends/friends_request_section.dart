@@ -22,28 +22,26 @@ class FriendRequestSection extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  child: Row(
-                    children: [
-                      Text(
-                        '친구 요청',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.w600,
-                        ),
+                Row(
+                  children: [
+                    Text(
+                      '친구 요청',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.w600,
                       ),
-                      SizedBox(width: 5.0),
-                      Text(
-                        '3',
-                        style: TextStyle(
-                          color: Color(0xFF1AEDB1),
-                          fontSize: 17.0,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    ),
+                    SizedBox(width: 5.0),
+                    Text(
+                      '3',
+                      style: TextStyle(
+                        color: Color(0xFF1AEDB1),
+                        fontSize: 17.0,
+                        fontWeight: FontWeight.w600,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ],
             ),

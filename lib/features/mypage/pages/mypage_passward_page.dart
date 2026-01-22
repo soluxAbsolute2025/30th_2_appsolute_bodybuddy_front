@@ -87,6 +87,10 @@ class _MypagePasswardPageState extends State<MypagePasswardPage> {
               horizontal: 20.0,
               vertical: 16,
             ),
+
+            filled: true,
+            fillColor: Color(0xFFFFFFFF),
+
             // 둥근 모서리를 주고 싶을 때 사용
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10.0),

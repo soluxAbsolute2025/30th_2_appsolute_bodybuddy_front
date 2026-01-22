@@ -18,9 +18,7 @@ class MypageProfileWidget extends StatelessWidget {
             width: 62.0,
             height: 62.0,
             child: ClipOval(
-              child: Image(
-                image: AssetImage('assets/images/common/profile1.jpg'),
-              ),
+              child: Image(image: AssetImage('assets/mypage/myprofile.png')),
             ),
           ),
           SizedBox(width: 14.0),
