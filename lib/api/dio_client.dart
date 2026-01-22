@@ -11,7 +11,6 @@ class DioClient {
               baseUrl: 'http://52.79.228.227:8080',
               connectTimeout: const Duration(seconds: 10),
               receiveTimeout: const Duration(seconds: 10),
-              headers: {"Content-Type": "application/json"},
             ),
           )
           ..interceptors.add(
@@ -30,6 +29,7 @@ class DioClient {
                 return handler.next(response);
               },
               onError: (e, handler) {
+                return handler.next(e);
               },
             ),
           );

@@ -12,13 +12,9 @@ class CreateGroupChallengeBanner extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: GestureDetector(
         onTap: () {
-          Navigator.push(
-            context,
+          Navigator.of(context, rootNavigator: true).push(
             MaterialPageRoute(
-              builder: (_) => GroupChallengeTypePage(
-                model: GroupChallengeCreateModel(),
-              ),
-              
+              builder: (_) => GroupChallengeTypePage(model: GroupChallengeCreateModel()),
             ),
           );
         },

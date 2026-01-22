@@ -64,7 +64,7 @@ class GroupChallengeCreatedModal extends StatelessWidget {
             const SizedBox(height: 18),
             SizedBox(
               width: double.infinity,
-              height: 44,
+              height: 55,
               child: OutlinedButton.icon(
                 onPressed: () async {
                   await Clipboard.setData(ClipboardData(text: groupCode));

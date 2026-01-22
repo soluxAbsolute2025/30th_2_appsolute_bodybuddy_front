@@ -1,19 +1,18 @@
+import 'dart:io';
+
 class GroupChallengeCreateModel {
   String title = '';
   String description = '';
-
-  String imageUrl = '';
-  String goalSummary = '';
+  File? imageFile;
 
   int? period;
   int maxParticipants = 2;
-  String privacyScope = 'FRIENDS'; 
+  String privacyScope = 'FRIENDS';
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toRequestJson() {
     return {
       'title': title.trim(),
       'description': description.trim(),
-      'imageUrl': imageUrl.trim().isEmpty ? null : imageUrl.trim(),
       'period': period,
       'maxParticipants': maxParticipants,
       'privacyScope': privacyScope,

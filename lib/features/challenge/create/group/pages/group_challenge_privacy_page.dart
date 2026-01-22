@@ -57,7 +57,7 @@ class _GroupChallengePrivacyPageState extends State<GroupChallengePrivacyPage> {
               '챌린지 공개 여부를\n설정해주세요',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 50),
 
             ...GroupChallengePrivacyOptions.items.map((opt) => Padding(
                   padding: const EdgeInsets.only(bottom: 12),

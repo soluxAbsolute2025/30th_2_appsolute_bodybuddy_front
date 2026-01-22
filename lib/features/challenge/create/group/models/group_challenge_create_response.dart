@@ -4,7 +4,7 @@ class GroupChallengeCreateResponse {
   final String groupCode;
   final String message;
 
-  GroupChallengeCreateResponse({
+  const GroupChallengeCreateResponse({
     required this.status,
     required this.groupId,
     required this.groupCode,
@@ -13,10 +13,10 @@ class GroupChallengeCreateResponse {
 
   factory GroupChallengeCreateResponse.fromJson(Map<String, dynamic> json) {
     return GroupChallengeCreateResponse(
-      status: json['status'] as int,
-      groupId: json['groupId'] as int,
-      groupCode: json['groupCode'] as String,
-      message: json['message'] as String,
+      status: (json['status'] as num?)?.toInt() ?? 0,
+      groupId: (json['groupId'] as num?)?.toInt() ?? 0,
+      groupCode: json['groupCode']?.toString() ?? '',
+      message: json['message']?.toString() ?? '',
     );
   }
 }

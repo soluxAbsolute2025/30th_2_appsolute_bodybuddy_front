@@ -18,7 +18,7 @@ class BottomPrimaryButton extends StatelessWidget {
       top: false,
       child: SizedBox(
         width: double.infinity,
-        height: 48,
+        height: 55,
         child: ElevatedButton(
           onPressed: isEnabled ? onPressed : null,
           style: ElevatedButton.styleFrom(

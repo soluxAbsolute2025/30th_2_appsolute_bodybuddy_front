@@ -23,12 +23,21 @@ class _GroupChallengeTypePageState extends State<GroupChallengeTypePage> {
   @override
   void initState() {
     super.initState();
+
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.immersiveSticky,
+    );
+
     _periodController =
         TextEditingController(text: widget.model.period?.toString() ?? '');
   }
 
   @override
   void dispose() {
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.edgeToEdge,
+    );
+
     _periodController.dispose();
     super.dispose();
   }
@@ -46,6 +55,7 @@ class _GroupChallengeTypePageState extends State<GroupChallengeTypePage> {
     final isValid = controller.isTypePageValid;
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         centerTitle: true,
         elevation: 0,
@@ -70,53 +80,56 @@ class _GroupChallengeTypePageState extends State<GroupChallengeTypePage> {
           ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              '기간과 함께 할\n최대 인원을 설정해주세요!',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 40),
-            
-            LabeledTextField(
-              label: '기간',
-              hint: '최소 7일 이상으로 설정해 주세요',
-              controller: _periodController,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              suffixText: '일',
-              onChanged: (value) {
-                final parsed = int.tryParse(value.trim());
-                widget.model.period = parsed;
-                setState(() {});
-              },
-            ),
+      body: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '기간과 함께 할\n최대 인원을 설정해주세요!',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 40),
+              
+              LabeledTextField(
+                label: '기간',
+                hint: '최소 7일 이상으로 설정해 주세요',
+                controller: _periodController,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                suffixText: '일',
+                onChanged: (value) {
+                  final parsed = int.tryParse(value.trim());
+                  widget.model.period = parsed;
+                  setState(() {});
+                },
+              ),
 
-            const SizedBox(height: 25),
-            const Text('최대 인원',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-            GroupChallengeParticipantCounter(
-              value: widget.model.maxParticipants,
-              onDecrease: _dec,
-              onIncrease: _inc,
-            ),
+              const SizedBox(height: 25),
+              const Text('최대 인원',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+              GroupChallengeParticipantCounter(
+                value: widget.model.maxParticipants,
+                onDecrease: _dec,
+                onIncrease: _inc,
+              ),
 
-            const Spacer(),
-            BottomPrimaryButton(
-              text: '다음',
-              isEnabled: isValid,
-              onPressed: () {
-                Navigator.of(context, rootNavigator: true).push(
-                  MaterialPageRoute(
-                    builder: (_) => GroupChallengePrivacyPage(model: widget.model),
-                  ),
-                );
-              },
-            ),
-          ],
+              const Spacer(),
+              BottomPrimaryButton(
+                text: '다음',
+                isEnabled: isValid,
+                onPressed: () {
+                  Navigator.of(context, rootNavigator: true).push(
+                    MaterialPageRoute(
+                      builder: (_) => GroupChallengePrivacyPage(model: widget.model),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
