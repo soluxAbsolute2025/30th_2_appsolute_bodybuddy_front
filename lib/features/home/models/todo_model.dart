@@ -1,36 +1,45 @@
-enum TodoCategory {
-  MEDICINE,
-  WATER,
-  EXERCISE,
-  MEAL,
+enum TodoCategory { MEDICINE, WATER, EXERCISE, MEAL }
+
+TodoCategory todoCategoryFromKey(String key) {
+  switch (key) {
+    case 'medicine':
+      return TodoCategory.MEDICINE;
+    case 'water':
+      return TodoCategory.WATER;
+    case 'exercise':
+      return TodoCategory.EXERCISE;
+    case 'meal':
+      return TodoCategory.MEAL;
+    default:
+      throw Exception('Unknown category key: $key');
+  }
 }
 
 class Todo {
-  final int todoId;
+  final int todoId; // notificationId
   final TodoCategory category;
   final String title;
-  final String time; // "HH:mm"
-  final bool completed;
-  final List<String> repeatDays;
+  final String time; // "HH:mm:ss"
+  final bool completed; // checked
 
-  Todo({
+  const Todo({
     required this.todoId,
     required this.category,
     required this.title,
     required this.time,
     required this.completed,
-    required this.repeatDays,
   });
 
-  factory Todo.fromJson(Map<String, dynamic> json) {
+  factory Todo.fromApiJson({
+    required String categoryKey,
+    required Map<String, dynamic> json,
+  }) {
     return Todo(
-      todoId: json['todoId'],
-      category: TodoCategory.values
-          .firstWhere((e) => e.name == json['category']),
-      title: json['title'],
-      time: json['time'],
-      completed: json['completed'],
-      repeatDays: List<String>.from(json['repeatDays']),
+      todoId: json['notificationId'] as int,
+      category: todoCategoryFromKey(categoryKey),
+      title: (json['title'] ?? '') as String,
+      time: (json['time'] ?? '') as String,
+      completed: (json['checked'] ?? false) as bool,
     );
   }
 
@@ -41,7 +50,6 @@ class Todo {
       title: title,
       time: time,
       completed: completed ?? this.completed,
-      repeatDays: repeatDays,
     );
   }
 }
