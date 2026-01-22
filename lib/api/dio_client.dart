@@ -30,9 +30,6 @@ class DioClient {
                 return handler.next(response);
               },
               onError: (e, handler) {
-                print("[DIO ERROR] ${e.response?.statusCode}");
-                print(e.response?.data);
-                return handler.next(e);
               },
             ),
           );
