@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../models/personal_challenge_create_model.dart';
 import '../widgets/personal_challenge_create_controller.dart';
@@ -22,6 +25,10 @@ class _PersonalChallengeInfoPageState extends State<PersonalChallengeInfoPage> {
   late final descController =
       TextEditingController(text: widget.model.description);
 
+  final _picker = ImagePicker();
+
+  File? get _pickedImage => widget.model.imageFile;
+
   @override
   void initState() {
     super.initState();
@@ -29,11 +36,29 @@ class _PersonalChallengeInfoPageState extends State<PersonalChallengeInfoPage> {
     void onChanged() {
       widget.model.title = titleController.text;
       widget.model.description = descController.text;
-      setState(() {}); 
+      setState(() {});
     }
 
     titleController.addListener(onChanged);
     descController.addListener(onChanged);
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final xfile = await _picker.pickImage(source: ImageSource.gallery);
+      if (xfile == null) return;
+
+      setState(() {
+        widget.model.imageFile = File(xfile.path);
+      });
+    } catch (_) {
+    }
+  }
+
+  void _removeImage() {
+    setState(() {
+      widget.model.imageFile = null;
+    });
   }
 
   @override
@@ -91,6 +116,58 @@ class _PersonalChallengeInfoPageState extends State<PersonalChallengeInfoPage> {
               label: '챌린지 설명',
               hint: '예) 매일 10,000보 걷기',
               controller: descController,
+            ),
+            const SizedBox(height: 50),
+            Stack(
+             children: [
+              GestureDetector(
+                onTap: _pickImage,
+                child: Column(
+                  children: [
+                    const Divider(height: 0.4, color: Color(0xFFA6A6A6)),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 16,
+                      ),
+                      alignment: Alignment.centerLeft,
+                      child: _pickedImage == null
+                          ? Image.asset(
+                              'assets/challenge/image.png',
+                              width: 30,
+                              height: 30,
+                            )
+                          : ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: AspectRatio(
+                                aspectRatio: 16 / 9,
+                                child: Image.file(
+                                  _pickedImage!,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+
+              if (_pickedImage != null)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: GestureDetector(
+                    onTap: _removeImage,
+                    child: Image.asset(
+                      'assets/challenge/del_image.png',
+                      width: 28,
+                      height: 28,
+                    ),
+                  ),
+                ),
+              ],
             ),
             const Spacer(),
             BottomPrimaryButton(
