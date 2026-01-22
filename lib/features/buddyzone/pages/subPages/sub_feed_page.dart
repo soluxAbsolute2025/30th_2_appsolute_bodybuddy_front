@@ -1,6 +1,7 @@
 import 'package:bodybuddy_frontend/common/widgets/sub_appbar.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/api/buddyzone_hottag_api.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/models/feeds/feed_content_model.dart';
+import 'package:bodybuddy_frontend/features/buddyzone/widgets/feeds/feed_my_comment_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -120,7 +121,7 @@ class _SubFeedPagesState extends State<SubFeedPages> {
                         ...widget.feed.comments.map((comment) {
                           return FeedCommentWidget(comment: comment);
                         }).toList(),
-                        // FeedCommentWidget(widget.feed),
+                        FeedMyCommentWidget(comment: widget.feed.comments[0]),
                       ],
                     ),
                   ),

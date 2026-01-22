@@ -64,6 +64,29 @@ class FeedsApi {
     );
     print(response);
   }
+
+  Future<void> deleteFeedComment(int commentId) async {
+    final response = await _dio.delete('/api/feeds/comments/${commentId}');
+    print(response);
+  }
+
+  Future<void> patchFeedComment(int commentId, String content) async {
+    final response = await _dio.patch(
+      '/api/feeds/comments/${commentId}',
+      data: {'content': content},
+    );
+
+    print(response);
+  }
+
+  Future<void> checkUserInfo() async {
+    final response = await _dio.get('/api/user');
+    print("api/user :" + response.data);
+    if (response.data != null) {
+      print('별다른 처리가 되지 않았습니다.');
+    }
+    // return List<String>.from(response.data);
+  }
 }
 
 class FeedRequestAPI {
@@ -118,7 +141,7 @@ class FeedPostRequst {
           MultipartFile.fromString(
             request.toJsonString(),
             contentType: MediaType('application/json', 'utf-8'),
-            filename: 'request.json', // [중요 1] 이게 없으면 Spring이 JSON 인식을 못함
+            // filename: 'request.json', // [중요 1] 이게 없으면 Spring이 JSON 인식을 못함
           ),
         ),
       );

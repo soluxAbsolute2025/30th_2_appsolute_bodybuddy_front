@@ -99,6 +99,10 @@ class _BuddyFeedPageState extends State<BuddyFeedPage> {
             sliver: SliverToBoxAdapter(
               child: Column(
                 children: [
+                  TextButton(
+                    onPressed: FeedsApi().checkUserInfo,
+                    child: Text('테스트 버튼'),
+                  ),
                   FeedSearchWidget(
                     onSearchFeed: onSearchFeed,
                     controller: searchController,
