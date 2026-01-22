@@ -5,14 +5,14 @@ class PostFeedModel {
   final String visibility;
   final String? place;
   final List<String> hashtags;
-  final bool imageDeleted;
+  // final bool imageDeleted;
 
   const PostFeedModel({
     required this.content,
     required this.visibility,
     this.place = null,
     required this.hashtags,
-    this.imageDeleted = false,
+    // this.imageDeleted = false,
   });
 
   Map<String, dynamic> toJson() {
@@ -21,7 +21,7 @@ class PostFeedModel {
       "visibility": visibility,
       "place": place,
       "hashtags": hashtags,
-      "imageDeleted": imageDeleted,
+      // "imageDeleted": imageDeleted,
     };
   }
 

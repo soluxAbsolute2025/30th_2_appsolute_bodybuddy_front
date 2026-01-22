@@ -62,7 +62,7 @@ class _SubNewFeedPagesState extends State<SubNewFeedPages> {
 
   void switchVisible() {
     setState(() {
-      visible = (visible == "PUBLIC") ? "FRIEND" : "PUBLIC";
+      visible = (visible == "PUBLIC") ? "SECRET" : "PUBLIC";
     });
   }
 
@@ -305,7 +305,7 @@ class _SubNewFeedPagesState extends State<SubNewFeedPages> {
               SvgPicture.asset('assets/buddyzone/public.svg'),
               const SizedBox(width: 6.0),
             ],
-            if (visible == "FRIEND") ...[
+            if (visible == "SECRET") ...[
               const Image(image: AssetImage('assets/buddyzone/link.png')),
               const SizedBox(width: 4.0),
               SvgPicture.asset('assets/buddyzone/friend.svg'),

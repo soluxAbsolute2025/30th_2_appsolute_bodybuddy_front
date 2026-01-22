@@ -7,8 +7,16 @@ import '../../models/feeds/feed_content_model.dart';
 
 class FeedMyCommentWidget extends StatefulWidget {
   final FeedComment comment;
+  // [추가] 부모로부터 받을 함수들 정의
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
-  const FeedMyCommentWidget({super.key, required this.comment});
+  const FeedMyCommentWidget({
+    super.key,
+    required this.comment,
+    required this.onEdit, // 필수 인자로 받기
+    required this.onDelete, // 필수 인자로 받기
+  });
 
   @override
   State<FeedMyCommentWidget> createState() => _FeedMyCommentWidgetState();
@@ -116,9 +124,9 @@ class _FeedMyCommentWidgetState extends State<FeedMyCommentWidget> {
 
                 onSelected: (value) {
                   if (value == 'edit') {
-                    // 수정 로직
+                    widget.onEdit(); // 부모가 준 수정 함수 실행!
                   } else if (value == 'delete') {
-                    // 삭제 로직
+                    widget.onDelete(); // 부모가 준 삭제 함수 실행!
                   }
                 },
 

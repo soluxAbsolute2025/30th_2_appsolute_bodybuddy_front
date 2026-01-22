@@ -123,7 +123,7 @@ class FeedPost {
 // 댓글 클래스
 class FeedComment {
   final int id;
-  final String content;
+  String content;
   final String writerNickname;
   final String? writerProfileImageUrl;
   final int writerLevel;
