@@ -33,4 +33,10 @@ class MyPageAPI {
 
     return PrivacyResponse.fromJson(response.data);
   }
+
+  Future<void> getMyPageMyFeed() async {
+    final response = await _dio.get('/api/mypage/posts');
+
+    print(response.data.toString());
+  }
 }

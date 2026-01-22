@@ -1,8 +1,10 @@
+import 'package:bodybuddy_frontend/features/buddyzone/models/feeds/feed_content_model.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/pages/subPages/sub_feed_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class MypageMyFeedWidget extends StatefulWidget {
+  final FeedPost feed;
   final double? profileSize;
   final double? fontSize;
   final bool? isCommentOpen;
@@ -10,7 +12,7 @@ class MypageMyFeedWidget extends StatefulWidget {
 
   const MypageMyFeedWidget({
     super.key,
-
+    required this.feed,
     this.profileSize = 33.0,
     this.fontSize = 12.0,
     this.isCommentOpen = true,
