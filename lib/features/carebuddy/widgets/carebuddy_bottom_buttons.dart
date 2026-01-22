@@ -15,7 +15,8 @@ class CarebuddyBottomButtons extends StatelessWidget {
           0xFFDFFEFF,
           0xFF86DBDD,
           0xFF00AEFF,
-          url: 'https://www.youtube.com/?app=desktop&hl=ko&gl=KR',
+          url:
+              'https://health.kdca.go.kr/healthinfo/biz/health/gnrlzHealthlnfo/gnrlzHealthInfo/gnrlzHealthInfoView.do?cntnts_sn=5293',
         ),
         _subtag(
           '영양',
@@ -23,7 +24,7 @@ class CarebuddyBottomButtons extends StatelessWidget {
           0xFFDDFFE3,
           0xFF87E597,
           0xFF00D346,
-          url: 'https://www.youtube.com/?app=desktop&hl=ko&gl=KR',
+          url: 'https://various.foodsafetykorea.go.kr/nutrient/',
         ),
         _subtag(
           '질병',
@@ -31,7 +32,8 @@ class CarebuddyBottomButtons extends StatelessWidget {
           0xFFFFDFDB,
           0xFFD78E83,
           0xFFEA441A,
-          url: 'https://www.youtube.com/?app=desktop&hl=ko&gl=KR',
+          url:
+              'https://health.kdca.go.kr/healthinfo/biz/health/ntcnlnfo/helthEdcRecsroom/helthEdcRecsroomMain.do',
         ),
         _subtag(
           '정신 건강',
@@ -39,7 +41,7 @@ class CarebuddyBottomButtons extends StatelessWidget {
           0xFFF8DFFF,
           0xFFB67DC4,
           0xFF9000FF,
-          url: 'https://www.youtube.com/?app=desktop&hl=ko&gl=KR',
+          url: 'https://www.mentalhealth.go.kr/portal/disease/diseaseList.do',
         ),
       ],
     );
@@ -92,9 +94,9 @@ class CarebuddyBottomButtons extends StatelessWidget {
     );
   }
 
-  // 외부 웹 링크 연결하기
+  // 외부 웹 링크 연결하기 > 정부 기관의 정보 값일 경우에는 inApp에서는 접속 차단하기 때문에 externalApplication으로 수정해야 함.
   Future<void> _launchInBrowser(Uri url) async {
-    if (!await launchUrl(url, mode: LaunchMode.inAppBrowserView)) {
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       throw Exception('Could not launch $url');
     }
   }

@@ -18,10 +18,6 @@ class DioClient {
             InterceptorsWrapper(
               onRequest: (options, handler) {
                 final token = Common.token;
-
-                print("[DIO] ${options.method} ${options.baseUrl}${options.path}");
-                print("[DIO] data: ${options.data}");
-
                 print("[DIO] 현재 토큰: $token");
 
                 if (token != null && token.isNotEmpty) {
@@ -34,10 +30,6 @@ class DioClient {
                 return handler.next(response);
               },
               onError: (e, handler) {
-                print("[DIO ERROR] ${e.requestOptions.method} ${e.requestOptions.baseUrl}${e.requestOptions.path}");
-                print("[DIO ERROR] status: ${e.response?.statusCode}");
-                print("[DIO ERROR] data: ${e.response?.data}");
-                handler.next(e);
               },
             ),
           );
