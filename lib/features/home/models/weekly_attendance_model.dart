@@ -16,7 +16,7 @@ AttendanceStatus attendanceStatusFromChecked(bool checked) {
 
 DateTime parseDateOnly(String s) {
   final parts = s.split('-').map(int.parse).toList();
-  return DateTime(parts[0], parts[1], parts[2]);
+  return DateTime.utc(parts[0], parts[1], parts[2]).add(const Duration(hours: 9));
 }
 
 class WeeklyAttendance {

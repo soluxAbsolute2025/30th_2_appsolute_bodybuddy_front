@@ -27,21 +27,39 @@ class _AttendanceWeekStripState extends State<AttendanceWeekStrip> {
     });
   }
 
+  // ✅ 서버 DateTime을 "KST dateOnly"로 정규화
+  DateTime _kstDateOnly(DateTime dt) {
+    final kst = dt.isUtc ? dt.add(const Duration(hours: 9)) : dt;
+    return DateTime(kst.year, kst.month, kst.day);
+  }
+
+  String _ymd(DateTime dt) {
+    final d = _kstDateOnly(dt);
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${d.year}-${two(d.month)}-${two(d.day)}';
+  }
+
   @override
   Widget build(BuildContext context) {
-    final today = nowKST();
+    final today = dateOnlyKST();
+    final todayIndex = today.weekday - 1;
+
+    final monday = today.subtract(Duration(days: today.weekday - 1));
+    DateTime dateOfIndex(int idx) => monday.add(Duration(days: idx));
 
     return FutureBuilder<List<WeeklyAttendance>>(
       future: _future,
       builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return _loading();
-        }
-        if (snapshot.hasError || !snapshot.hasData) {
-          return _error();
-        }
+        if (snapshot.connectionState != ConnectionState.done) return _loading();
+        if (snapshot.hasError || !snapshot.hasData) return _error();
 
-        final weeklyAttendance = snapshot.data!;
+        final weekly = snapshot.data!;
+
+        // ✅ 서버 응답을 "KST yyyy-mm-dd" 키로 매핑
+        final stampedByYmd = <String, bool>{};
+        for (final w in weekly) {
+          stampedByYmd[_ymd(w.date)] = (w.status == AttendanceStatus.success);
+        }
 
         return Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
@@ -51,13 +69,14 @@ class _AttendanceWeekStripState extends State<AttendanceWeekStrip> {
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: weeklyAttendance.map((attendance) {
-              final isToday = _isSameKstDate(attendance.date, today);
+            children: List.generate(7, (idx) {
+              final date = dateOfIndex(idx);
+              final isToday = idx == todayIndex;
 
-              // ✅ 핵심: 서버 SUCCESS OR (오늘이고 forceStampToday면) 도장
+              final key = _ymd(date);
+              final isStampedFromServer = stampedByYmd[key] == true;
               final isStamped =
-                  attendance.status == AttendanceStatus.success ||
-                  (widget.forceStampToday && isToday);
+                  isStampedFromServer || (widget.forceStampToday && isToday);
 
               return GestureDetector(
                 onTap: isToday && !isStamped
@@ -70,7 +89,7 @@ class _AttendanceWeekStripState extends State<AttendanceWeekStrip> {
                 child: Column(
                   children: [
                     Text(
-                      _weekday(attendance.date),
+                      _weekday(date),
                       style: TextStyle(
                         fontFamily: 'Pretendard',
                         fontSize: 12,
@@ -102,7 +121,7 @@ class _AttendanceWeekStripState extends State<AttendanceWeekStrip> {
                               height: 20,
                             )
                           : Text(
-                              '${attendance.date.day}',
+                              '${date.day}',
                               style: const TextStyle(
                                 fontFamily: 'Pretendard',
                                 fontSize: 12,
@@ -114,7 +133,7 @@ class _AttendanceWeekStripState extends State<AttendanceWeekStrip> {
                   ],
                 ),
               );
-            }).toList(),
+            }),
           ),
         );
       },
@@ -154,10 +173,6 @@ class _AttendanceWeekStripState extends State<AttendanceWeekStrip> {
         ],
       ),
     );
-  }
-
-  bool _isSameKstDate(DateTime a, DateTime kstNow) {
-    return a.year == kstNow.year && a.month == kstNow.month && a.day == kstNow.day;
   }
 
   String _weekday(DateTime date) {
