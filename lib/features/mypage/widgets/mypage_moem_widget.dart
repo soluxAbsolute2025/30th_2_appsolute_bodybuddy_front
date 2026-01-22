@@ -1,9 +1,16 @@
+import 'package:bodybuddy_frontend/features/mypage/models/mypage_info_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-class MypageMoemWidget extends StatelessWidget {
-  const MypageMoemWidget({super.key});
+class MypageMoemWidget extends StatefulWidget {
+  MyPageResponse? myPageInfo;
+  MypageMoemWidget({super.key, required this.myPageInfo});
 
+  @override
+  State<MypageMoemWidget> createState() => _MypageMoemWidgetState();
+}
+
+class _MypageMoemWidgetState extends State<MypageMoemWidget> {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -20,7 +27,8 @@ class MypageMoemWidget extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  '12',
+                  widget.myPageInfo!.activitySummary.completedChallenges
+                      .toString(),
                   style: TextStyle(
                     color: Colors.black,
                     fontSize: 14,
@@ -47,7 +55,8 @@ class MypageMoemWidget extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  '49',
+                  widget.myPageInfo!.activitySummary.consecutiveAttendance
+                      .toString(),
                   style: TextStyle(
                     color: Colors.black,
                     fontSize: 14,

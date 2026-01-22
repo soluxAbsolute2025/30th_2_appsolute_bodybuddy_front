@@ -1,11 +1,18 @@
+import 'package:bodybuddy_frontend/features/mypage/models/mypage_info_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class MypageLevelWidget extends StatefulWidget {
   final int? userVal;
   final int? maxVal;
+  LevelInfo? levelInfo;
 
-  const MypageLevelWidget({super.key, this.userVal = 1, this.maxVal = 3});
+  MypageLevelWidget({
+    super.key,
+    this.userVal = 1,
+    this.maxVal = 3,
+    required this.levelInfo,
+  });
 
   @override
   State<MypageLevelWidget> createState() => _MypageLevelWidgetState();
@@ -14,9 +21,10 @@ class MypageLevelWidget extends StatefulWidget {
 class _MypageLevelWidgetState extends State<MypageLevelWidget> {
   @override
   Widget build(BuildContext context) {
-    int level = widget.maxVal!.toInt() - widget.userVal!.toInt();
+    int level = widget.levelInfo!.currentExp.toInt() - widget.userVal!.toInt();
 
-    double ratio = widget.userVal! / widget.maxVal!;
+    double ratio =
+        widget.levelInfo!.currentExp / widget.levelInfo!.nextLevelExp;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -34,7 +42,7 @@ class _MypageLevelWidgetState extends State<MypageLevelWidget> {
             ),
             SizedBox(width: 6.0),
             Text(
-              '${level} XP',
+              '${widget.levelInfo!.remainingExp} XP',
               style: TextStyle(
                 color: Color(0xFF1AEDB0),
                 fontSize: 16,
@@ -79,7 +87,7 @@ class _MypageLevelWidgetState extends State<MypageLevelWidget> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              '${widget.userVal}XP',
+              '${widget.levelInfo!.currentExp}XP',
               style: TextStyle(
                 color: Color(0xFF7D7C7C),
                 fontSize: 12,
@@ -88,7 +96,7 @@ class _MypageLevelWidgetState extends State<MypageLevelWidget> {
               ),
             ),
             Text(
-              '${widget.maxVal}XP',
+              '${widget.levelInfo!.nextLevelExp}XP',
               style: TextStyle(
                 color: Color(0xFF7D7C7C),
                 fontSize: 12,
