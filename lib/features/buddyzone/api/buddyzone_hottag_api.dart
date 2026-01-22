@@ -6,7 +6,8 @@ import 'package:bodybuddy_frontend/api/dio_client.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/models/feeds/feed_content_model.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/models/feeds/feed_type_model.dart';
 import 'package:http_parser/http_parser.dart';
-import '../../../common/common.dart';
+
+import '../models/feeds/feed_post_model.dart';
 
 class HattagApi {
   final Dio _dio = DioClient.dio;
@@ -108,26 +109,56 @@ class FeedPostRequst {
     File? imageFile,
   }) async {
     try {
-      final formData = FormData.fromMap({
-        "request": MultipartFile.fromString(
-          request.toJsonString(),
-          contentType: MediaType('application/json', 'utf-8'),
-        ),
-        // 이미지 파일이 있을 경우 추가
-        if (imageFile != null)
-          "image": await MultipartFile.fromFile(
-            imageFile.path,
-            filename: "post_image.jpg",
-            contentType: MediaType('image', 'jpeg'), // 파일 형식에 맞게 설정
-          ),
-      });
+      final formData = FormData();
 
-      // 3. 서버로 전송
+      // 1. JSON 데이터 추가 (가짜 파일명 'request.json' 필수)
+      formData.files.add(
+        MapEntry(
+          "request",
+          MultipartFile.fromString(
+            request.toJsonString(),
+            contentType: MediaType('application/json', 'utf-8'),
+            filename: 'request.json', // [중요 1] 이게 없으면 Spring이 JSON 인식을 못함
+          ),
+        ),
+      );
+
+      // 2. 이미지 파일 추가
+      if (imageFile != null) {
+        final String path = imageFile.path;
+        final String fileName = path.split('/').last;
+
+        // 확장자 체크 (기본 jpeg)
+        MediaType contentType = MediaType('image', 'jpeg');
+        if (path.toLowerCase().endsWith('.png')) {
+          contentType = MediaType('image', 'png');
+        }
+
+        formData.files.add(
+          MapEntry(
+            "image",
+            await MultipartFile.fromFile(
+              path,
+              filename: fileName,
+              contentType: contentType,
+            ),
+          ),
+        );
+      }
+
+      print("--- [서버 전송 시작] ---");
+
       final response = await _dio.post('/api/feeds', data: formData);
 
-      print("업로드 성공: ${response.data}");
+      print("업로드 성공: ${response.statusCode} / ${response.data}");
+    } on DioException catch (e) {
+      print("업로드 실패 (DioError): ${e.message}");
+      if (e.response != null) {
+        print("상태 코드: ${e.response?.statusCode}");
+        print("서버 응답: ${e.response?.data}");
+      }
     } catch (e) {
-      print("업로드 실패: $e");
+      print("업로드 실패 (기타): $e");
     }
   }
 }
