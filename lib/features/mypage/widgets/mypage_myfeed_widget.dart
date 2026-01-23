@@ -13,6 +13,8 @@ class MypageMyFeedWidget extends StatefulWidget {
   final double? fontSize;
   final bool? isCommentOpen;
   final List<String> tags;
+  final VoidCallback? onLikeToggle;
+  final VoidCallback? onDelete;
 
   const MypageMyFeedWidget({
     super.key,
@@ -21,6 +23,8 @@ class MypageMyFeedWidget extends StatefulWidget {
     this.fontSize = 12.0,
     this.isCommentOpen = true,
     this.tags = const [],
+    this.onLikeToggle,
+    this.onDelete,
   });
 
   @override
@@ -29,6 +33,7 @@ class MypageMyFeedWidget extends StatefulWidget {
 
 class _MypageMyFeedWidget extends State<MypageMyFeedWidget> {
   FeedPost? detailFeed;
+
   bool isLoading = true;
 
   @override
@@ -38,15 +43,32 @@ class _MypageMyFeedWidget extends State<MypageMyFeedWidget> {
     getPostInfo();
   }
 
+  Future<void> deleteFeed() async {
+    isLoading = true;
+
+    await FeedsApi().deleteFeed(feedId: widget.feed.postId);
+
+    if (widget.onDelete != null) {
+      widget.onDelete!();
+    }
+
+    setState(() {
+      isLoading = false;
+    });
+  }
+
   Future<void> getPostInfo() async {
     try {
       final FeedPost response = await FeedsApi().detailFeeds(
-        feedId: widget.feed.postId.toInt(),
+        feedId: widget.feed.postId,
       );
 
       if (mounted) {
         setState(() {
           detailFeed = response;
+
+          widget.feed.liked = response.liked;
+          widget.feed.likeCount = response.likeCount;
           isLoading = false;
         });
       }
@@ -55,6 +77,25 @@ class _MypageMyFeedWidget extends State<MypageMyFeedWidget> {
       if (mounted) {
         setState(() => isLoading = false);
       }
+    }
+  }
+
+  void _clickHeart() async {
+    await FeedsApi().postFeedLike(widget.feed.postId);
+
+    setState(() {
+      if (detailFeed != null) {
+        detailFeed!.liked = !detailFeed!.liked;
+        detailFeed!.liked ? detailFeed!.likeCount++ : detailFeed!.likeCount--;
+
+        // 부모 리스트 데이터도 동기화
+        widget.feed.liked = detailFeed!.liked;
+        widget.feed.likeCount = detailFeed!.likeCount;
+      }
+    });
+
+    if (widget.onLikeToggle != null) {
+      widget.onLikeToggle!();
     }
   }
 
@@ -104,51 +145,7 @@ class _MypageMyFeedWidget extends State<MypageMyFeedWidget> {
               ],
             ),
             SizedBox(height: 16.0),
-            Container(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      '오늘 스쿼트 100개 달성! 한 달 전만 해도 50개도 힘들었는데 꾸준히 하니까 늘었네요. 다들 화이팅!',
-                      softWrap: true,
-                      style: TextStyle(
-                        fontSize: widget.fontSize,
-                        height: 1.5,
-                        fontWeight: FontWeight.w400,
-                        fontFamily: 'Pretendard',
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 8.0),
-            Row(
-              children: [
-                Text(
-                  '#텍스트',
-                  style: TextStyle(
-                    fontSize: widget.fontSize,
-                    height: 1.5,
-                    fontWeight: FontWeight.w400,
-                    fontFamily: 'Pretendard',
-                    color: Color(0xFF18D9A2),
-                  ),
-                ),
-                SizedBox(width: 8.0),
-                Text(
-                  '#텍스트',
-                  style: TextStyle(
-                    fontSize: widget.fontSize,
-                    height: 1.5,
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFF18D9A2),
-                    fontFamily: 'Pretendard',
-                  ),
-                ),
-                SizedBox(width: 8.0),
-              ],
-            ),
+            Row(children: [_contentText(content: widget.feed.content)]),
             SizedBox(height: 16.0),
             Container(
               width: double.infinity,
@@ -169,7 +166,9 @@ class _MypageMyFeedWidget extends State<MypageMyFeedWidget> {
                 Row(
                   children: [
                     TextButton(
-                      onPressed: null,
+                      onPressed: () {
+                        _clickHeart();
+                      },
                       style: TextButton.styleFrom(
                         foregroundColor: Color(0xFF87D2BD),
                         padding: EdgeInsets.symmetric(
@@ -185,12 +184,14 @@ class _MypageMyFeedWidget extends State<MypageMyFeedWidget> {
                       child: SvgPicture.asset(
                         width: 22,
                         height: 19,
-                        'assets/buddyzone/false_heart.svg',
+                        detailFeed!.liked
+                            ? 'assets/buddyzone/heart.svg'
+                            : 'assets/buddyzone/false_heart.svg',
                       ),
                     ),
                     SizedBox(width: 2.0),
                     Text(
-                      widget.feed.likeCount.toString(),
+                      detailFeed!.likeCount.toString(),
                       style: TextStyle(
                         color: Colors.black,
                         fontSize: 12,
@@ -296,7 +297,9 @@ class _MypageMyFeedWidget extends State<MypageMyFeedWidget> {
                     ),
                     SizedBox(width: 8.0),
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        deleteFeed();
+                      },
                       style: TextButton.styleFrom(
                         foregroundColor: Color(0xFFF65A33),
                         padding: EdgeInsets.symmetric(

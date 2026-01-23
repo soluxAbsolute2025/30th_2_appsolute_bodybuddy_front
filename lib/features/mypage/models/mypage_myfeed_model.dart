@@ -30,8 +30,9 @@ class FeedItem {
   final String content;
   final List<String> hashtags;
   final String postImageUrl;
-  final int likeCount;
   final int commentCount;
+  int likeCount;
+  bool liked;
 
   FeedItem({
     required this.postId,
@@ -44,6 +45,7 @@ class FeedItem {
     required this.hashtags,
     required this.postImageUrl,
     required this.likeCount,
+    this.liked = false,
     required this.commentCount,
   });
 
@@ -61,6 +63,7 @@ class FeedItem {
       postImageUrl: json['postImageUrl'] ?? '',
       likeCount: json['likeCount'] ?? 0,
       commentCount: json['commentCount'] ?? 0,
+      liked: false,
     );
   }
 }

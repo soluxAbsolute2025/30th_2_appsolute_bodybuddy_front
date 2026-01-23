@@ -27,20 +27,6 @@ class _MypageMyfeedPageState extends State<MypageMyfeedPage> {
     _getMyFeedList();
   }
 
-  // Future<void> _setFeedList() async {
-  //   if (isLoading) return;
-  //   setState(() {
-  //     isLoading = true;
-  //   });
-  //
-  //   // print(response.content);
-  //
-  //   setState(() {
-  //     // feeds.addAll(response.content);
-  //     isLoading = false;
-  //   });
-  // }
-
   Future<void> _getMyFeedList() async {
     if (isLoading) return;
     setState(() {
@@ -60,6 +46,8 @@ class _MypageMyfeedPageState extends State<MypageMyfeedPage> {
       appBar: SubAppbar(titleText: '내가 쓴 글'),
       body: isLoading && myFeedModel == null
           ? const Center(child: CircularProgressIndicator()) // 로딩 중일 때 표시
+          : (myFeedModel?.data == null || myFeedModel!.data.isEmpty)
+          ? _nullCommentText()
           : CustomScrollView(
               slivers: [
                 SliverToBoxAdapter(
@@ -78,13 +66,50 @@ class _MypageMyfeedPageState extends State<MypageMyfeedPage> {
                       final item = myFeedModel!.data[index];
                       return Container(
                         margin: const EdgeInsets.only(bottom: 10.0),
-                        child: MypageMyFeedWidget(feed: item),
+                        child: MypageMyFeedWidget(
+                          feed: item,
+                          onLikeToggle: () {
+                            setState(() {
+                              if (feeds[index].liked) {
+                                feeds[index].likeCount--;
+                              } else {
+                                feeds[index].likeCount++;
+                              }
+                              feeds[index].liked = !feeds[index].liked;
+                            });
+                          },
+                          onDelete: () {
+                            setState(() {
+                              myFeedModel!.data.removeAt(index);
+                            });
+                          },
+                        ),
                       );
                     }, childCount: myFeedModel?.data.length ?? 0),
                   ),
                 ),
               ],
             ),
+    );
+  }
+
+  Widget _nullCommentText() {
+    return Container(
+      padding: EdgeInsets.only(bottom: 16.0),
+      height: 350.0,
+      alignment: Alignment.center,
+      child: Text(
+        '아직 작성한 글이 없습니다.\n'
+        '버디존에서 원하는 글을 생성해보세요',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: const Color(0xFFA6A6A6),
+          fontSize: 14,
+          fontFamily: 'Pretendard Variable',
+          fontWeight: FontWeight.w400,
+          height: 1.50,
+        ),
+      ),
     );
   }
 }

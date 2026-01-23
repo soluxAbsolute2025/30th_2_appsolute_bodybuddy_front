@@ -79,7 +79,6 @@ class _BadgeCollectionWidgetState extends State<BadgeCollectionWidget> {
                           badgeList[index].badgeName,
                         );
                       } else {
-                        // 빈 공간 채우기
                         return const Expanded(child: SizedBox(height: 127.0));
                       }
                     }),
@@ -102,7 +101,7 @@ class _BadgeCollectionWidgetState extends State<BadgeCollectionWidget> {
                 imageUrl,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
-                  return Container(color: Colors.grey[200]); // 에러 시 회색 원
+                  return Container(color: Colors.grey[200]);
                 },
               ),
             ),
