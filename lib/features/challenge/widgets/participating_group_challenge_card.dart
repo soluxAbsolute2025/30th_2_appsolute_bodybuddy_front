@@ -1,32 +1,34 @@
 import 'package:flutter/material.dart';
+
 import 'overlapping_profile_stack.dart';
 import '../models/group_member_model.dart';
 import 'rank_badge.dart';
 import 'group_code_join_button.dart';
 import 'group_code_join_dialog.dart';
 
-class ParticipatingGroupChallengeCard extends StatelessWidget {
-  final String title;
-  final int rank;
-  final int remainDays;
-  final List<GroupMember> members;
-  final String? imageUrl;
+import '../models/ongoing_group_challenge.dart';
 
+class ParticipatingGroupChallengeCard extends StatelessWidget {
+  final OngoingGroupChallenge challenge;
   final VoidCallback onImageTap;
 
   const ParticipatingGroupChallengeCard({
     super.key,
-    required this.title,
-    required this.rank,
-    required this.remainDays,
-    required this.members,
+    required this.challenge,
     required this.onImageTap,
-    this.imageUrl,
   });
 
   @override
   Widget build(BuildContext context) {
-    final memberCount = members.length;
+    final members = challenge.topParticipants
+        .map(
+          (p) => GroupMember(
+            id: p.nickname, // ✅ 현재 GroupMember에 nickname 필드가 없으니 id에 넣어 사용
+            profileImageUrl: p.profileImageUrl ?? '',
+            isMe: p.isMe,
+          ),
+        )
+        .toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,11 +40,11 @@ class ParticipatingGroupChallengeCard extends StatelessWidget {
             width: double.infinity,
             height: 150,
             decoration: BoxDecoration(
-              color: imageUrl == null ? const Color(0xFFF5F5F5) : null,
+              color: challenge.imageUrl == null ? const Color(0xFFF5F5F5) : null,
               borderRadius: BorderRadius.circular(10),
-              image: imageUrl != null
+              image: challenge.imageUrl != null
                   ? DecorationImage(
-                      image: NetworkImage(imageUrl!),
+                      image: NetworkImage(challenge.imageUrl!),
                       fit: BoxFit.cover,
                     )
                   : null,
@@ -53,7 +55,7 @@ class ParticipatingGroupChallengeCard extends StatelessWidget {
                 Positioned(
                   top: 12,
                   right: 12,
-                  child: RankBadge(rank: rank),
+                  child: RankBadge(rank: challenge.myRank),
                 ),
 
                 /// 하단 프로필
@@ -76,7 +78,7 @@ class ParticipatingGroupChallengeCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                title,
+                challenge.title,
                 style: const TextStyle(
                   fontFamily: 'Pretendard',
                   fontSize: 14,
@@ -86,7 +88,7 @@ class ParticipatingGroupChallengeCard extends StatelessWidget {
                 ),
               ),
               Text(
-                '$memberCount명 참여중 · $remainDays일 남음',
+                '${challenge.participantCount}명 참여중 · ${challenge.remainingDays}일 남음',
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w400,
@@ -99,14 +101,14 @@ class ParticipatingGroupChallengeCard extends StatelessWidget {
 
         const SizedBox(height: 40),
 
-        /// 그룹 코드로 참여 버튼
+        /// 그룹 코드로 참여 버튼 (참여중 카드라면 보통 "코드 공유/복사"가 더 자연스럽긴 함)
         GroupCodeJoinButton(
           onTap: () {
             showJoinGroupCodeDialog(
               context: context,
               onJoin: (code) {
-                // TODO: 여기서 그룹 참여 API 호출
                 debugPrint('그룹 코드: $code');
+                // TODO: 그룹 참여 API 호출
               },
             );
           },
