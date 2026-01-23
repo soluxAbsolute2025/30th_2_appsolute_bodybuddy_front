@@ -1,13 +1,21 @@
+import 'package:bodybuddy_frontend/features/mypage/models/mypage_info_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '/features/mypage/pages/mypage_profile_page.dart';
 
-class MypageProfileWidget extends StatelessWidget {
-  const MypageProfileWidget({super.key});
+class MypageProfileWidget extends StatefulWidget {
+  MyPageResponse? myPageInfo;
+  MypageProfileWidget({super.key, required this.myPageInfo});
 
   @override
+  State<MypageProfileWidget> createState() => _MypageProfileWidgetState();
+}
+
+class _MypageProfileWidgetState extends State<MypageProfileWidget> {
+  @override
   Widget build(BuildContext context) {
+    final UserProfile? userProfile = widget.myPageInfo?.userProfile;
     return Container(
       color: Colors.white,
       constraints: BoxConstraints(maxHeight: 90.0),
@@ -18,7 +26,13 @@ class MypageProfileWidget extends StatelessWidget {
             width: 62.0,
             height: 62.0,
             child: ClipOval(
-              child: Image(image: AssetImage('assets/mypage/myprofile.png')),
+              child: Image(
+                image:
+                    userProfile!.profileImageUrl == null ||
+                        userProfile.profileImageUrl!.isEmpty
+                    ? AssetImage('assets/mypage/myprofile.png')
+                    : NetworkImage(userProfile.profileImageUrl!),
+              ),
             ),
           ),
           SizedBox(width: 14.0),
@@ -30,7 +44,7 @@ class MypageProfileWidget extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      '김헬스',
+                      userProfile.nickname,
                       style: TextStyle(
                         fontSize: 16.0,
                         fontWeight: FontWeight.w700,
@@ -50,7 +64,7 @@ class MypageProfileWidget extends StatelessWidget {
                           borderRadius: BorderRadius.circular(5.0),
                         ),
                         child: Text(
-                          'Lv.15',
+                          'Lv.${widget.myPageInfo?.levelInfo.currentLevel}',
                           style: TextStyle(
                             color: Color(0xFF18D9A2),
                             fontSize: 11.0,
@@ -68,7 +82,7 @@ class MypageProfileWidget extends StatelessWidget {
                     Container(
                       child: Text(
                         textAlign: TextAlign.left,
-                        '건강한 라이프 스타일 실천 중',
+                        widget.myPageInfo!.userProfile.introduction.toString(),
                         style: TextStyle(
                           color: Color(0xFF747474),
                           fontSize: 14.0,
@@ -85,7 +99,8 @@ class MypageProfileWidget extends StatelessWidget {
             onPressed: () {
               Navigator.of(context, rootNavigator: true).push(
                 MaterialPageRoute(
-                  builder: (context) => const MypageProfilePage(),
+                  builder: (context) =>
+                      MypageProfilePage(myPageInfo: widget.myPageInfo),
                 ),
               );
             },

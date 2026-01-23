@@ -47,9 +47,15 @@ class FeedsApi {
     return List<String>.from(response.data);
   }
 
-  Future<void> detailFeeds({required int feedId}) async {
+  Future<FeedPost> detailFeeds({required int feedId}) async {
+    final response = await _dio.get('/api/feeds/${feedId}');
+    print(response.data);
+    return FeedPost.fromJson(response.data);
+  }
+
+  Future<void> deleteFeed({required int feedId}) async {
     final response = await _dio.delete('/api/feeds/${feedId}');
-    print(response);
+    print('삭제 완료 : ${response}');
   }
 
   Future<void> postFeedLike(int feedId) async {

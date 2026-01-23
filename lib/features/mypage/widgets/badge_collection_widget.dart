@@ -1,11 +1,20 @@
+import 'package:bodybuddy_frontend/features/mypage/models/mypage_info_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-class BadgeCollectionWidget extends StatelessWidget {
-  const BadgeCollectionWidget({super.key});
+class BadgeCollectionWidget extends StatefulWidget {
+  MyPageResponse? myPageInfo;
+  BadgeCollectionWidget({super.key, required this.myPageInfo});
 
   @override
+  State<BadgeCollectionWidget> createState() => _BadgeCollectionWidgetState();
+}
+
+class _BadgeCollectionWidgetState extends State<BadgeCollectionWidget> {
+  @override
   Widget build(BuildContext context) {
+    final badgeList = widget.myPageInfo?.recentBadges ?? [];
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -61,92 +70,73 @@ class BadgeCollectionWidget extends StatelessWidget {
           Container(
             margin: const EdgeInsets.only(top: 24.0, bottom: 30.0),
             child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    children: [
-                      SizedBox(
-                        width: 90.0,
-                        height: 90.0,
-                        child: ClipOval(
-                          child: Image(
-                            image: AssetImage(
-                              'assets/images/common/profile1.jpg',
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 16.0),
-                      Text(
-                        '30일 챌린지',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 14,
-                          fontFamily: 'Pretendard Variable',
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Column(
-                    children: [
-                      SizedBox(
-                        width: 90.0,
-                        height: 90.0,
-                        child: ClipOval(
-                          child: Image(
-                            image: AssetImage(
-                              'assets/images/common/profile1.jpg',
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 16.0),
-                      Text(
-                        '목표 설정',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 14,
-                          fontFamily: 'Pretendard Variable',
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Column(
-                    children: [
-                      SizedBox(
-                        width: 90.0,
-                        height: 90.0,
-                        child: ClipOval(
-                          child: Image(
-                            image: AssetImage(
-                              'assets/images/common/profile1.jpg',
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 16.0),
-                      Text(
-                        '꾸준함',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 14,
-                          fontFamily: 'Pretendard Variable',
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+              children: badgeList.isEmpty
+                  ? [Expanded(child: _nullCommentText())]
+                  : List.generate(3, (index) {
+                      if (index < badgeList.length) {
+                        return _bedgeWidget(
+                          badgeList[index].badgeImageUrl,
+                          badgeList[index].badgeName,
+                        );
+                      } else {
+                        return const Expanded(child: SizedBox(height: 127.0));
+                      }
+                    }),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _bedgeWidget(String imageUrl, String title) {
+    return Expanded(
+      child: Column(
+        children: [
+          SizedBox(
+            width: 90.0,
+            height: 90.0,
+            child: ClipOval(
+              child: Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(color: Colors.grey[200]);
+                },
+              ),
+            ),
+          ),
+          SizedBox(height: 16.0),
+          Text(
+            title,
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 14,
+              fontFamily: 'Pretendard Variable',
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _nullCommentText() {
+    return Container(
+      padding: EdgeInsets.only(bottom: 16.0),
+      height: 127.0,
+      alignment: Alignment.center,
+      child: Text(
+        '아직 뱃지가 없어요\n'
+        '경험치를 얻어 뱃지를 획득해보세요',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: const Color(0xFFA6A6A6),
+          fontSize: 14,
+          fontFamily: 'Pretendard Variable',
+          fontWeight: FontWeight.w400,
+          height: 1.50,
+        ),
       ),
     );
   }
