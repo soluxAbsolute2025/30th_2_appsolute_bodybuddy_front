@@ -80,11 +80,24 @@ class FeedsApi {
   }
 
   Future<void> checkUserInfo() async {
-    final response = await _dio.get('/api/user');
-    print("api/user :" + response.data);
-    if (response.data != null) {
-      print('별다른 처리가 되지 않았습니다.');
+    print("checkUserInfo 호출됨.");
+    try {
+      final response = await _dio.get('/api/users');
+
+      print("🎉 업로드 성공: ${response.statusCode}");
+      print("응답 데이터: ${response.data}");
+    } on DioException catch (e) {
+      print("❌ 업로드 실패 (DioError): ${e.response?.statusCode}");
+      print("서버 응답: ${e.response?.data}");
+      print("에러 메시지: ${e.message}");
+    } catch (e) {
+      print("❌ 업로드 실패 (기타): $e");
     }
+    // final response = await _dio.get('/api/users');
+    // print("/api/users :" + response.data);
+    // if (response.data != null) {
+    //   print('별다른 처리가 되지 않았습니다.');
+    // }
     // return List<String>.from(response.data);
   }
 }
@@ -134,14 +147,20 @@ class FeedPostRequst {
     try {
       final formData = FormData();
 
-      // 1. JSON 데이터 추가 (가짜 파일명 'request.json' 필수)
+      // 1. JSON 데이터 추가
+      // 백엔드 예시: request.files.add(http.MultipartFile.fromString('request', ...));
       formData.files.add(
         MapEntry(
           "request",
           MultipartFile.fromString(
             request.toJsonString(),
-            contentType: MediaType('application/json', 'utf-8'),
-            // filename: 'request.json', // [중요 1] 이게 없으면 Spring이 JSON 인식을 못함
+            // [핵심 수정] 문법을 고쳤습니다.
+            // application/json 이라고 붙여 쓰면 안되고, 콤마(,)로 나눠야 합니다.
+            contentType: MediaType('application', 'json'),
+
+            // [수정] 백엔드 예시에 filename이 없으므로 우리도 뺍니다.
+            // 만약 그래도 안 되면 filename: 'request.json'을 다시 넣어야 하지만,
+            // MediaType이 틀렸던 게 가장 큰 원인이었을 겁니다.
           ),
         ),
       );
@@ -151,10 +170,13 @@ class FeedPostRequst {
         final String path = imageFile.path;
         final String fileName = path.split('/').last;
 
-        // 확장자 체크 (기본 jpeg)
+        // 확장자 체크
         MediaType contentType = MediaType('image', 'jpeg');
         if (path.toLowerCase().endsWith('.png')) {
           contentType = MediaType('image', 'png');
+        } else if (path.toLowerCase().endsWith('.jpg') ||
+            path.toLowerCase().endsWith('.jpeg')) {
+          contentType = MediaType('image', 'jpeg');
         }
 
         formData.files.add(
@@ -170,18 +192,25 @@ class FeedPostRequst {
       }
 
       print("--- [서버 전송 시작] ---");
+      print("JSON Data: ${request.toJsonString()}");
 
-      final response = await _dio.post('/api/feeds', data: formData);
+      // 3. 전송
+      // 백엔드 예시에는 헤더를 직접 넣었지만, Dio에서는 FormData를 넣으면
+      // 알아서 Content-Type: multipart/form-data; boundary=... 를 만들어줍니다.
+      final response = await _dio.post(
+        '/api/feeds',
+        data: formData,
+        // options: Options(...) <-- 이 부분은 삭제하세요. Dio에게 맡기는 게 가장 안전합니다.
+      );
 
-      print("업로드 성공: ${response.statusCode} / ${response.data}");
+      print("🎉 업로드 성공: ${response.statusCode}");
+      print("응답 데이터: ${response.data}");
     } on DioException catch (e) {
-      print("업로드 실패 (DioError): ${e.message}");
-      if (e.response != null) {
-        print("상태 코드: ${e.response?.statusCode}");
-        print("서버 응답: ${e.response?.data}");
-      }
+      print("❌ 업로드 실패 (DioError): ${e.response?.statusCode}");
+      print("서버 응답: ${e.response?.data}");
+      print("에러 메시지: ${e.message}");
     } catch (e) {
-      print("업로드 실패 (기타): $e");
+      print("❌ 업로드 실패 (기타): $e");
     }
   }
 }

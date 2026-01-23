@@ -85,6 +85,7 @@ flutter:
     - assets/images/
     - assets/challenge/
     - assets/buddyzone/
+    - assets/buddyzone/friend_profile/
     - assets/mypage/
     - assets/home/
     - assets/bodylog/
