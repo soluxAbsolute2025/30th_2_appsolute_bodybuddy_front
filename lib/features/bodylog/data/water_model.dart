@@ -2,26 +2,20 @@
 
 class WaterLog {
   final int id;
-  final int amount; // 섭취량 (ml)
-  final String time; // "14:30" (화면 표시용)
+  final int amount;
+  final String time;
 
-  WaterLog({
-    required this.id,
-    required this.amount,
-    required this.time,
-  });
+  WaterLog({required this.id, required this.amount, required this.time});
 
   factory WaterLog.fromJson(Map<String, dynamic> json) {
-    // 서버의 createdAt ("2025-01-24T14:30:00")에서 시간만 추출
-    String timeStr = "00:00";
-    if (json['createdAt'] != null && json['createdAt'].toString().length > 16) {
-      timeStr = json['createdAt'].toString().substring(11, 16);
-    }
-
     return WaterLog(
-      id: json['id'] ?? 0,
-      amount: json['amount'] ?? 0,
-      time: timeStr,
+      // 서버 필드명에 맞춰서 매핑
+      id: json['waterLogId'] ?? 0,
+      amount: json['amountMl'] ?? 0,
+      // "2025-12-30T00:00:00"에서 시간만 추출 (00:00)
+      time: json['loggedAt'] != null
+          ? json['loggedAt'].toString().substring(11, 16)
+          : '00:00',
     );
   }
 }
