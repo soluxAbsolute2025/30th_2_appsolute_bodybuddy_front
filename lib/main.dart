@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-
-// 👇 [중요] OnboardingPage를 사용하려면 파일 위치를 import 해줘야 합니다.
 import 'features/onboarding/pages/onboarding_page.dart';
+import 'pages/main_page.dart';                                                                                                                                                                                                                                                                                                  
+import 'common/common.dart';
 
-// 👇 나중에 로그인 완료 후 메인 페이지로 넘어갈 때 사용할 수 있으니 유지합니다.
-import 'pages/main_page.dart';
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-void main() {
+  await Common.init();
   runApp(const MyApp());
 }
 
@@ -15,6 +15,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print("\n [앱 시작 토큰 확인]: ${Common.token}\n");
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'BodyBuddy',

@@ -26,12 +26,6 @@ class _MainPageState extends State<MainPage> {
     GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
     GlobalKey<NavigatorState>(),
-
-    // HomePage(),
-    // BodyLogPage(),
-    // ChallengePage(),
-    // BuddyZonePage(),
-    // MypagePage(),
   ];
 
   @override

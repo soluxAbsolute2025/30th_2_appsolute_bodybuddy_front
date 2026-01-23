@@ -4,6 +4,8 @@ import '../widgets/challenge_floating_button.dart';
 import 'personal_challenge_page.dart';
 import 'group_challenge_page.dart';
 import '../widgets/challenge_scope_toggle.dart';
+import '../../shop/pages/shop_page.dart'; 
+import '../create/personal/pages/personal_challenge_type_page.dart';
 
 class ChallengePage extends StatefulWidget {
   const ChallengePage({super.key});
@@ -23,7 +25,14 @@ class _ChallengePageState extends State<ChallengePage> {
         titleText: '바디 챌린지',
         imageUrl: 'assets/challenge/shop.svg',
         buttonText: '상점',
-        onButtonPressed: () {},
+        onButtonPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const ShopPage(),
+            ),
+          );
+        },
       ),
       body: Column(
         children: [
@@ -43,14 +52,20 @@ class _ChallengePageState extends State<ChallengePage> {
         ],
       ),
       floatingActionButton: Visibility(
-        visible: isPersonalSelected,
-        maintainState: true,
-        maintainAnimation: true,
-        maintainSize: true,
-        child: ChallengeFloatingButton(
-          onPressed: () {},
-        ),
+      visible: isPersonalSelected,
+      maintainState: true,
+      maintainAnimation: true,
+      maintainSize: true,
+      child: ChallengeFloatingButton(
+        onPressed: () {
+          Navigator.of(context, rootNavigator: true).push(
+            MaterialPageRoute(
+              builder: (_) => const PersonalChallengeTypePage(),
+            ),
+          );
+        },
       ),
+    ),
     );
   }
 }

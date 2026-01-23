@@ -12,13 +12,10 @@ class PersonalChallengePage extends StatefulWidget {
   const PersonalChallengePage({super.key});
 
   @override
-  State<PersonalChallengePage> createState() =>
-      _PersonalChallengePageState();
+  State<PersonalChallengePage> createState() => _PersonalChallengePageState();
 }
 
-class _PersonalChallengePageState
-    extends State<PersonalChallengePage> {
-
+class _PersonalChallengePageState extends State<PersonalChallengePage> {
   @override
   Widget build(BuildContext context) {
     final challenges = dummyPersonalChallenges;
@@ -48,10 +45,7 @@ class _PersonalChallengePageState
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
               children: challenges
-                  .map(
-                    (challenge) =>
-                        OngoingChallengeCard(challenge: challenge),
-                  )
+                  .map((challenge) => OngoingChallengeCard(challenge: challenge))
                   .toList(),
             ),
           ),
@@ -89,10 +83,7 @@ class _PersonalChallengePageState
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
               children: dummyRecommendedChallenges
-                  .map(
-                    (challenge) =>
-                        RecommendedChallengeCard(challenge: challenge),
-                  )
+                  .map((challenge) => RecommendedChallengeCard(challenge: challenge))
                   .toList(),
             ),
           ),
@@ -126,10 +117,7 @@ class _PersonalChallengePageState
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
               children: dummyCompletedChallenges
-                  .map(
-                    (challenge) =>
-                        CompletedChallengeCard(challenge: challenge),
-                  )
+                  .map((challenge) => CompletedChallengeCard(challenge: challenge))
                   .toList(),
             ),
           ),

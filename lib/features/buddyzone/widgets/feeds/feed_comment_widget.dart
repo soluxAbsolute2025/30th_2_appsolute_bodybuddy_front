@@ -1,26 +1,26 @@
 import 'package:flutter/material.dart';
-
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:timeago/timeago.dart' as timeage;
+import 'package:bodybuddy_frontend/features/carebuddy/providers/custom_ko_messages.dart';
+
+import '../../models/feeds/feed_content_model.dart';
 
 class FeedCommentWidget extends StatefulWidget {
-  final String profileName;
-  final int profileTime;
-  final int profileLevel;
-  final String comment;
+  final FeedComment comment;
 
-  const FeedCommentWidget({
-    super.key,
-    this.profileName = '익명',
-    this.profileTime = 30,
-    this.profileLevel = 15,
-    this.comment = '열심히 운동하시는 모습 너무 멋있습니다~^^',
-  });
+  const FeedCommentWidget({super.key, required this.comment});
 
   @override
   State<FeedCommentWidget> createState() => _FeedCommentWidgetState();
 }
 
 class _FeedCommentWidgetState extends State<FeedCommentWidget> {
+  @override
+  void initState() {
+    super.initState();
+    timeage.setLocaleMessages('ko_custom', MyCustomKomassages());
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -32,7 +32,9 @@ class _FeedCommentWidgetState extends State<FeedCommentWidget> {
               height: 37.0,
               child: ClipOval(
                 child: Image(
-                  image: AssetImage('assets/images/common/profile1.jpg'),
+                  image: widget.comment.writerProfileImageUrl == null
+                      ? AssetImage('assets/buddyzone/myprofile.png')
+                      : NetworkImage(widget.comment.writerProfileImageUrl!),
                 ),
               ),
             ),
@@ -43,7 +45,7 @@ class _FeedCommentWidgetState extends State<FeedCommentWidget> {
                   Row(
                     children: [
                       Text(
-                        widget.profileName,
+                        widget.comment.writerNickname,
                         style: TextStyle(
                           fontSize: 14.0,
                           fontWeight: FontWeight.bold,
@@ -62,7 +64,7 @@ class _FeedCommentWidgetState extends State<FeedCommentWidget> {
                             borderRadius: BorderRadius.circular(5.0),
                           ),
                           child: Text(
-                            'Lv.${widget.profileLevel}',
+                            'Lv.${widget.comment.writerLevel}',
                             style: TextStyle(
                               color: Color(0xFF1AEDB1),
                               fontSize: 11.0,
@@ -78,7 +80,10 @@ class _FeedCommentWidgetState extends State<FeedCommentWidget> {
                     alignment: Alignment.centerLeft,
                     child: Text(
                       textAlign: TextAlign.left,
-                      '${widget.profileTime}분 전',
+                      timeage.format(
+                        widget.comment.createdAt,
+                        locale: 'ko_custom',
+                      ),
                       style: TextStyle(color: Colors.grey[600], fontSize: 14.0),
                     ),
                   ),
@@ -90,7 +95,7 @@ class _FeedCommentWidgetState extends State<FeedCommentWidget> {
         Container(
           padding: EdgeInsets.only(top: 6.0, left: 53.0),
           alignment: Alignment.centerLeft,
-          child: Text('${widget.comment} ', style: TextStyle()),
+          child: Text('${widget.comment.content} ', style: TextStyle()),
         ),
         SizedBox(height: 30.0),
       ],
