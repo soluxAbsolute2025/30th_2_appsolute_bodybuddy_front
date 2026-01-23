@@ -1,18 +1,32 @@
 // features/home/widgets/home_content.dart
+import 'package:bodybuddy_frontend/features/buddyzone/models/friends/buddy_detail_model.dart';
+import 'package:bodybuddy_frontend/features/buddyzone/models/friends/buddy_list_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../friends/myfriendBlock.dart';
 
-class MyFriendsSection extends StatelessWidget {
-  const MyFriendsSection({super.key});
+class MyFriendsSection extends StatefulWidget {
+  final BuddyResponse myFriends;
+  final Function({required int userId}) onMyFriendDetail;
 
+  const MyFriendsSection({
+    super.key,
+    required this.myFriends,
+    required this.onMyFriendDetail,
+  });
+
+  @override
+  State<MyFriendsSection> createState() => _MyFriendsSectionState();
+}
+
+class _MyFriendsSectionState extends State<MyFriendsSection> {
   @override
   Widget build(BuildContext context) {
     return Container(
       color: Colors.white,
       padding: EdgeInsets.only(
-        bottom: 25.0,
+        bottom: 17.0,
         right: 16.0,
         left: 16.0,
         top: 20.0,
@@ -36,7 +50,7 @@ class MyFriendsSection extends StatelessWidget {
                     ),
                     SizedBox(width: 5.0),
                     Text(
-                      '3',
+                      widget.myFriends.myBuddies.length.toString(),
                       style: TextStyle(
                         color: Color(0xFFA8A8A8),
                         fontSize: 17.0,
@@ -77,11 +91,16 @@ class MyFriendsSection extends StatelessWidget {
               ],
             ),
           ),
-          MyfriendBlock(),
-          SizedBox(height: 8.0),
-          MyfriendBlock(),
-          SizedBox(height: 8.0),
-          MyfriendBlock(),
+          ...widget.myFriends.myBuddies
+              .map(
+                (e) => Column(
+                  children: [
+                    MyfriendBlock(buddy: e),
+                    SizedBox(height: 8.0),
+                  ],
+                ),
+              )
+              .toList(),
         ],
       ),
     );

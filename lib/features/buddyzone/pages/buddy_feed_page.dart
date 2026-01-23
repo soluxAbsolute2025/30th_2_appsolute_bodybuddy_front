@@ -104,11 +104,11 @@ class _BuddyFeedPageState extends State<BuddyFeedPage> {
                 children: [
                   TextButton(
                     onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) =>
-                            BuddyProfileDialog(userId: userId),
-                      );
+                      // showDialog(
+                      //   context: context,
+                      //   builder: (BuildContext context) =>
+                      //       // BuddyProfileDialog(userId: userId),
+                      // );
                     },
                     child: Text('테스트 버튼'),
                   ),

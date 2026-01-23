@@ -1,4 +1,6 @@
 import 'package:bodybuddy_frontend/features/buddyzone/api/buddyzone_friends_api.dart';
+import 'package:bodybuddy_frontend/features/buddyzone/models/friends/buddy_detail_model.dart';
+import 'package:bodybuddy_frontend/features/buddyzone/models/friends/buddy_list_model.dart';
 import 'package:flutter/material.dart';
 import '../widgets/friends/friends_request_section.dart';
 import '../widgets/friends/my_friends_section.dart';
@@ -11,9 +13,14 @@ class BuddyFriendPage extends StatefulWidget {
 }
 
 class _BuddyFriendPageState extends State<BuddyFriendPage> {
+  BuddyResponse? _buddyResponse;
+  BuddyDetail? _buddyDetail;
+  bool isLoading = true;
+
   @override
   void initState() {
     super.initState();
+    _getBuddyList();
   }
 
   @override
@@ -22,49 +29,35 @@ class _BuddyFriendPageState extends State<BuddyFriendPage> {
   }
 
   void _getBuddyList() async {
-    await BuddysApi().getBuddyList();
+    final response = await BuddysApi().getBuddyList();
+
+    _buddyResponse = response;
+    setState(() {
+      isLoading = false;
+    });
   }
 
-  void _getBuddyDetail() async {
-    print('데이터 로딩 시작...');
+  void _getBuddyDetail({required int userId}) async {
+    final response = await BuddysApi().getBuddyDetail(userId: userId);
 
-    try {
-      // 1. 0부터 50까지의 요청 리스트 생성
-      final requests = List.generate(
-        51,
-        (i) => BuddysApi().getBuddyDetail(userId: i),
-      );
-
-      // 2. 모든 요청을 동시에 실행하고 전체가 끝날 때까지 대기
-      final results = await Future.wait(requests);
-
-      // 3. 결과 확인 (results는 각 API 응답의 리스트가 됩니다)
-      print('${results.length}개의 데이터 수신 완료!');
-
-      // 만약 화면에 반영하고 싶다면?
-      // setState(() { _details = results; });
-    } catch (e) {
-      print('에러 발생: $e');
-    }
+    _buddyDetail = response;
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading || _buddyResponse == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return Column(
       children: <Widget>[
-        TextButton(
-          onPressed: () {
-            _getBuddyList();
-          },
-          child: Text('테스트 확인'),
+        TextButton(onPressed: () {}, child: Text('테스트 확인')),
+        TextButton(onPressed: () {}, child: Text('테스트 확인')),
+        MyFriendsSection(
+          myFriends: _buddyResponse!,
+          onMyFriendDetail: _getBuddyDetail,
         ),
-        TextButton(
-          onPressed: () {
-            _getBuddyDetail();
-          },
-          child: Text('테스트 확인'),
-        ),
-        MyFriendsSection(),
         SizedBox(height: 10.0),
         FriendRequestSection(),
       ],
