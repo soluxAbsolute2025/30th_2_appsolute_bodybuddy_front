@@ -1,22 +1,24 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import '../../../common/common.dart';
 
+// 👇 불필요한 http, json, secure_storage import 모두 제거!
+import '../data/diet_api_service.dart';
+import '../data/diet_model.dart';
 
 class DietEditPage extends StatefulWidget {
-  final bool isEditMode;
-  final DateTime? selectedDate;
-  final String? initialMealType; // "BREAKFAST", "LUNCH", "DINNER"
-  final Map<String, dynamic>? existingData; // 수정 시 넘어오는 데이터
+  final bool isEditMode; // 수정 모드 여부
+  final DietRecord? record; // 수정 시 넘어오는 기존 데이터
+  final DateTime? selectedDate; // 날짜 (생성 시 사용)
+  final String? initialMealType; // "BREAKFAST", "LUNCH", "DINNER" (생성 시 기본값)
 
   const DietEditPage({
     super.key,
     this.isEditMode = false,
+    this.record,
     this.selectedDate,
     this.initialMealType,
-    this.existingData
   });
 
   @override
@@ -25,288 +27,328 @@ class DietEditPage extends StatefulWidget {
 
 class _DietEditPageState extends State<DietEditPage> {
   // 컨트롤러
-  final TextEditingController _timeController = TextEditingController();
-  final TextEditingController _memoController = TextEditingController();
-  final TextEditingController _foodController = TextEditingController(); // 음식 입력
+  late TextEditingController _timeController;
+  late TextEditingController _memoController;
+  late TextEditingController _foodController;
 
-  String _selectedMealType = 'LUNCH'; // 기본값 (API용: BREAKFAST/LUNCH/DINNER)
+  // 서비스 클래스 (이제 얘가 모든 통신을 담당)
+  final DietApiService _apiService = DietApiService();
+  final ImagePicker _picker = ImagePicker();
 
-  final String _baseUrl = "http://52.79.228.227:8080";
+  String _selectedMealType = 'LUNCH'; // 기본값
+  File? _imageFile;
+  bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
-    // 1. 넘어온 데이터 초기화
-    if (widget.isEditMode && widget.existingData != null) {
-      final data = widget.existingData!;
-      _selectedMealType = data['mealType']; // "LUNCH"
-      _timeController.text = _formatTime(data['intakeTime']); // "12:30"
-      _memoController.text = data['memo'] ?? "";
+    _initData();
+  }
 
-      // 리스트 ["닭", "밥"] -> 문자열 "닭, 밥" 으로 변환해 표시
-      List<dynamic> foods = data['foods'] ?? [];
-      _foodController.text = foods.join(", ");
-    } else {
-      // 2. 신규 생성 시
-      if (widget.initialMealType != null) {
-        _selectedMealType = widget.initialMealType!;
-      }
-      _timeController.text = DateFormat('HH:mm').format(DateTime.now());
+  // 데이터 초기화 로직 분리 (깔끔하게)
+  void _initData() {
+    // 1. 식사 종류(MealType) 설정
+    if (widget.isEditMode && widget.record != null) {
+      _selectedMealType = widget.record!.mealType;
+    } else if (widget.initialMealType != null) {
+      _selectedMealType = widget.initialMealType!;
+    }
+
+    // 2. 시간 설정 (기존 데이터 없으면 현재 시간)
+    String timeValue = widget.record?.intakeTime ?? DateFormat('HH:mm').format(DateTime.now());
+    _timeController = TextEditingController(text: timeValue);
+
+    // 3. 메모 설정
+    _memoController = TextEditingController(text: widget.record?.memo ?? '');
+
+    // 4. 음식 목록 설정 (List -> String 변환)
+    String foodsStr = widget.record?.foods.join(', ') ?? '';
+    _foodController = TextEditingController(text: foodsStr);
+  }
+
+  @override
+  void dispose() {
+    _timeController.dispose();
+    _memoController.dispose();
+    _foodController.dispose();
+    super.dispose();
+  }
+
+  // 이미지 선택
+  Future<void> _pickImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() => _imageFile = File(image.path));
     }
   }
 
-  // HH:mm:ss -> HH:mm 로 변환
-  String _formatTime(String? time) {
-    if (time == null || time.length < 5) return "12:00";
-    return time.substring(0, 5);
-  }
+  // 저장 (생성 또는 수정)
+  Future<void> _save() async {
+    // 유효성 검사
+    if (_foodController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('메뉴를 입력해주세요.')));
+      return;
+    }
 
-  // --- [API] 식단 기록 추가 (POST /api/meal-log) ---
-  Future<void> _saveMealLog() async {
-    if (Common.token == null) return;
-
-    // 1. 날짜 처리
-    DateTime date = widget.selectedDate ?? DateTime.now();
-    String dateStr = DateFormat('yyyy-MM-dd').format(date);
-
-    // 2. 음식 리스트 처리 (콤마로 구분해서 리스트로 변환)
-    List<String> foodList = _foodController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
-
-    // 3. 바디 구성 (명세서 참고)
-    final Map<String, dynamic> body = {
-      "mealType": _selectedMealType,    // "LUNCH"
-      "intakeDate": dateStr,            // "2026-01-17"
-      "intakeTime": _timeController.text, // "12:30"
-      "foods": foodList,                // ["닭가슴살", "고구마"]
-      "memo": _memoController.text,
-    };
+    setState(() => _isSaving = true); // 로딩 시작
 
     try {
-      final url = Uri.parse('$_baseUrl/api/meal-log');
+      // 콤마로 구분된 음식을 리스트로 변환
+      List<String> foods = _foodController.text
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
 
-      // 수정인 경우 ID가 필요할 수 있으나, 명세상 POST로 덮어쓰거나,
-      // PATCH가 있다면 /api/meal-log/{id} 로 보내야 함.
-      // 여기서는 우선 명세서에 있는 POST(추가) 로직을 기본으로 함.
-      // (만약 수정 API가 따로 있다면 분기 처리 필요)
-
-      // ※ 수정 시나리오: ID가 있다면 PATCH, 없으면 POST
-      http.Response response;
-
-      if (widget.isEditMode && widget.existingData != null) {
-        // 수정 (PATCH /api/meal-log/{id})
-        final int id = widget.existingData!['mealLogId'] ?? widget.existingData!['id']; // ID 키값 확인 필요
-        final updateUrl = Uri.parse('$_baseUrl/api/meal-log/$id');
-        response = await http.patch(
-          updateUrl,
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer ${Common.token}",
-          },
-          body: jsonEncode(body),
-        );
+      if (widget.isEditMode && widget.record != null) {
+        // [수정 모드]
+        await _apiService.updateMeal(widget.record!.dietRecordId, {
+          "mealType": _selectedMealType,
+          "intakeTime": _timeController.text,
+          "memo": _memoController.text,
+          "foods": foods,
+        });
       } else {
-        // 신규 (POST /api/meal-log)
-        response = await http.post(
-          url,
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer ${Common.token}",
-          },
-          body: jsonEncode(body),
+        // [생성 모드]
+        String dateStr = DateFormat('yyyy-MM-dd').format(widget.selectedDate ?? DateTime.now());
+
+        await _apiService.createMeal(
+          mealType: _selectedMealType,
+          intakeDate: dateStr,
+          intakeTime: _timeController.text,
+          foods: foods,
+          memo: _memoController.text,
+          imageFile: _imageFile,
         );
       }
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        if(mounted) {
-          Navigator.pop(context); // 성공 시 뒤로 가기
+      // 성공 시 뒤로가기 (true 반환해서 목록 갱신 유도)
+      if (mounted) Navigator.pop(context, true);
+
+    } catch (e) {
+      print("❌ 저장 실패: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('저장 중 오류가 발생했습니다: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false); // 로딩 종료
+    }
+  }
+
+  // 삭제
+  Future<void> _delete() async {
+    if (widget.record == null) return;
+
+    // 삭제 확인 팝업
+    bool? confirm = await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("삭제 확인"),
+        content: const Text("정말 삭제하시겠습니까?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("취소")),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text("삭제", style: TextStyle(color: Colors.red))),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() => _isSaving = true);
+      try {
+        await _apiService.deleteMeal(widget.record!.dietRecordId);
+        if (mounted) Navigator.pop(context, true);
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('삭제 실패')));
         }
-      } else {
-        print("❌ 저장 실패: ${utf8.decode(response.bodyBytes)}");
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("저장 실패: ${response.statusCode}")));
+        setState(() => _isSaving = false);
       }
-    } catch (e) {
-      print("❌ 네트워크 에러: $e");
-    }
-  }
-
-  // --- [API] 식단 삭제 (DELETE /api/meal-log/{id}) ---
-  Future<void> _deleteMealLog() async {
-    if (widget.existingData == null) return;
-
-    // ID 추출 (서버 응답 키값에 따라 'mealLogId' 또는 'id' 사용)
-    final int id = widget.existingData!['mealLogId'] ?? widget.existingData!['id'] ?? 0;
-
-    try {
-      final url = Uri.parse('$_baseUrl/api/meal-log/$id');
-      final response = await http.delete(
-        url,
-        headers: {
-          "Authorization": "Bearer ${Common.token}",
-        },
-      );
-
-      if (response.statusCode == 200) {
-        if(mounted) Navigator.pop(context);
-      } else {
-        print("❌ 삭제 실패: ${response.body}");
-      }
-    } catch (e) {
-      print("삭제 에러: $e");
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(widget.isEditMode ? '기록 편집' : '식단 기록', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-        centerTitle: true,
+        title: Text(widget.isEditMode ? '식단 수정' : '식단 기록'),
         backgroundColor: Colors.white,
-        elevation: 0,
         foregroundColor: Colors.black,
-        leading: IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+        elevation: 0,
       ),
-      body: Column(
+      body: Stack(
         children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // (1) 시간 입력
-                  _buildLabel('시간'),
-                  const SizedBox(height: 10),
-                  _buildTextField(
-                    controller: _timeController,
-                    hint: '예: 12:30',
-                  ),
-
-                  const SizedBox(height: 25),
-
-                  // (2) 메뉴 입력 (Foods)
-                  _buildLabel('메뉴 (콤마 , 로 구분)'),
-                  const SizedBox(height: 10),
-                  _buildTextField(
-                    controller: _foodController,
-                    hint: '예: 닭가슴살, 현미밥, 김치',
-                  ),
-
-                  const SizedBox(height: 25),
-
-                  // (3) 메모 입력
-                  _buildLabel('메모'),
-                  const SizedBox(height: 10),
-                  _buildTextField(
-                    controller: _memoController,
-                    hint: '메모를 입력해주세요',
-                    maxLines: 3,
-                  ),
-
-                  const SizedBox(height: 25),
-
-                  // (4) 식사 시간 선택 (라디오 버튼)
-                  _buildLabel('식사 구분'),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      _buildRadioOption('아침', 'BREAKFAST'),
-                      const SizedBox(width: 20),
-                      _buildRadioOption('점심', 'LUNCH'),
-                      const SizedBox(width: 20),
-                      _buildRadioOption('저녁', 'DINNER'),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // 하단 버튼들
-          Padding(
+          SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: _saveMealLog, // 저장 함수 연결
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4BECBE),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    ),
-                    child: Text(widget.isEditMode ? '수정하기' : '기록하기', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                // 1. 식사 종류 선택 (라디오 버튼)
+                const Text('식사 종류', style: TextStyle(fontWeight: FontWeight.bold)),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildRadio('아침', 'BREAKFAST'),
+                      _buildRadio('점심', 'LUNCH'),
+                      _buildRadio('저녁', 'DINNER'),
+                      _buildRadio('간식', 'SNACK'), // 간식도 필요하면 추가
+                    ],
                   ),
                 ),
-                if (widget.isEditMode) ...[
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: OutlinedButton(
-                      onPressed: _deleteMealLog, // 삭제 함수 연결
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFFFF6B6B)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
-                      child: const Text('삭제하기', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFFFF6B6B))),
-                    ),
+                const SizedBox(height: 20),
+
+                // 2. 시간 입력
+                const Text('시간', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _timeController,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: "HH:mm",
+                    suffixIcon: Icon(Icons.access_time),
                   ),
-                ]
+                  readOnly: true, // 직접 입력 방지하고 시간 피커 띄우기 권장 (지금은 텍스트로 유지)
+                  onTap: () async {
+                    // 시간 선택 피커 (선택 사항)
+                    TimeOfDay? picked = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay.now(),
+                    );
+                    if (picked != null) {
+                      final now = DateTime.now();
+                      final dt = DateTime(now.year, now.month, now.day, picked.hour, picked.minute);
+                      _timeController.text = DateFormat('HH:mm').format(dt);
+                    }
+                  },
+                ),
+
+                const SizedBox(height: 20),
+
+                // 3. 메뉴 입력
+                const Text('메뉴 (쉼표로 구분)', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _foodController,
+                  decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      hintText: "예: 닭가슴살, 현미밥, 샐러드"
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // 4. 메모 입력
+                const Text('메모', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _memoController,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      hintText: "오늘 식단의 특이사항을 기록하세요."
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // 5. 사진 업로드
+                const Text('사진', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                GestureDetector(
+                  onTap: _pickImage,
+                  child: Container(
+                    height: 200,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: _buildImagePreview(),
+                  ),
+                ),
+
+                const SizedBox(height: 30),
+
+                // 6. 저장 버튼
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: _save,
+                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4BECBE)),
+                    child: const Text('저장하기', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+
+                // 7. 삭제 버튼 (수정 모드일 때만)
+                if (widget.isEditMode)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: TextButton(
+                      onPressed: _delete,
+                      child: const SizedBox(
+                        width: double.infinity,
+                        child: Center(child: Text("삭제하기", style: TextStyle(color: Colors.red))),
+                      ),
+                    ),
+                  )
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildLabel(String text) {
-    return Text(text, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14));
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    String? hint,
-    int maxLines = 1,
-  }) {
-    return TextFormField(
-      controller: controller,
-      maxLines: maxLines,
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[300]!)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[300]!)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF4BECBE))),
-      ),
-    );
-  }
-
-  Widget _buildRadioOption(String label, String value) {
-    bool isSelected = _selectedMealType == value;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedMealType = value),
-      child: Row(
-        children: [
-          Container(
-            width: 18, height: 18,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isSelected ? const Color(0xFF4BECBE) : Colors.white,
-              border: Border.all(color: isSelected ? const Color(0xFF4BECBE) : Colors.grey[300]!),
+          // 로딩 인디케이터
+          if (_isSaving)
+            Container(
+              color: Colors.black.withOpacity(0.3),
+              child: const Center(child: CircularProgressIndicator()),
             ),
-            child: isSelected ? const Icon(Icons.check, size: 12, color: Colors.white) : null,
-          ),
-          const SizedBox(width: 8),
-          Text(label, style: const TextStyle(fontSize: 14)),
         ],
       ),
     );
+  }
+
+  // 라디오 버튼 위젯 빌더
+  Widget _buildRadio(String label, String value) {
+    return Row(children: [
+      Radio<String>(
+        value: value,
+        groupValue: _selectedMealType,
+        onChanged: (v) => setState(() => _selectedMealType = v!),
+        activeColor: const Color(0xFF4BECBE),
+      ),
+      Text(label),
+      const SizedBox(width: 10),
+    ]);
+  }
+
+  // 이미지 미리보기 위젯 빌더
+  Widget _buildImagePreview() {
+    if (_imageFile != null) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Image.file(_imageFile!, fit: BoxFit.cover),
+      );
+    } else if (widget.record?.imageUrl != null && widget.record!.imageUrl!.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Image.network(
+          widget.record!.imageUrl!,
+          fit: BoxFit.cover,
+          errorBuilder: (ctx, _, __) => const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
+        ),
+      );
+    } else {
+      return const Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.camera_alt, color: Colors.grey, size: 40),
+          SizedBox(height: 8),
+          Text("사진을 등록하려면 터치하세요", style: TextStyle(color: Colors.grey)),
+        ],
+      );
+    }
   }
 }

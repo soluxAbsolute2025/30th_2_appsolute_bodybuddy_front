@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'features/onboarding/pages/onboarding_page.dart';
-import 'pages/main_page.dart';
+import 'features/bodylog/pages/diet_tab.dart'; // 혹은 MainPage import
+import 'pages/main_page.dart'; // 실제 메인 페이지 import
 import 'common/common.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // 한국어 날짜 데이터 초기화
+  await initializeDateFormatting('ko_KR', null);
+
+  // 👇 [핵심] 여기서 저장된 토큰을 불러옵니다.
   await Common.init();
+
   runApp(const MyApp());
 }
 
@@ -15,38 +22,35 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print("\n [앱 시작 토큰 확인]: ${Common.token}\n");
+    // 토큰이 잘 로드되었는지 로그로 확인
+    bool isLoggedIn = Common.token != null && Common.token!.isNotEmpty;
+    print("\n [앱 시작 상태] 토큰 존재 여부: $isLoggedIn / 토큰값: ${Common.token}\n");
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'BodyBuddy',
 
-      // 👇 설정해주신 예쁜 테마 디자인
+      // ... (ThemeData 부분은 기존 코드 그대로 유지) ...
       theme: ThemeData(
-        primaryColor: const Color(0xFF00E676), // 바디버디 시그니처 민트색
+        primaryColor: const Color(0xFF00E676),
         scaffoldBackgroundColor: Colors.white,
         useMaterial3: true,
-        fontFamily: 'Pretendard', // (참고: pubspec.yaml에 폰트 등록이 안 되어 있으면 기본 폰트로 나옵니다)
-
-        // 상단 앱바 스타일
+        fontFamily: 'Pretendard',
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.white,
           elevation: 0,
           iconTheme: IconThemeData(color: Colors.black),
           titleTextStyle: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
         ),
-
-        // 버튼 스타일 (모든 버튼에 공통 적용됨)
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF00E676),
             foregroundColor: Colors.white,
-            minimumSize: const Size(double.infinity, 56), // 버튼 높이 56으로 통일
+            minimumSize: const Size(double.infinity, 56),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
         ),
-
-        // 입력창 스타일 (회원가입/로그인 시 사용)
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: const Color(0xFFF5F6F8),
@@ -58,8 +62,9 @@ class MyApp extends StatelessWidget {
         ),
       ),
 
-      // 👇 앱 시작 페이지를 'OnboardingPage'로 설정
-      home: const OnboardingPage(),
+      // 👇 [여기가 핵심 변경 포인트!]
+      // 토큰이 있으면(로그인 상태면) MainPage, 없으면 OnboardingPage 보여주기
+      home: isLoggedIn ? const MainPage() : const OnboardingPage(),
     );
   }
 }
