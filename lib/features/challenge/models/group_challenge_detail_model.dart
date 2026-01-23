@@ -1,0 +1,41 @@
+class GroupChallengeDetail {
+  final String title;
+  final DateTime startDate;
+  final DateTime endDate;
+  final bool isPublic;
+  final String description;
+  final int currentParticipants;
+  final int maxParticipants;
+  final String groupCode;
+  final String? imageUrl;
+  final List<ChallengeRank> ranks;
+
+  const GroupChallengeDetail({
+    required this.title,
+    required this.startDate,
+    required this.endDate,
+    required this.isPublic,
+    required this.description,
+    required this.currentParticipants,
+    required this.maxParticipants,
+    required this.groupCode,
+    required this.ranks,
+    this.imageUrl,
+  });
+}
+
+class ChallengeRank {
+  final int rank;
+  final String name;
+  final bool isMe;
+  final String? profileImageUrl;
+  final int progress;
+
+  const ChallengeRank({
+    required this.rank,
+    required this.name,
+    required this.progress,
+    this.isMe = false,
+    this.profileImageUrl,
+  });
+}

@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
-import '../widgets/challenge_scope_toggle.dart';
-import '../widgets/ongoing_challenge_card.dart';
-import '../data/dummy_challenges.dart';
-import '../data/dummy_recommended_challenges.dart';
-import '../widgets/recommended_challenge_card.dart';
-import '../data/dummy_completed_challenges.dart';
-import '../widgets/completed_challenge_card.dart';
 import '../../../common/widgets/main_appbar.dart';
 import '../widgets/challenge_summary_card.dart';
 import '../data/dummy_challenge_summary.dart';
 import '../widgets/challenge_floating_button.dart';
 import '../modal/ongoing_challenge_detail_modal.dart';
 import '../modal/recommended_challenge_more_modal.dart';
+import '../widgets/challenge_floating_button.dart'; 
+import 'personal_challenge_page.dart';
+import 'group_challenge_page.dart';
+import '../widgets/challenge_scope_toggle.dart';
+import '../../shop/pages/shop_page.dart'; 
+import '../create/personal/pages/personal_challenge_type_page.dart';
 
 class ChallengePage extends StatefulWidget {
   const ChallengePage({super.key});
@@ -21,7 +20,6 @@ class ChallengePage extends StatefulWidget {
 }
 
 class _ChallengePageState extends State<ChallengePage> {
-  /// true = 개인, false = 그룹
   bool isPersonalSelected = true;
 
   @override
@@ -240,6 +238,47 @@ class _ChallengePageState extends State<ChallengePage> {
           : null,
 
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+        onButtonPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const ShopPage(),
+            ),
+          );
+        },
+      ),
+      body: Column(
+        children: [
+          ChallengeScopeToggle(
+            isPersonalSelected: isPersonalSelected,
+            onChanged: (value) {
+              setState(() {
+                isPersonalSelected = value;
+              });
+            },
+          ),
+          Expanded(
+            child: isPersonalSelected
+                ? const PersonalChallengePage()
+                : const GroupChallengePage(),
+          ),
+        ],
+      ),
+      floatingActionButton: Visibility(
+      visible: isPersonalSelected,
+      maintainState: true,
+      maintainAnimation: true,
+      maintainSize: true,
+      child: ChallengeFloatingButton(
+        onPressed: () {
+          Navigator.of(context, rootNavigator: true).push(
+            MaterialPageRoute(
+              builder: (_) => const PersonalChallengeTypePage(),
+            ),
+          );
+        },
+      ),
+    ),
     );
   }
 }

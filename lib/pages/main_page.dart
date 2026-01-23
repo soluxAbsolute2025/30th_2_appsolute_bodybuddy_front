@@ -20,19 +20,32 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = const [
-    HomePage(),
-    BodyLogPage(),
-    ChallengePage(),
-    BuddyZonePage(),
-    MypagePage(),
+  final List<GlobalKey<NavigatorState>> _navigatorKeys = [
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
+    GlobalKey<NavigatorState>(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_currentIndex],
-      floatingActionButton: MainFloating(),
+      // body: _pages[_currentIndex],
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          _buildNavigator(0, const HomePage()),
+          _buildNavigator(1, const BodyLogPage()),
+          _buildNavigator(2, const ChallengePage()),
+          _buildNavigator(3, const BuddyZonePage()),
+          _buildNavigator(4, const MypagePage()),
+        ],
+      ),
+
+      floatingActionButton: _shouldShowFloating()
+          ? MainFloating(navigatorKey: _navigatorKeys[_currentIndex])
+          : null,
       bottomNavigationBar: MainBottomNav(
         currentIndex: _currentIndex,
         onTap: (index) {
@@ -42,5 +55,19 @@ class _MainPageState extends State<MainPage> {
         },
       ),
     );
+  }
+
+  Widget _buildNavigator(int index, Widget page) {
+    return Navigator(
+      key: _navigatorKeys[index],
+      onGenerateRoute: (routeSettings) {
+        return MaterialPageRoute(builder: (context) => page);
+      },
+    );
+  }
+
+  // 조건에 따라 플로팅 버튼 표시 여부 결정
+  bool _shouldShowFloating() {
+    return true;
   }
 }

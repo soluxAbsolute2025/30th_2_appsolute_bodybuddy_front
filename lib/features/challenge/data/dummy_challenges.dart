@@ -63,15 +63,3 @@ const List<Challenge> dummyPersonalChallenges = [
   ),
 ];
 
-const List<Challenge> dummyGroupChallenges = [
-  Challenge(
-    title: '주간 운동 목표',
-    description: '주 5회 30분 운동',
-    current: 4,
-    total: 5,
-    rewardXp: 200,
-    dDay: 15,
-    imageUrl: null, 
-    category: 'WEEKLY',
-  ),
-];
