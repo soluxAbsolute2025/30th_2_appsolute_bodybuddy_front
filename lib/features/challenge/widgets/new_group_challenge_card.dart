@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../models/recruiting_group_challenge_model.dart';
+import '../models/group_challenge_list_item.dart';
 
 class NewGroupChallengeCard extends StatelessWidget {
-  final RecruitingGroupChallenge challenge;
+  final GroupChallengeListItem challenge;
 
   const NewGroupChallengeCard({
     super.key,
@@ -11,7 +11,10 @@ class NewGroupChallengeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isFull = challenge.isFull;
+    final isFull = challenge.currentParticipants >= challenge.maxParticipants;
+
+    // status가 RECRUITING이 아닌데도 이 카드에 들어오면 (실수 방지)
+    final isRecruiting = challenge.isRecruiting;
 
     return SizedBox(
       width: 200,
@@ -23,9 +26,10 @@ class NewGroupChallengeCard extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
-                child: challenge.imageUrl.isNotEmpty
+                child: (challenge.imageUrl != null &&
+                        challenge.imageUrl!.isNotEmpty)
                     ? Image.network(
-                        challenge.imageUrl,
+                        challenge.imageUrl!,
                         height: 96,
                         width: double.infinity,
                         fit: BoxFit.cover,
@@ -46,13 +50,13 @@ class NewGroupChallengeCard extends StatelessWidget {
                 Positioned.fill(
                   child: Container(
                     decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10), 
-                  ),
+                      color: Colors.black.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                 ),
 
-              /// 모집중 뱃지
+              /// 모집중/모집완료 뱃지
               Positioned(
                 right: 8,
                 bottom: 8,
@@ -62,13 +66,13 @@ class NewGroupChallengeCard extends StatelessWidget {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: isFull
+                    color: (!isRecruiting || isFull)
                         ? const Color(0xFFA8A8A8)
                         : const Color(0xFF1AEDB1),
                     borderRadius: BorderRadius.circular(5),
                   ),
                   child: Text(
-                    isFull ? '모집완료' : '모집중',
+                    (!isRecruiting || isFull) ? '모집완료' : '모집중',
                     style: const TextStyle(
                       color: Color(0xFFF4F4F4),
                       fontSize: 12,
@@ -106,7 +110,7 @@ class NewGroupChallengeCard extends StatelessWidget {
                   ),
                   children: [
                     TextSpan(
-                      text: '${challenge.currentMembers}',
+                      text: '${challenge.currentParticipants}',
                       style: const TextStyle(
                         color: Color(0xFFFF4806),
                       ),
@@ -118,7 +122,7 @@ class NewGroupChallengeCard extends StatelessWidget {
                       ),
                     ),
                     TextSpan(
-                      text: '${challenge.totalMembers}명',
+                      text: '${challenge.maxParticipants}명',
                       style: const TextStyle(
                         color: Color(0xFF7D7C7C),
                       ),
@@ -134,6 +138,8 @@ class NewGroupChallengeCard extends StatelessWidget {
           /// 설명
           Text(
             challenge.description,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontSize: 12,
               color: Color(0xFF7D7C7C),
