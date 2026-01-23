@@ -1,7 +1,13 @@
+import 'dart:io';
+
 import 'package:bodybuddy_frontend/common/widgets/sub_appbar.dart';
+import 'package:bodybuddy_frontend/features/mypage/api/mypage_api.dart';
 import 'package:bodybuddy_frontend/features/mypage/models/mypage_info_model.dart';
+import 'package:bodybuddy_frontend/features/mypage/models/mypage_profile_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 
 class MypageProfilePage extends StatefulWidget {
@@ -20,14 +26,21 @@ class _MypageProfilePageState extends State<MypageProfilePage> {
 
   /// Email domain
   String? _selectedDomain;
-  final List<String> _domains = ['naver.com', 'gmail.com', 'daum.net'];
+  final List<String> _domains = [
+    'naver.com',
+    'daum.net',
+    'gmail.com',
+    'sookmyung.ac.kr',
+  ];
 
   /// Origin values (변경 여부 판단용)
-  late XFile _originImage;
+  late File _originImage;
   late String _originNickname;
   late String _originIntroduction;
   late String _originEmail;
   String? _originDomain;
+
+  File? _selectedImage;
 
   bool _isSaveEnabled = false;
 
@@ -63,33 +76,92 @@ class _MypageProfilePageState extends State<MypageProfilePage> {
   /// 🔥 저장 버튼 활성화 조건
   void _checkSaveEnabled() {
     final nickname = _nicknameController.text.trim();
+    final introduction = _introductionController.text.trim();
     final email = _emailController.text.trim();
+    final fullEmail = '$email@$_selectedDomain';
 
-    // 필수값 검증
+    // 1. 필수값 검증
     if (nickname.isEmpty || email.isEmpty || _selectedDomain == null) {
       setState(() => _isSaveEnabled = false);
       return;
     }
 
-    // 변경 여부
-    final isChanged =
-        nickname != _originNickname ||
-        _introductionController.text != _originIntroduction ||
-        email != _originEmail ||
-        _selectedDomain != _originDomain;
+    // 2. 변경 여부 판단
+    bool isNicknameChanged = nickname != _originNickname;
+    bool isIntroductionChanged = introduction != _originIntroduction;
+    bool isEmailChanged = fullEmail != '$_originEmail@$_originDomain';
+
+    // 이미지가 새로 선택되었는가? (선택되었다면 무조건 변경으로 간주)
+    bool isImageChanged = _selectedImage != null;
 
     setState(() {
-      _isSaveEnabled = isChanged;
+      _isSaveEnabled =
+          isNicknameChanged ||
+          isIntroductionChanged ||
+          isEmailChanged ||
+          isImageChanged;
     });
   }
 
-  void _onSave() {
-    final fullEmail = '${_emailController.text}@$_selectedDomain';
+  void _onSave() async {
+    final nickname = _nicknameController.text.trim();
+    final introduction = _introductionController.text.trim();
+    final email = _emailController.text.trim();
+    final fullEmail = '$email@$_selectedDomain';
 
-    /// TODO: API 호출
-    debugPrint('닉네임: ${_nicknameController.text}');
-    debugPrint('소개: ${_introductionController.text}');
-    debugPrint('이메일: $fullEmail');
+    final profileModel = MyProfileModel(
+      nickname: (nickname != _originNickname) ? nickname : null,
+      introduction: (introduction != _originIntroduction) ? introduction : null,
+      email: (fullEmail != '$_originEmail@$_originDomain') ? fullEmail : null,
+      isImageDeleted: false,
+    );
+
+    debugPrint('전송 데이터: ${profileModel.toJsonString()}');
+
+    await ProfileApi().updateProfile(
+      request: profileModel,
+      imageFile: _selectedImage,
+    );
+  }
+
+  Future<void> _pickAndProcessImage() async {
+    final XFile? pickedFile = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+    );
+    if (pickedFile == null) return;
+
+    final CroppedFile? croppedFile = await ImageCropper().cropImage(
+      sourcePath: pickedFile.path,
+      uiSettings: [
+        AndroidUiSettings(
+          toolbarTitle: '사진 자르기',
+          toolbarColor: Colors.black,
+          toolbarWidgetColor: Colors.white,
+          initAspectRatio: CropAspectRatioPreset.original,
+          lockAspectRatio: false,
+        ),
+        IOSUiSettings(title: '사진 자르기'),
+      ],
+    );
+    if (croppedFile == null) return;
+
+    final String targetPath = croppedFile.path.replaceFirst(
+      RegExp(r'\.jpg$|\.png$'),
+      '_out.jpg',
+    );
+
+    var result = await FlutterImageCompress.compressAndGetFile(
+      croppedFile.path,
+      targetPath,
+      quality: 80,
+    );
+
+    if (result != null) {
+      setState(() {
+        _originImage = File(result.path);
+        _selectedImage = File(result.path);
+      });
+    }
   }
 
   @override
@@ -116,7 +188,14 @@ class _MypageProfilePageState extends State<MypageProfilePage> {
                           shape: BoxShape.circle,
                           color: Color(0xFFF8F8F8),
                         ),
-                        child: Image.asset('assets/mypage/myprofile.png'),
+                        child: _selectedImage != null
+                            ? ClipOval(
+                                child: Image.file(
+                                  _originImage,
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            : Image.asset('assets/mypage/myprofile.png'),
                       ),
                       Positioned(
                         bottom: 6,
@@ -124,6 +203,7 @@ class _MypageProfilePageState extends State<MypageProfilePage> {
                         child: TextButton(
                           onPressed: () {
                             // TODO: 프로필 이미지 변경
+                            _pickAndProcessImage();
                           },
                           style: TextButton.styleFrom(
                             backgroundColor: const Color(0xFF1AEDB0),
@@ -180,24 +260,34 @@ class _MypageProfilePageState extends State<MypageProfilePage> {
 
           /// 저장 버튼
           Container(
-            margin: const EdgeInsets.all(16),
+            margin: EdgeInsets.symmetric(horizontal: 16.0, vertical: 30.0),
+            alignment: Alignment.center,
             width: double.infinity,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.all(Radius.circular(10.0)),
               color: _isSaveEnabled
                   ? const Color(0xFF1AEDB0)
                   : const Color(0xFFE0E0E0),
             ),
             child: TextButton(
               onPressed: _isSaveEnabled ? _onSave : null,
-              child: const Padding(
-                padding: EdgeInsets.all(16),
-                child: Text(
-                  '저장',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
+              style: TextButton.styleFrom(
+                foregroundColor: Color(0xFF669588),
+                padding: EdgeInsets.zero,
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Container(
+                padding: EdgeInsets.all(16.0),
+                child: Center(
+                  child: Text(
+                    '저장',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontFamily: 'Pretendard Variable',
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),
