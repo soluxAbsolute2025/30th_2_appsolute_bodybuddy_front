@@ -1,4 +1,7 @@
 import 'package:bodybuddy_frontend/common/widgets/sub_appbar.dart';
+import 'package:bodybuddy_frontend/features/buddyzone/api/buddyzone_hottag_api.dart';
+import 'package:bodybuddy_frontend/features/buddyzone/models/feeds/feed_content_model.dart';
+import 'package:bodybuddy_frontend/features/buddyzone/widgets/feeds/feed_my_comment_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -6,8 +9,142 @@ import '../../widgets/feeds/feed_only_widget.dart';
 import '../../widgets/feeds/feed_comment_widget.dart';
 import '../../../../common/widgets/sub_appbar.dart';
 
-class SubFeedPages extends StatelessWidget {
-  const SubFeedPages({super.key});
+class SubFeedPages extends StatefulWidget {
+  final FeedPost feed;
+  final Function(String)? onCommentAdd;
+  final VoidCallback? onLikeToggle;
+  const SubFeedPages({
+    super.key,
+    required this.feed,
+    required this.onCommentAdd,
+    this.onLikeToggle,
+  });
+
+  @override
+  State<SubFeedPages> createState() => _SubFeedPagesState();
+}
+
+class _SubFeedPagesState extends State<SubFeedPages> {
+  final textController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
+
+  bool isButtonEnabled = false;
+  int? editingCommentId;
+  int? editingCommentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+
+    textController.addListener(() {
+      setState(() {
+        isButtonEnabled = textController.text.isNotEmpty;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    textController.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  // void _sendMessage() async {
+  //   final text = textController.text.trim();
+  //   if (text.isEmpty || text.length < 2) {
+  //     textController.clear();
+  //     return;
+  //   }
+  //
+  //   await FeedsApi().postFeedComment(widget.feed.id, text);
+  //
+  //   if (widget.onCommentAdd != null) {
+  //     widget.onCommentAdd!(text);
+  //   }
+  //
+  //   setState(() {});
+  //
+  //   print('text : ' + text);
+  //   textController.clear();
+  // }
+
+  // [핵심 1] 전송 버튼 로직 수정
+  void _sendMessage() async {
+    final text = textController.text.trim();
+    if (text.isEmpty || text.length < 2) return;
+
+    if (editingCommentId == null) {
+      // 1. [새 댓글 작성 모드]
+      await FeedsApi().postFeedComment(widget.feed.id, text);
+      if (widget.onCommentAdd != null) widget.onCommentAdd!(text);
+
+      // (리스트 새로고침 로직이 없다면 임시로 UI에 추가하는 코드 필요할 수 있음)
+    } else {
+      // 2. [댓글 수정 모드]
+      // API 호출 (FeedsApi에 patchFeedComment 메서드가 수정되었다고 가정)
+      await FeedsApi().patchFeedComment(editingCommentId!, text);
+
+      // UI 갱신: 리스트 데이터를 직접 수정해서 화면을 바꿈
+      setState(() {
+        // 현재 리스트에서 수정된 댓글을 찾아 내용을 바꿈
+        if (editingCommentIndex != null &&
+            editingCommentIndex! < widget.feed.comments.length) {
+          widget.feed.comments[editingCommentIndex!].content = text;
+        }
+      });
+    }
+
+    // 3. 초기화 (공통)
+    setState(() {
+      editingCommentId = null;
+      editingCommentIndex = null;
+      textController.clear();
+      isButtonEnabled = false;
+    });
+    FocusScope.of(context).unfocus(); // 키보드 내리기
+  }
+
+  // [핵심 2] 수정 모드 진입 함수
+  void _onEditComment(int commentId, String oldContent, int index) {
+    setState(() {
+      editingCommentId = commentId; // ID 저장
+      editingCommentIndex = index; // 인덱스 저장 (나중에 UI 갱신용)
+      textController.text = oldContent; // 입력창에 기존 글 채우기
+      isButtonEnabled = true; // 버튼 활성화
+    });
+
+    // 0.1초 뒤에 포커스 요청 (UI 렌더링 안정성 확보)
+    Future.delayed(Duration(milliseconds: 100), () {
+      FocusScope.of(context).requestFocus(_focusNode);
+    });
+  }
+
+  // 수정 취소 (필요하다면 UI에 취소 버튼을 만들어 연결)
+  void _cancelEdit() {
+    setState(() {
+      editingCommentId = null;
+      textController.clear();
+      FocusScope.of(context).unfocus();
+    });
+  }
+
+  void deleteComment(int commentId) async {
+    try {
+      await FeedsApi().deleteFeedComment(commentId);
+
+      setState(() {
+        widget.feed.comments.removeWhere((comment) => comment.id == commentId);
+      });
+      print("삭제 성공!"); // 로그 확인용
+    } catch (e) {
+      print("삭제 실패 (서버 에러): $e");
+
+      // setState(() {
+      //   widget.feed.comments.removeWhere((comment) => comment.id == commentId);
+      // });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +159,22 @@ class SubFeedPages extends StatelessWidget {
                 children: [
                   Container(
                     padding: EdgeInsets.only(left: 16.0, right: 16.0),
-                    child: FeedOnlyWidget(profileSize: 37.0, fontSize: 14.0),
+                    child: FeedOnlyWidget(
+                      feed: widget.feed,
+                      onLikeToggle: () {
+                        setState(() {
+                          if (widget.feed.liked) {
+                            widget.feed.likeCount--;
+                          } else {
+                            widget.feed.likeCount++;
+                          }
+                          widget.feed.liked = !widget.feed.liked;
+                        });
+                      },
+                      profileSize: 37.0,
+                      fontSize: 14.0,
+                      isCommentOpen: false,
+                    ),
                   ),
                   SizedBox(height: 12.0),
                   Divider(),
@@ -31,8 +183,7 @@ class SubFeedPages extends StatelessWidget {
                     padding: EdgeInsets.symmetric(horizontal: 16.0),
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      '댓글 '
-                      '8',
+                      '댓글 ${widget.feed.comments.length}',
                       style: TextStyle(
                         color: Colors.black,
                         fontSize: 14,
@@ -51,11 +202,31 @@ class SubFeedPages extends StatelessWidget {
                     alignment: Alignment.centerLeft,
                     child: Column(
                       children: [
-                        if (false) _nullCommentText(),
-                        FeedCommentWidget(),
-                        FeedCommentWidget(),
-                        FeedCommentWidget(),
-                        _nullCommentText(),
+                        if (widget.feed.comments.isEmpty)
+                          Container(
+                            width: double.infinity,
+                            child: _nullCommentText(),
+                          ),
+                        ...widget.feed.comments.map((comment) {
+                          return FeedCommentWidget(comment: comment);
+                        }).toList(),
+                        if (widget.feed.comments.isNotEmpty) ...[
+                          FeedMyCommentWidget(
+                            comment: widget.feed.comments[0], // 예시용
+                            onEdit: () {
+                              // [중요] 여기서 함수를 연결합니다!
+                              _onEditComment(
+                                widget.feed.comments[0].id,
+                                widget.feed.comments[0].content,
+                                0, // 인덱스
+                              );
+                            },
+                            onDelete: () {
+                              print(widget.feed.comments[0].id);
+                              deleteComment(1);
+                            },
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -72,16 +243,24 @@ class SubFeedPages extends StatelessWidget {
               ),
             ),
             child: Container(
-              decoration: ShapeDecoration(
+              // 배경색과 둥근 모서리 설정
+              decoration: BoxDecoration(
                 color: const Color(0xFFF5F5F5),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(127),
-                ), // 둥근 타원형
+                borderRadius: BorderRadius.circular(30.0),
               ),
               child: TextField(
+                controller: textController,
+                focusNode: _focusNode,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (value) {
+                  _sendMessage();
+                },
+                maxLines: 1,
                 style: const TextStyle(fontSize: 14.0),
                 decoration: InputDecoration(
-                  hintText: '건강에 관해 궁금한 점을 물어보세요',
+                  hintText: editingCommentId == null
+                      ? '댓글을 작성해보세요'
+                      : '댓글 수정 중...',
                   hintStyle: const TextStyle(
                     color: Color(0xFFA7A7A7),
                     fontSize: 14.0,
@@ -91,19 +270,11 @@ class SubFeedPages extends StatelessWidget {
                     vertical: 12.0,
                   ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: BorderRadius.circular(30.0),
                     borderSide: BorderSide.none,
                   ),
-                  suffixIcon: IconButton(
-                    icon: SvgPicture.asset(
-                      'assets/carebuddy/send.svg', // 전송 아이콘 경로
-                      width: 20,
-                      height: 20,
-                    ),
-                    onPressed: () {
-                      print("전송 클릭!");
-                    },
-                  ),
+                  // 2. TextField 내부에 전송 아이콘(SuffixIcon) 배치
+                  suffixIcon: _textFieldButton(),
                 ),
               ),
             ),
@@ -115,7 +286,7 @@ class SubFeedPages extends StatelessWidget {
 
   Widget _nullCommentText() {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 70.0),
+      padding: EdgeInsets.symmetric(vertical: 55.0),
       child: Text(
         '아직 댓글이 없어요\n'
         '가장 먼저 댓글을 남겨보세요',
@@ -126,6 +297,31 @@ class SubFeedPages extends StatelessWidget {
           fontFamily: 'Pretendard Variable',
           fontWeight: FontWeight.w400,
           height: 1.50,
+        ),
+      ),
+    );
+  }
+
+  Widget _textFieldButton() {
+    return Container(
+      margin: EdgeInsets.all(5.0),
+      child: TextButton(
+        style: TextButton.styleFrom(
+          foregroundColor: Color(0xFF669688),
+          backgroundColor: isButtonEnabled
+              ? Color(0xFF1AEDB1)
+              : Color(0xFFF8F8F8),
+          padding: EdgeInsets.fromLTRB(2.0, 0.0, 0.0, 0.0),
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          shape: CircleBorder(),
+        ),
+        onPressed: isButtonEnabled ? _sendMessage : null,
+        child: SvgPicture.asset(
+          isButtonEnabled
+              ? 'assets/carebuddy/send_active.svg'
+              : 'assets/carebuddy/send.svg',
+          key: ValueKey(isButtonEnabled),
         ),
       ),
     );

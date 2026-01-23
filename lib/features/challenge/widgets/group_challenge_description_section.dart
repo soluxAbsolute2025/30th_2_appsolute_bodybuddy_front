@@ -11,12 +11,12 @@ class GroupChallengeDescriptionSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final info = challenge.challengeInfo;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-      ),
+      color: Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -32,27 +32,27 @@ class GroupChallengeDescriptionSection extends StatelessWidget {
           const SizedBox(height: 10),
 
           Padding(
-            padding: const EdgeInsets.only(left: 1), 
+            padding: const EdgeInsets.only(left: 1),
             child: Text(
-              challenge.description,
+              info.description, // ✅ 여기
               style: const TextStyle(
                 fontFamily: 'Pretendard',
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                height: 1.0,
-                letterSpacing: 0,
+                height: 1.4,
                 color: Color(0xFF464646),
               ),
             ),
           ),
+
           const SizedBox(height: 15),
 
           Container(
-              width: double.infinity,
-              height: 3,
-              color: const Color(0xFFF8F8F8),
-            ),
-          
+            width: double.infinity,
+            height: 3,
+            color: const Color(0xFFF8F8F8),
+          ),
+
           const SizedBox(height: 15),
 
           /// 그룹 코드
@@ -77,7 +77,7 @@ class GroupChallengeDescriptionSection extends StatelessWidget {
                   borderRadius: BorderRadius.circular(5),
                 ),
                 child: Text(
-                  challenge.groupCode,
+                  info.groupCode,
                   style: const TextStyle(
                     fontFamily: 'Pretendard',
                     fontSize: 14,

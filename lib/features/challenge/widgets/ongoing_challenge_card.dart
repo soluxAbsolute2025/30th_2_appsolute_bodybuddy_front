@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/challenge_model.dart';
 import 'progress_bar.dart';
+import '../modal/ongoing_challenge_detail_modal.dart';
 
 class OngoingChallengeCard extends StatelessWidget {
   final Challenge challenge;
@@ -25,7 +26,7 @@ class OngoingChallengeCard extends StatelessWidget {
               height: 110,
               padding: const EdgeInsets.fromLTRB(16, 28, 16, 16),
               decoration: BoxDecoration(
-                color: challenge.type == ChallengeType.weekly
+                color: challenge.category == 'WEEKLY'
                     ? const Color(0xFFD6FEFF)
                     : const Color(0xFFBDFFEE),
                 borderRadius: BorderRadius.circular(10),

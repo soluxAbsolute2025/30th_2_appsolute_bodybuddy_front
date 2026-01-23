@@ -6,6 +6,8 @@ class SubAppbar extends StatefulWidget implements PreferredSizeWidget {
   final String? imageUrl;
   final bool? isButton;
   final VoidCallback? onButtonPressed;
+  final bool? isFormValid;
+  final VoidCallback? onFormSubmit;
 
   const SubAppbar({
     super.key,
@@ -13,6 +15,8 @@ class SubAppbar extends StatefulWidget implements PreferredSizeWidget {
     this.onButtonPressed,
     this.imageUrl,
     this.isButton = false,
+    this.isFormValid,
+    this.onFormSubmit,
   });
 
   @override
@@ -70,23 +74,25 @@ class _SubAppbarState extends State<SubAppbar> {
         if (widget.isButton == true)
           Container(
             margin: EdgeInsets.only(right: 16.0),
-
             child: TextButton(
-              onPressed: () {},
+              onPressed: widget.isFormValid! ? widget.onFormSubmit! : null,
               style: TextButton.styleFrom(
                 padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                backgroundColor: Color(0xFF1AEDB0),
+                backgroundColor: widget.isFormValid!
+                    ? Color(0xFF1AEDB0)
+                    : Color(0xFFE3E3E3),
                 foregroundColor: Color(0xFF669588),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(5.0),
                 ),
+                elevation: 0,
               ),
-              child: const Text(
+              child: Text(
                 '게시하기',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: widget.isFormValid! ? Colors.white : Color(0xFFA8A8A8),
                   fontSize: 14,
                   fontFamily: 'Pretendard',
                   fontWeight: FontWeight.w700,

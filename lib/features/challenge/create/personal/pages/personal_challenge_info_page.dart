@@ -1,9 +1,15 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../models/personal_challenge_create_model.dart';
 import '../widgets/personal_challenge_create_controller.dart';
 import '../widgets/labeled_text_field.dart';
 import '../widgets/bottom_primary_button.dart';
+import '../../../modal/top_notice_toast.dart';
+import '../api/personal_challenge_api.dart';
+import '../../../pages/personal_challenge_page.dart';
 
 class PersonalChallengeInfoPage extends StatefulWidget {
   final PersonalChallengeCreateModel model;
@@ -19,8 +25,13 @@ class _PersonalChallengeInfoPageState extends State<PersonalChallengeInfoPage> {
   late final controller = PersonalChallengeCreateController(widget.model);
 
   late final titleController = TextEditingController(text: widget.model.title);
-  late final descController =
-      TextEditingController(text: widget.model.description);
+  late final descController = TextEditingController(
+    text: widget.model.description,
+  );
+
+  final _picker = ImagePicker();
+
+  File? get _pickedImage => widget.model.imageFile;
 
   @override
   void initState() {
@@ -29,11 +40,28 @@ class _PersonalChallengeInfoPageState extends State<PersonalChallengeInfoPage> {
     void onChanged() {
       widget.model.title = titleController.text;
       widget.model.description = descController.text;
-      setState(() {}); 
+      setState(() {});
     }
 
     titleController.addListener(onChanged);
     descController.addListener(onChanged);
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final xfile = await _picker.pickImage(source: ImageSource.gallery);
+      if (xfile == null) return;
+
+      setState(() {
+        widget.model.imageFile = File(xfile.path);
+      });
+    } catch (_) {}
+  }
+
+  void _removeImage() {
+    setState(() {
+      widget.model.imageFile = null;
+    });
   }
 
   @override
@@ -46,6 +74,7 @@ class _PersonalChallengeInfoPageState extends State<PersonalChallengeInfoPage> {
   @override
   Widget build(BuildContext context) {
     final isValid = controller.isInfoPageValid;
+    final _api = PersonalChallengeApi();
 
     return Scaffold(
       appBar: AppBar(
@@ -92,12 +121,83 @@ class _PersonalChallengeInfoPageState extends State<PersonalChallengeInfoPage> {
               hint: '예) 매일 10,000보 걷기',
               controller: descController,
             ),
+            const SizedBox(height: 50),
+            Stack(
+              children: [
+                GestureDetector(
+                  onTap: _pickImage,
+                  child: Column(
+                    children: [
+                      const Divider(height: 0.4, color: Color(0xFFA6A6A6)),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 16,
+                        ),
+                        alignment: Alignment.centerLeft,
+                        child: _pickedImage == null
+                            ? Image.asset(
+                                'assets/challenge/image.png',
+                                width: 30,
+                                height: 30,
+                              )
+                            : ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: AspectRatio(
+                                  aspectRatio: 16 / 9,
+                                  child: Image.file(
+                                    _pickedImage!,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                if (_pickedImage != null)
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: GestureDetector(
+                      onTap: _removeImage,
+                      child: Image.asset(
+                        'assets/challenge/del_image.png',
+                        width: 20,
+                        height: 20,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
             const Spacer(),
             BottomPrimaryButton(
               label: '챌린지 생성하기',
               enabled: isValid,
               onPressed: () async {
-                Navigator.popUntil(context, (route) => route.isFirst);
+                try {
+                  await _api.createPersonalChallenge(widget.model);
+
+                  if (!mounted) return;
+
+                  await TopNoticeToast.show(
+                    context,
+                    message: '개인 챌린지를 만들었어요!',
+                    duration: const Duration(milliseconds: 1200),
+                  );
+
+                  if (!mounted) return;
+
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (_) => const PersonalChallengePage()),
+                    (route) => false,
+                  );
+                } catch (e) {
+                  // 에러 처리
+                }
               },
             ),
           ],

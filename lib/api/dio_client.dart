@@ -1,43 +1,55 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../common/common.dart';
 
 class DioClient {
-  static final Dio _dio = Dio();
+  // 1. 변수는 하나만 남깁니다.
+  static Dio? _dio;
   static const _storage = FlutterSecureStorage();
 
   static Dio get dio {
-    _dio.options.baseUrl = 'http://52.79.228.227:8080'; // 서버 주소
-    _dio.options.connectTimeout = const Duration(seconds: 5);
-    _dio.options.receiveTimeout = const Duration(seconds: 3);
+    if (_dio == null) {
+      _dio = Dio(
+        BaseOptions(
+          baseUrl: 'http://52.79.228.227:8080',
+          connectTimeout: const Duration(seconds: 10),
+          receiveTimeout: const Duration(seconds: 10),
+        ),
+      );
 
-    // 기존 인터셉터 제거 (중복 방지)
-    _dio.interceptors.clear();
+      _dio!.interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) async {
+            // 2. 스토리지에서 토큰 가져오기 (비동기 방식 권장)
+            final token = await _storage.read(key: 'accessToken') ?? Common.token;
 
-    _dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (options, handler) async {
-          // 1. 저장소에서 토큰 꺼내기
-          final token = await _storage.read(key: 'accessToken');
+            if (token != null && token.isNotEmpty) {
+              options.headers['Authorization'] = 'Bearer $token';
+            }
 
-          // 2. 토큰이 있으면 헤더에 심기
-          if (token != null && token.isNotEmpty) {
-            options.headers['Authorization'] = 'Bearer $token';
-          }
+            // 3. FormData(파일 업로드) 처리 로직 통합
+            final isMultipart = options.data is FormData;
+            if (!isMultipart) {
+              options.headers['Content-Type'] = 'application/json';
+            } else {
+              // Multipart일 때는 Dio가 boundary를 스스로 정하도록 Content-Type을 비워둡니다.
+              options.headers.remove('Content-Type');
+            }
 
-          // [디버깅용 로그] - 실제 날아가는 헤더 확인
-          print("🛫 [전송] URL: ${options.path}");
-          print("🛫 [전송] 헤더: ${options.headers['Authorization']}");
-
-          return handler.next(options);
-        },
-        onError: (error, handler) {
-          print("🚨 [오류] 상태 코드: ${error.response?.statusCode}");
-          print("🚨 [오류] 메시지: ${error.response?.data}");
-          return handler.next(error);
-        },
-      ),
-    );
-
-    return _dio;
+            print("🛫 [DIO] ${options.method} ${options.uri}");
+            return handler.next(options);
+          },
+          onResponse: (response, handler) {
+            print("✅ [DIO] 응답: ${response.statusCode}");
+            return handler.next(response);
+          },
+          onError: (e, handler) {
+            print("❌ [DIO] 에러: ${e.response?.statusCode} - ${e.message}");
+            return handler.next(e);
+          },
+        ),
+      );
+    }
+    return _dio!;
   }
 }

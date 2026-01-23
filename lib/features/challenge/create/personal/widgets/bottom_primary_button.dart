@@ -18,7 +18,7 @@ class BottomPrimaryButton extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 9),
       child: SizedBox(
         width: double.infinity,
-        height: 44,
+        height: 55,
         child: ElevatedButton(
           onPressed: enabled ? onPressed : null,
           style: ElevatedButton.styleFrom(

@@ -81,6 +81,7 @@ class MainAppbar extends StatelessWidget implements PreferredSizeWidget {
             child: TextButton(
               onPressed: onButtonPressed ?? () {}, // 홈 탭의 버튼 동작
               style: TextButton.styleFrom(
+                foregroundColor: Color(0xFF88D3BD),
                 padding: EdgeInsets.zero,
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,

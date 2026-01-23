@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'features/onboarding/pages/onboarding_page.dart'; // 맨 처음 화면
+import 'features/onboarding/pages/onboarding_page.dart';
+import 'pages/main_page.dart';
 import 'common/common.dart';
 
 void main() async {

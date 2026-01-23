@@ -32,7 +32,6 @@ dependencies:
     sdk: flutter
   intl: ^0.20.2
   dio: ^5.9.0
-  image_picker: ^1.2.1
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -40,10 +39,18 @@ dependencies:
   flutter_svg: ^2.2.3
   http_parser: ^4.0.0
   url_launcher: ^6.3.2
+  timeago: ^3.7.1
 
   http: ^1.6.0
   shared_preferences: ^2.5.4
   flutter_secure_storage: ^10.0.0
+
+  permission_handler: ^12.0.1
+  image_picker: ^1.2.1
+  image_cropper: ^11.0.0
+  flutter_image_compress: ^2.4.0
+  fluttertoast: ^9.0.0
+  mime: ^2.0.0
 
 dev_dependencies:
   flutter_test:
@@ -78,6 +85,7 @@ flutter:
     - assets/images/
     - assets/challenge/
     - assets/buddyzone/
+    - assets/buddyzone/friend_profile/
     - assets/mypage/
     - assets/home/
     - assets/bodylog/

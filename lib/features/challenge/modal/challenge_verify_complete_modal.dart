@@ -3,12 +3,18 @@ import 'package:flutter/material.dart';
 Future<void> showChallengeVerifyCompleteModal({
   required BuildContext context,
   required int point,
+  VoidCallback? onClosed, // ✅ 추가
 }) {
   return showDialog(
     context: context,
     barrierDismissible: false,
-    builder: (dialogContext) { 
+    builder: (dialogContext) {
       bool isHover = false;
+
+      void close() {
+        Navigator.of(dialogContext, rootNavigator: true).pop(); // ✅ dialogContext 사용
+        onClosed?.call(); // ✅ 다음 모달 트리거
+      }
 
       return Center(
         child: Material(
@@ -41,7 +47,7 @@ Future<void> showChallengeVerifyCompleteModal({
                           onExit: (_) => setState(() => isHover = false),
                           cursor: SystemMouseCursors.click,
                           child: GestureDetector(
-                            onTap: () => Navigator.of(context, rootNavigator: true).pop(),
+                            onTap: close, // ✅ 여기만 변경
                             child: Container(
                               padding: const EdgeInsets.all(5),
                               decoration: BoxDecoration(
@@ -65,9 +71,7 @@ Future<void> showChallengeVerifyCompleteModal({
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 40),
-
                 Container(
                   width: 40,
                   height: 40,
@@ -78,7 +82,6 @@ Future<void> showChallengeVerifyCompleteModal({
                   child: const Icon(Icons.check, color: Colors.white, size: 25),
                 ),
                 const SizedBox(height: 16),
-
                 const Text(
                   '챌린지 인증이 완료되었습니다!',
                   style: TextStyle(
@@ -89,7 +92,6 @@ Future<void> showChallengeVerifyCompleteModal({
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
-
                 Text(
                   '$point 포인트를 획득하였습니다',
                   style: const TextStyle(
@@ -99,7 +101,6 @@ Future<void> showChallengeVerifyCompleteModal({
                   ),
                   textAlign: TextAlign.center,
                 ),
-
                 const SizedBox(height: 30),
               ],
             ),

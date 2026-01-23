@@ -12,56 +12,51 @@ class GroupChallengeRankSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ranks = challenge.ranks;
-    final myRank = ranks.where((r) => r.isMe).isNotEmpty
-        ? ranks.firstWhere((r) => r.isMe)
-        : null;
+    final participants = challenge.participants;
+
+    // 내 랭크 찾기 (없으면 null)
+    GroupChallengeParticipant? myRank;
+    for (final p in participants) {
+      if (p.isMe) {
+        myRank = p;
+        break;
+      }
+    }
+
+    // 정렬 (rank 오름차순)
+    final sorted = [...participants]..sort((a, b) => a.rank.compareTo(b.rank));
 
     final List<Widget> items = [];
-    if (myRank != null && myRank.rank > 4) {
-      final top4 = ranks.where((r) => r.rank <= 4).toList()
-        ..sort((a, b) => a.rank.compareTo(b.rank));
 
-      for (final r in top4) {
-        items.add(
-          GroupChallengeRankItem(
-            rank: r,
-            progress: r.progress, // (rank에 progress 넣어둔 상태 기준)
-          ),
-        );
+    // 내 랭크가 4위 밖이면: 상위 4 + ... + 내 랭크
+    if (myRank != null && myRank.rank > 4) {
+      final top4 = sorted.where((p) => p.rank <= 4).toList();
+
+      for (final p in top4) {
+        items.add(GroupChallengeRankItem(participant: p));
       }
 
       items.add(
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
+        const Padding(
+          padding: EdgeInsets.only(bottom: 12),
           child: Center(
             child: Text(
               '...',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFFA8A8A8),
+                color: Color(0xFFA8A8A8),
               ),
             ),
           ),
         ),
       );
 
-      items.add(
-        GroupChallengeRankItem(
-          rank: myRank,
-          progress: myRank.progress,
-        ),
-      );
+      items.add(GroupChallengeRankItem(participant: myRank));
     } else {
-      final sorted = [...ranks]..sort((a, b) => a.rank.compareTo(b.rank));
-      for (final r in sorted) {
-        items.add(
-          GroupChallengeRankItem(
-            rank: r,
-            progress: r.progress,
-          ),
-        );
+      // 그 외: 전부 노출
+      for (final p in sorted) {
+        items.add(GroupChallengeRankItem(participant: p));
       }
     }
 

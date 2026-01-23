@@ -2,19 +2,20 @@ import 'package:flutter/material.dart';
 import '../models/group_challenge_detail_model.dart';
 
 class GroupChallengeRankItem extends StatelessWidget {
-  final ChallengeRank rank;
-  final int progress;
+  final GroupChallengeParticipant participant;
 
   const GroupChallengeRankItem({
     super.key,
-    required this.rank,
-    required this.progress,
+    required this.participant,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bool isMe = rank.isMe;
-    final bool isFirst = rank.rank == 1;
+    final bool isMe = participant.isMe;
+    final bool isFirst = participant.rank == 1;
+
+    // achievementRate: double (예: 85.5)
+    final int progress = participant.achievementRate.round().clamp(0, 100);
 
     final Color backgroundColor = isMe
         ? const Color(0xFFE8FFF9)
@@ -24,9 +25,6 @@ class GroupChallengeRankItem extends StatelessWidget {
 
     final Color rankNumberColor =
         isFirst ? const Color(0xFF000000) : const Color(0xFF747474);
-
-    final Color percentColor =
-        (rank.rank <= 3) ? const Color(0xFF18D9A2) : const Color(0xFFA8A8A8);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -48,7 +46,7 @@ class GroupChallengeRankItem extends StatelessWidget {
           SizedBox(
             width: 18,
             child: Text(
-              '${rank.rank}',
+              '${participant.rank}',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -60,17 +58,11 @@ class GroupChallengeRankItem extends StatelessWidget {
 
           /// 프로필
           Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0xFFD8D8D8),
-              image: rank.profileImageUrl != null
-                  ? DecorationImage(
-                      image: NetworkImage(rank.profileImageUrl!),
-                      fit: BoxFit.cover,
-                    )
-                  : null,
+            width: 17,
+            height: 17,
+            decoration: const BoxDecoration(shape: BoxShape.circle),
+            child: ClipOval(
+              child: _RankProfileImage(url: participant.profileImageUrl),
             ),
           ),
           const SizedBox(width: 8),
@@ -87,11 +79,13 @@ class GroupChallengeRankItem extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          rank.name,
+                          participant.nickname,
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
-                            color: rank.isMe ? const Color(0xFF18D9A2) : Colors.black,
+                            color: isMe
+                                ? const Color(0xFF18D9A2)
+                                : Colors.black,
                           ),
                         ),
                       ),
@@ -100,7 +94,7 @@ class GroupChallengeRankItem extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: (rank.rank <= 3)
+                          color: (participant.rank <= 3)
                               ? const Color(0xFF18D9A2)
                               : const Color(0xFFA8A8A8),
                         ),
@@ -108,7 +102,6 @@ class GroupChallengeRankItem extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 6),
-
                   _RoundedLinearProgressBar(
                     value: progress / 100,
                     height: 6,
@@ -126,7 +119,40 @@ class GroupChallengeRankItem extends StatelessWidget {
   }
 }
 
-// 커스텀 바 위젯
+class _RankProfileImage extends StatelessWidget {
+  final String? url;
+
+  const _RankProfileImage({required this.url});
+
+  bool get _useNetwork {
+    final u = url?.trim();
+    if (u == null) return false;
+    if (u.isEmpty) return false;
+    if (u.toLowerCase() == 'null') return false;
+    return u.startsWith('http://') || u.startsWith('https://');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _useNetwork
+        ? Image.network(
+            url!.trim(),
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) {
+              return Image.asset(
+                'assets/challenge/profile.png',
+                fit: BoxFit.cover,
+              );
+            },
+          )
+        : Image.asset(
+            'assets/challenge/profile.png',
+            fit: BoxFit.cover,
+          );
+  }
+}
+
+/// 커스텀 바 위젯
 class _RoundedLinearProgressBar extends StatelessWidget {
   final double value;
   final double height;
