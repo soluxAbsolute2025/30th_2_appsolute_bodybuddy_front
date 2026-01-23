@@ -84,34 +84,38 @@ class _DietEditPageState extends State<DietEditPage> {
 
   // 저장 (생성 또는 수정)
   Future<void> _save() async {
-    // 유효성 검사
     if (_foodController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('메뉴를 입력해주세요.')));
       return;
     }
 
-    setState(() => _isSaving = true); // 로딩 시작
+    setState(() => _isSaving = true);
 
     try {
-      // 콤마로 구분된 음식을 리스트로 변환
       List<String> foods = _foodController.text
           .split(',')
           .map((e) => e.trim())
           .where((e) => e.isNotEmpty)
           .toList();
 
+      // 날짜 포맷 (API Body 명세: "2025-12-23")
+      String dateStr = DateFormat('yyyy-MM-dd').format(widget.selectedDate ?? DateTime.now());
+
       if (widget.isEditMode && widget.record != null) {
-        // [수정 모드]
-        await _apiService.updateMeal(widget.record!.id, {
+        // [수정 모드] API 명세서 Body 구조 반영
+        final Map<String, dynamic> updateData = {
+          "dietRecordId": widget.record!.id, // 수정할 기록 인덱스
           "mealType": _selectedMealType,
-          "time": _timeController.text,
-          "memo": _memoController.text,
+          "intakeDate": dateStr,
+          "intakeTime": _timeController.text, // "12:20" 형태
           "foods": foods,
-        });
+          "memo": _memoController.text,
+          // 이미지는 서비스 클래스 내부에서 파일 유무에 따라 Multipart 등으로 처리됨
+        };
+
+        await _apiService.updateMeal(widget.record!.id, updateData);
       } else {
         // [생성 모드]
-        String dateStr = DateFormat('yyyy-MM-dd').format(widget.selectedDate ?? DateTime.now());
-
         await _apiService.createMeal(
           mealType: _selectedMealType,
           intakeDate: dateStr,
@@ -122,18 +126,16 @@ class _DietEditPageState extends State<DietEditPage> {
         );
       }
 
-      // 성공 시 뒤로가기 (true 반환해서 목록 갱신 유도)
       if (mounted) Navigator.pop(context, true);
 
     } catch (e) {
-      print("❌ 저장 실패: $e");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('저장 중 오류가 발생했습니다: $e')),
+          SnackBar(content: Text('저장 실패: $e')),
         );
       }
     } finally {
-      if (mounted) setState(() => _isSaving = false); // 로딩 종료
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 

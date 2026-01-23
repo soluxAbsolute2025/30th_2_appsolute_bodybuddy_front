@@ -198,8 +198,8 @@ class _WaterTabState extends State<WaterTab> with SingleTickerProviderStateMixin
   // --- 핵심 위젯: 물결 애니메이션 포함 ---
   // --- 핵심 위젯: 단순화된 물 게이지 ---
   Widget _buildWaterProgress(double percent, int percentInt) {
-    const double outerSize = 180.0;
-    const double innerSize = 134.0;
+    const double outerSize = 210.0;
+    const double innerSize = 170.0;
 
     return SizedBox(
       width: outerSize,
@@ -240,7 +240,7 @@ class _WaterTabState extends State<WaterTab> with SingleTickerProviderStateMixin
                     alignment: Alignment.bottomCenter, // 하단 정렬
                     child: SizedBox(
                       width: innerSize,
-                      height: innerSize * 0.6, // 전체 원 높이의 60%만 차지
+                      height: innerSize * 0.7, // 전체 원 높이의 60%만 차지
                       child: Image.asset(
                         'assets/bodylog/water_icon.png',
                         fit: BoxFit.cover, // 지정된 60% 영역 내에서 꽉 차게
@@ -256,7 +256,7 @@ class _WaterTabState extends State<WaterTab> with SingleTickerProviderStateMixin
                     child: Text(
                       '$percentInt%',
                       style: const TextStyle(
-                        fontSize: 28,
+                        fontSize: 33,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF00CFA5),
                       ),

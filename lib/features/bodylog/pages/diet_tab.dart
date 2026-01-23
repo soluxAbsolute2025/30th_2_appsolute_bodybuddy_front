@@ -228,7 +228,6 @@ class _DietTabState extends State<DietTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // [상단] 타이틀 + 수정 아이콘
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -239,10 +238,12 @@ class _DietTabState extends State<DietTab> {
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                     const SizedBox(width: 6),
-                    const Icon(Icons.edit, size: 14, color: Colors.grey),
+                    // 수정 아이콘을 클릭 가능한 버튼 느낌으로 강조
+                    const Icon(Icons.edit_note_rounded, size: 20, color: Color(0xFF4BECBE)),
                   ],
                 ),
-                // 시간 표시 부분 제거함 (데이터 모델에 time이 없으므로)
+                // API 명세에 intakeTime이 있으므로 표시해주면 좋습니다.
+                Text(r.time ?? "", style: const TextStyle(color: Colors.grey, fontSize: 12)),
               ],
             ),
             const SizedBox(height: 12),
