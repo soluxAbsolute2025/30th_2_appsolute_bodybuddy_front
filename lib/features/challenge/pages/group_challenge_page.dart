@@ -7,7 +7,6 @@ import '../widgets/new_group_challenge_card.dart';
 import '../widgets/create_group_challenge_banner.dart';
 import '../widgets/completed_group_challenge_card.dart';
 import '../pages/group_challenge_detail_page.dart';
-import '../data/dummy_group_challenge_detail.dart';
 import '../modal/participating_challenge_more_modal.dart';
 
 import '../api/ongoing_group_challenge_api.dart';
@@ -174,11 +173,12 @@ class _GroupChallengePageState extends State<GroupChallengePage> {
                           members: const [], // TODO: 모달도 API 기준으로 바꾸면 여기 매핑 가능
                           imageUrl: c.imageUrl,
                           onTap: () {
-                            Navigator.push(
-                              context,
+                            Navigator.of(context, rootNavigator: true).pop();
+
+                            Navigator.of(context, rootNavigator: true).push(
                               MaterialPageRoute(
                                 builder: (_) => GroupChallengeDetailPage(
-                                  challenge: dummyGroupChallengeDetail,
+                                  challengeId: c.challengeId,
                                 ),
                               ),
                             );
@@ -354,7 +354,14 @@ class _GroupChallengePageState extends State<GroupChallengePage> {
             (challenge) => ParticipatingGroupChallengeCard(
               challenge: challenge,
               onImageTap: () {
-                // TODO: 상세 이동
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => GroupChallengeDetailPage(
+                      challengeId: challenge.challengeId, // ✅ 여기!
+                    ),
+                  ),
+                );
               },
             ),
           )

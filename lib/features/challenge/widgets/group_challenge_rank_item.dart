@@ -2,19 +2,20 @@ import 'package:flutter/material.dart';
 import '../models/group_challenge_detail_model.dart';
 
 class GroupChallengeRankItem extends StatelessWidget {
-  final ChallengeRank rank;
-  final int progress;
+  final GroupChallengeParticipant participant;
 
   const GroupChallengeRankItem({
     super.key,
-    required this.rank,
-    required this.progress,
+    required this.participant,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bool isMe = rank.isMe;
-    final bool isFirst = rank.rank == 1;
+    final bool isMe = participant.isMe;
+    final bool isFirst = participant.rank == 1;
+
+    // achievementRate: double (예: 85.5)
+    final int progress = participant.achievementRate.round().clamp(0, 100);
 
     final Color backgroundColor = isMe
         ? const Color(0xFFE8FFF9)
@@ -45,7 +46,7 @@ class GroupChallengeRankItem extends StatelessWidget {
           SizedBox(
             width: 18,
             child: Text(
-              '${rank.rank}',
+              '${participant.rank}',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -61,7 +62,7 @@ class GroupChallengeRankItem extends StatelessWidget {
             height: 17,
             decoration: const BoxDecoration(shape: BoxShape.circle),
             child: ClipOval(
-              child: _RankProfileImage(url: rank.profileImageUrl),
+              child: _RankProfileImage(url: participant.profileImageUrl),
             ),
           ),
           const SizedBox(width: 8),
@@ -78,7 +79,7 @@ class GroupChallengeRankItem extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          rank.name,
+                          participant.nickname,
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
@@ -93,7 +94,7 @@ class GroupChallengeRankItem extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: (rank.rank <= 3)
+                          color: (participant.rank <= 3)
                               ? const Color(0xFF18D9A2)
                               : const Color(0xFFA8A8A8),
                         ),
