@@ -25,9 +25,6 @@ class GroupChallengeRankItem extends StatelessWidget {
     final Color rankNumberColor =
         isFirst ? const Color(0xFF000000) : const Color(0xFF747474);
 
-    final Color percentColor =
-        (rank.rank <= 3) ? const Color(0xFF18D9A2) : const Color(0xFFA8A8A8);
-
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
@@ -62,9 +59,7 @@ class GroupChallengeRankItem extends StatelessWidget {
           Container(
             width: 17,
             height: 17,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-            ),
+            decoration: const BoxDecoration(shape: BoxShape.circle),
             child: ClipOval(
               child: _RankProfileImage(url: rank.profileImageUrl),
             ),
@@ -87,7 +82,9 @@ class GroupChallengeRankItem extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
-                            color: rank.isMe ? const Color(0xFF18D9A2) : Colors.black,
+                            color: isMe
+                                ? const Color(0xFF18D9A2)
+                                : Colors.black,
                           ),
                         ),
                       ),
@@ -104,7 +101,6 @@ class GroupChallengeRankItem extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 6),
-
                   _RoundedLinearProgressBar(
                     value: progress / 100,
                     height: 6,
@@ -152,7 +148,10 @@ class _RankProfileImage extends StatelessWidget {
             'assets/challenge/profile.png',
             fit: BoxFit.cover,
           );
-// 커스텀 바 위젯
+  }
+}
+
+/// 커스텀 바 위젯
 class _RoundedLinearProgressBar extends StatelessWidget {
   final double value;
   final double height;

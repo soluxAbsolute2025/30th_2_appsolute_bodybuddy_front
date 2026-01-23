@@ -160,8 +160,7 @@ class _GroupChallengePageState extends State<GroupChallengePage> {
                             imageUrl: challenge.imageUrl,
 
                             onImageTap: () {
-                              Navigator.push(
-                                context,
+                              Navigator.of(context, rootNavigator: true).push(
                                 MaterialPageRoute(
                                   builder: (_) => GroupChallengeDetailPage(
                                     challenge: dummyGroupChallengeDetail,
