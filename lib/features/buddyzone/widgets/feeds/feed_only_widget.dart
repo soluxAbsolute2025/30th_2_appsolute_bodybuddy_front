@@ -1,4 +1,6 @@
 import 'package:bodybuddy_frontend/features/buddyzone/api/buddyzone_hottag_api.dart';
+import 'package:bodybuddy_frontend/features/mypage/api/mypage_api.dart';
+import 'package:bodybuddy_frontend/features/mypage/models/mypage_info_model.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:bodybuddy_frontend/features/carebuddy/providers/custom_ko_messages.dart';
 
@@ -30,16 +32,19 @@ class FeedOnlyWidget extends StatefulWidget {
 
 class _FeedOnlyWidgetState extends State<FeedOnlyWidget> {
   int commentCount = 0;
+  MyPageResponse? myInfo;
 
   @override
   void initState() {
     super.initState();
+    _checkUserId();
     timeago.setLocaleMessages('ko_custom', MyCustomKomassages());
   }
 
   void _checkUserId() async {
-    final respone = await FeedsApi().checkUserInfo();
-    // print(respone);
+    final respone = await MyPageAPI().getMyPageAllInfo();
+    myInfo = respone;
+    setState(() {});
   }
 
   void _clickHeart() async {
@@ -165,9 +170,10 @@ class _FeedOnlyWidgetState extends State<FeedOnlyWidget> {
                                     id: widget.feed.comments.length + 1,
                                     content: userContent,
                                     writerProfileImageUrl:
-                                        'assets/buddyzone/myprofile.png',
-                                    writerNickname: '나(테스트)',
-                                    writerLevel: 1,
+                                        myInfo!.userProfile.profileImageUrl,
+                                    writerNickname:
+                                        myInfo!.userProfile.nickname,
+                                    writerLevel: myInfo!.levelInfo.currentLevel,
                                     createdAt: DateTime.now(),
                                     updatedAt: DateTime.now(),
                                     edited: false,
