@@ -25,9 +25,6 @@ class GroupChallengeRankItem extends StatelessWidget {
     final Color rankNumberColor =
         isFirst ? const Color(0xFF000000) : const Color(0xFF747474);
 
-    final Color percentColor =
-        (rank.rank <= 3) ? const Color(0xFF18D9A2) : const Color(0xFFA8A8A8);
-
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
@@ -60,17 +57,11 @@ class GroupChallengeRankItem extends StatelessWidget {
 
           /// 프로필
           Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0xFFD8D8D8),
-              image: rank.profileImageUrl != null
-                  ? DecorationImage(
-                      image: NetworkImage(rank.profileImageUrl!),
-                      fit: BoxFit.cover,
-                    )
-                  : null,
+            width: 17,
+            height: 17,
+            decoration: const BoxDecoration(shape: BoxShape.circle),
+            child: ClipOval(
+              child: _RankProfileImage(url: rank.profileImageUrl),
             ),
           ),
           const SizedBox(width: 8),
@@ -91,7 +82,9 @@ class GroupChallengeRankItem extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
-                            color: rank.isMe ? const Color(0xFF18D9A2) : Colors.black,
+                            color: isMe
+                                ? const Color(0xFF18D9A2)
+                                : Colors.black,
                           ),
                         ),
                       ),
@@ -108,7 +101,6 @@ class GroupChallengeRankItem extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 6),
-
                   _RoundedLinearProgressBar(
                     value: progress / 100,
                     height: 6,
@@ -126,7 +118,40 @@ class GroupChallengeRankItem extends StatelessWidget {
   }
 }
 
-// 커스텀 바 위젯
+class _RankProfileImage extends StatelessWidget {
+  final String? url;
+
+  const _RankProfileImage({required this.url});
+
+  bool get _useNetwork {
+    final u = url?.trim();
+    if (u == null) return false;
+    if (u.isEmpty) return false;
+    if (u.toLowerCase() == 'null') return false;
+    return u.startsWith('http://') || u.startsWith('https://');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _useNetwork
+        ? Image.network(
+            url!.trim(),
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) {
+              return Image.asset(
+                'assets/challenge/profile.png',
+                fit: BoxFit.cover,
+              );
+            },
+          )
+        : Image.asset(
+            'assets/challenge/profile.png',
+            fit: BoxFit.cover,
+          );
+  }
+}
+
+/// 커스텀 바 위젯
 class _RoundedLinearProgressBar extends StatelessWidget {
   final double value;
   final double height;
