@@ -99,7 +99,8 @@ class _MypageProfileWidgetState extends State<MypageProfileWidget> {
             onPressed: () {
               Navigator.of(context, rootNavigator: true).push(
                 MaterialPageRoute(
-                  builder: (context) => const MypageProfilePage(),
+                  builder: (context) =>
+                      MypageProfilePage(myPageInfo: widget.myPageInfo),
                 ),
               );
             },
