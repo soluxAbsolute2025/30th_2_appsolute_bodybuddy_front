@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart'; // Dio 패키지 사용
-import '../../../../api/dio_client.dart'; // ✅ DioClient import (경로 확인해주세요!)
-import '../../../../pages/main_page.dart';
-import 'welcome_flow_page.dart'; // 혹은 onboarding_page.dart
+import 'package:dio/dio.dart';
+import '../../../../api/dio_client.dart'; // DioClient 경로 확인
+import '../../../../pages/main_page.dart'; // 메인 페이지 경로 확인
+import 'welcome_flow_page.dart';
 import '../../../common/common.dart';
 
 class LoginPage extends StatefulWidget {
@@ -17,118 +17,103 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
 
-  // ✅ [핵심] DioClient 사용 (토큰 자동 관리)
   final Dio _dio = DioClient.dio;
 
+  // 🖐️ [로그인 버튼 클릭 시 실행]
   Future<void> _login() async {
     final loginId = _idController.text.trim();
     final password = _passwordController.text.trim();
 
     if (loginId.isEmpty || password.isEmpty) {
-      _showSnackBar("아이디와 비밀번호를 모두 입력해주세요.");
+      _showSnackBar("아이디와 비밀번호를 입력해주세요.");
       return;
     }
 
     setState(() => _isLoading = true);
 
     try {
-      // 1. 로그인 요청
-      // (로그인은 토큰이 필요 없으므로 DioClient 써도 되고 그냥 Dio 써도 되지만 통일성 위해 사용)
+      // 1. 로그인 요청 (ID/PW 전송)
       final response = await _dio.post(
         '/api/users/login',
-        data: {
-          "loginId": loginId,
-          "password": password
-        },
+        data: {"loginId": loginId, "password": password},
       );
 
       if (response.statusCode == 200) {
         final data = response.data;
-        // 응답 구조에 따라 accessToken 위치 확인 (data['accessToken'] 또는 data['data']['accessToken'])
+        // 토큰 파싱 (구조에 따라 수정: data['accessToken'] 등)
         String? accessToken = data['accessToken'] ?? data['data']?['accessToken'];
 
         if (accessToken != null) {
           // 2. 토큰 저장 (필수!)
           await Common.setToken(accessToken);
-          print("🔑 로그인 성공! 토큰 저장 완료.");
+          print("🔑 [로그인 성공] 토큰 발급 완료.");
 
-          // 3. 회원 정보 조회하여 갈 곳 정하기
+          // 3. 🔥 [핵심 분기점] 닉네임 있는지 확인하러 감!
           await _checkUserInfoAndRedirect();
         } else {
-          _showSnackBar("로그인 성공했으나 토큰이 없습니다.");
+          _showSnackBar("토큰이 반환되지 않았습니다.");
         }
       }
     } on DioException catch (e) {
-      // 400, 401, 500 에러 등 처리
-      print("🔥 로그인 실패: ${e.response?.statusCode} / ${e.response?.data}");
-      String msg = "로그인에 실패했습니다.";
+      // 로그인 실패 (비번 틀림 등)
+      print("🔥 로그인 실패: ${e.response?.statusCode}");
       if (e.response?.statusCode == 400 || e.response?.statusCode == 401) {
-        msg = "아이디 또는 비밀번호를 확인해주세요.";
+        _showSnackBar("아이디 또는 비밀번호를 확인해주세요.");
+      } else {
+        _showSnackBar("로그인 중 오류가 발생했습니다.");
       }
-      _showSnackBar(msg);
-    } catch (e) {
-      print("🔥 기타 에러: $e");
-      _showSnackBar("알 수 없는 오류가 발생했습니다.");
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  // 🚀 [회원 정보 조회 및 분기 처리]
-  // 명세서 이미지(d7cd14.png)에 따라 '/api/users' 호출
+  // 🚀 [회원 정보 조회 및 납치 로직]
   Future<void> _checkUserInfoAndRedirect() async {
     try {
-      print("🔎 회원 정보 조회 시작 (/api/users)...");
+      print("🔎 [분기 확인] 닉네임 정보 조회 중...");
 
-      // ✅ DioClient가 헤더에 토큰을 자동으로 넣어줍니다.
+      // 토큰은 헤더에 자동 포함됨
       final response = await _dio.get('/api/users');
 
       if (response.statusCode == 200) {
-        // ✅ JSON 구조 이미지(d7cfc0.png)에 맞춘 파싱
-        // { "status": 200, "data": { "nickname": "김눈송", ... } }
-        final Map<String, dynamic> responseData = response.data;
-        final Map<String, dynamic>? dataObj = responseData['data'];
+        final data = response.data;
+        final String? nickname = data['data']?['nickname'];
 
-        // nickname 확인
-        final String? nickname = dataObj?['nickname'];
-
-        print("🔎 조회된 닉네임: $nickname");
-
-        _navigateBasedOnNickname(nickname);
-      } else {
-        // 200이 아닌 경우 (예: 정보 없음) -> 온보딩으로
-        print("⚠️ 회원 정보 조회 실패 (Status: ${response.statusCode})");
-        _navigateBasedOnNickname(null);
+        // A. 닉네임이 있다 -> 메인 화면으로
+        if (nickname != null && nickname.isNotEmpty && nickname != "null") {
+          print("✅ 닉네임 있음($nickname) -> 메인 페이지로 이동");
+          _moveToPage(const MainPage());
+        }
+        // B. 닉네임이 없다 -> 플로우 화면으로
+        else {
+          print("🆕 닉네임 없음 -> 온보딩 플로우(입력) 화면으로 이동");
+          _moveToPage(const OnboardingFlowScreen());
+        }
       }
-    } catch (e) {
-      print("🔥 회원 정보 조회 중 에러: $e");
-      // 에러가 나면 안전하게 온보딩으로 보내거나, 재시도 안내
-      _navigateBasedOnNickname(null);
+    } on DioException catch (e) {
+      // 🚨 C. 500 에러 (정보가 없어서 서버가 터짐) -> 플로우 화면으로
+      if (e.response?.statusCode == 500) {
+        print("🔥 [서버 500] 정보 없음으로 간주 -> 온보딩 플로우 화면으로 이동");
+        _moveToPage(const OnboardingFlowScreen());
+      } else {
+        // 그 외 에러는 로그만 찍고, 일단 플로우로 보내거나 에러 표시 (여기선 안전하게 플로우로)
+        print("⚠️ 기타 에러 -> 온보딩 플로우 화면으로 이동");
+        _moveToPage(const OnboardingFlowScreen());
+      }
     }
   }
 
-  void _navigateBasedOnNickname(String? nickname) {
+  void _moveToPage(Widget page) {
     if (!mounted) return;
-
-    if (nickname != null && nickname.isNotEmpty && nickname != "null") {
-      print("✅ 닉네임 있음 ($nickname) -> 메인 페이지로 이동");
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const MainPage()),
-            (route) => false,
-      );
-    } else {
-      print("🆕 닉네임 없음 -> 온보딩(프로필 설정) 페이지로 이동");
-      // WelcomeFlowPage 또는 OnboardingFlowScreen 등 본인 파일명에 맞게 수정
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const OnboardingFlowScreen()),
-            (route) => false,
-      );
-    }
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => page),
+          (route) => false, // 뒤로가기 다 지워버림
+    );
   }
 
   void _showSnackBar(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), duration: const Duration(seconds: 2)),
     );
@@ -137,42 +122,40 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(title: const Text("로그인")),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextField(
-                controller: _idController,
-                decoration: const InputDecoration(labelText: "아이디"),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(labelText: "비밀번호"),
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _login,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00E676),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text("로그인", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+      backgroundColor: Colors.white,
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextField(
+              controller: _idController,
+              decoration: const InputDecoration(labelText: "아이디"),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _passwordController,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: "비밀번호"),
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _login, // 로딩 중이면 버튼 비활성
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF00E676),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
+                child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text("로그인", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

@@ -2,8 +2,8 @@ import 'dart:convert'; // JSON 처리
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // 키보드 입력 제한용
 import 'package:http/http.dart' as http; // API 통신
-import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // 토큰 관리
-import '../../../../pages/main_page.dart'; // 메인 페이지 경로 (프로젝트 구조에 맞게 유지)
+import '../../../../common/common.dart'; // ✅ Common import (경로 확인해주세요!)
+import '../../../../pages/main_page.dart'; // 메인 페이지 경로
 
 class OnboardingFlowScreen extends StatefulWidget {
   const OnboardingFlowScreen({super.key});
@@ -15,14 +15,16 @@ class OnboardingFlowScreen extends StatefulWidget {
 class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
   // ★ 서버 주소
   static const String baseUrl = "http://52.79.228.227:8080";
-  final storage = const FlutterSecureStorage();
+
+  // ❌ [삭제] storage 직접 사용 안 함
+  // final storage = const FlutterSecureStorage();
 
   final PageController _pageController = PageController();
   int _currentPage = 0;
   bool _isLoading = false;
 
   // ✨ 디자인 컬러 (민트)
-  final Color _activeColor = const Color(0xFF4BECBE);
+  final Color _activeColor = const Color(0xFF00E676); // 메인 컬러와 통일 (선택 사항)
 
   // --- 1단계: 닉네임 ---
   final TextEditingController _nicknameController = TextEditingController();
@@ -103,13 +105,16 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // 쿼리 파라미터로 전송
       final url = Uri.parse('$baseUrl/api/users/check-nickname?nickname=$nickname');
+
+      // ✅ [API] 닉네임 중복 체크
       final response = await http.get(url);
 
       if (response.statusCode == 200) {
+        // 중복 아님 -> 다음 페이지로
         _goToNextPage();
       } else {
+        // 409 Conflict 등
         _showSnackBar("이미 사용 중인 닉네임입니다. 다른 이름을 써주세요!");
       }
     } catch (e) {
@@ -124,13 +129,21 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
   Future<void> _submitOnboarding() async {
     setState(() => _isLoading = true);
 
-    // 저장된 토큰 가져오기
-    String? token = await storage.read(key: 'ACCESS_TOKEN');
+    // 1. 메모리에 있는 토큰 우선 조회
+    String? token = Common.token;
+
+    // 2. 메모리에 없으면 스토리지에서 직접 조회 (방어 코드)
+    if (token == null) {
+      // 💡 [수정 포인트]
+      // 1. const storage = ... 에러 해결을 위해 Common.storage 사용
+      // 2. Common._key는 private이라 접근 못하므로 문자열 'accessToken' 직접 사용
+      // (Common.dart에서 _key = 'accessToken' 이라고 하셨으므로 동일하게 맞춤)
+      token = await Common.storage.read(key: 'accessToken');
+    }
 
     if (token == null) {
       _showSnackBar("로그인 정보가 없습니다. 다시 로그인해주세요.");
       setState(() => _isLoading = false);
-      // 필요하다면 로그인 페이지로 이동 로직 추가 가능
       return;
     }
 
@@ -139,10 +152,10 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
 
       final bodyData = {
         "nickname": _nicknameController.text.trim(),
-        "age": int.parse(_ageController.text), // 나이는 정수
+        "age": int.parse(_ageController.text),
         "gender": _selectedGender == "Male" ? "MALE" : "FEMALE",
-        "height": double.parse(_heightController.text), // 키는 실수
-        "weight": double.parse(_weightController.text), // 몸무게는 실수
+        "height": double.parse(_heightController.text),
+        "weight": double.parse(_weightController.text),
         "dailyStepGoal": int.parse(_stepsController.text),
         "dailyWorkoutGoal": int.parse(_exerciseTimeController.text),
         "dailySleepHoursGoal": int.parse(_sleepHourController.text),
@@ -157,18 +170,15 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
         url,
         headers: {
           "Content-Type": "application/json",
-          // ★ [핵심 수정] Bearer + 공백 + 토큰
-          "Authorization": "Bearer $token",
+          "Authorization": "Bearer $token", // 토큰 사용
         },
         body: jsonEncode(bodyData),
       );
 
       print("📩 [응답 상태]: ${response.statusCode}");
-      print("📩 [응답 내용]: ${utf8.decode(response.bodyBytes)}");
 
       if (response.statusCode == 200) {
         if (!mounted) return;
-        // 성공 시 메인 페이지로 이동 (이전 기록 제거)
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => const MainPage()),
@@ -181,7 +191,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
       print("🔥 [에러] $e");
       _showSnackBar("오류가 발생했습니다: $e");
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -193,6 +203,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
   }
 
   void _showSnackBar(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
@@ -222,7 +233,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // 상단 인디케이터 (1단계 제외)
+            // 상단 인디케이터
             if (_currentPage > 0)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -251,15 +262,15 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                 physics: const NeverScrollableScrollPhysics(),
                 onPageChanged: (idx) => setState(() => _currentPage = idx),
                 children: [
-                  _buildNicknameStep(),     // 0: 닉네임
-                  _buildPersonalInfoStep(), // 1: 신체정보
-                  _buildDailyGoalStep(),    // 2: 목표
-                  _buildInterestStep(),     // 3: 관심사
+                  _buildNicknameStep(),     // 0
+                  _buildPersonalInfoStep(), // 1
+                  _buildDailyGoalStep(),    // 2
+                  _buildInterestStep(),     // 3
                 ],
               ),
             ),
 
-            // 하단 '다음' / '시작하기' 버튼
+            // 하단 버튼
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
               child: SizedBox(
@@ -304,7 +315,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     );
   }
 
-  // --- 1단계 UI ---
+  // --- 이하 UI 빌더 함수들은 기존과 동일 ---
   Widget _buildNicknameStep() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -354,7 +365,6 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     );
   }
 
-  // --- 2단계 UI ---
   Widget _buildPersonalInfoStep() {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -390,13 +400,11 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
           const SizedBox(height: 24),
           _buildLabel("키(cm)"),
           const SizedBox(height: 8),
-          // 키: 소수점 허용 (isDecimal: true)
           _buildBoxTextField(controller: _heightController, hint: "예) 170.5", isNumber: true, isDecimal: true),
 
           const SizedBox(height: 24),
           _buildLabel("몸무게(kg)"),
           const SizedBox(height: 8),
-          // 몸무게: 소수점 허용 (isDecimal: true)
           _buildBoxTextField(controller: _weightController, hint: "예) 65.4", isNumber: true, isDecimal: true),
           const SizedBox(height: 20),
         ],
@@ -404,7 +412,6 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     );
   }
 
-  // --- 3단계 UI ---
   Widget _buildDailyGoalStep() {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -452,7 +459,6 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     );
   }
 
-  // --- 4단계 UI ---
   Widget _buildInterestStep() {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -507,7 +513,6 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     );
   }
 
-  // Helper Widgets
   Widget _buildLabel(String text) {
     return Text(
       text,
@@ -515,22 +520,19 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     );
   }
 
-  // ✨ [수정] 소수점 입력 지원 (isDecimal 추가)
   Widget _buildBoxTextField({
     required TextEditingController controller,
     required String hint,
     bool isNumber = false,
-    bool isDecimal = false, // 소수점 허용 여부
+    bool isDecimal = false,
   }) {
     return TextFormField(
       controller: controller,
-      // 숫자 키패드: 소수점 옵션 활성화
       keyboardType: isNumber
           ? TextInputType.numberWithOptions(decimal: isDecimal)
           : TextInputType.text,
       inputFormatters: isNumber
           ? [
-        // isDecimal이면 소수점 포함 허용, 아니면 숫자만 허용
         FilteringTextInputFormatter.allow(
           isDecimal ? RegExp(r'^\d+\.?\d*') : RegExp(r'^\d+'),
         )

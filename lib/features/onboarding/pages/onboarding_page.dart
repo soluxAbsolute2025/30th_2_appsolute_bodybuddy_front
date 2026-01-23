@@ -165,6 +165,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 // [시작하기 버튼] -> StartPage로 이동
                 SizedBox(
                   height: 56,
+                  width: 600,
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.push(

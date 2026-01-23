@@ -72,9 +72,16 @@ class _SignUpFormScreenState extends State<SignUpFormScreen> {
     }
 
     final url = Uri.parse('$baseUrl/api/users/check-id?loginId=$loginId');
+    print("🛫 [ID 중복확인 요청] URL: $url");
 
     try {
+      // 2. GET 요청 보내기
       final response = await http.get(url);
+
+      // 🔥🔥🔥 [여기가 핵심!] 서버 응답 로그 찍기 🔥🔥🔥
+      print("📥 [응답 상태코드] : ${response.statusCode}");
+
+
       final dynamic decodedBody = jsonDecode(utf8.decode(response.bodyBytes));
 
       if (response.statusCode == 200) {
