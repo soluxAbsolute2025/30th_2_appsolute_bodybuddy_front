@@ -1,6 +1,7 @@
 import 'package:bodybuddy_frontend/features/buddyzone/api/buddyzone_hottag_api.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/models/feeds/feed_content_model.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/models/feeds/feed_type_model.dart';
+import 'package:bodybuddy_frontend/features/buddyzone/widgets/friends/friends_buddy_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../widgets/feeds/feed_search_widget.dart';
@@ -24,6 +25,8 @@ class _BuddyFeedPageState extends State<BuddyFeedPage> {
   int currentPage = 0;
   bool isLoading = false;
   bool isLast = false;
+
+  int userId = 1;
 
   void initState() {
     super.initState();
@@ -99,6 +102,16 @@ class _BuddyFeedPageState extends State<BuddyFeedPage> {
             sliver: SliverToBoxAdapter(
               child: Column(
                 children: [
+                  TextButton(
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) =>
+                            BuddyProfileDialog(userId: userId),
+                      );
+                    },
+                    child: Text('테스트 버튼'),
+                  ),
                   FeedSearchWidget(
                     onSearchFeed: onSearchFeed,
                     controller: searchController,

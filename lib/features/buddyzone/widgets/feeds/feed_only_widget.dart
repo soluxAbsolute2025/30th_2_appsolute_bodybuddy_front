@@ -37,6 +37,11 @@ class _FeedOnlyWidgetState extends State<FeedOnlyWidget> {
     timeago.setLocaleMessages('ko_custom', MyCustomKomassages());
   }
 
+  void _checkUserId() async {
+    final respone = await FeedsApi().checkUserInfo();
+    // print(respone);
+  }
+
   void _clickHeart() async {
     await FeedsApi().postFeedLike(widget.feed.id);
     if (widget.onLikeToggle != null) {
@@ -93,14 +98,14 @@ class _FeedOnlyWidgetState extends State<FeedOnlyWidget> {
           ],
         ),
         SizedBox(height: 16.0),
-        if (widget.feed.writerProfileImageUrl != null) ...[
+        if (widget.feed.imageUrl != null) ...[
           Container(
             width: double.infinity,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10.0),
               child: Image(
                 fit: BoxFit.fitWidth,
-                image: NetworkImage(widget.feed.writerProfileImageUrl!),
+                image: NetworkImage(widget.feed.imageUrl!),
               ),
             ),
           ),
@@ -111,6 +116,7 @@ class _FeedOnlyWidgetState extends State<FeedOnlyWidget> {
           children: [
             TextButton(
               onPressed: () {
+                _checkUserId();
                 _clickHeart();
               },
               style: TextButton.styleFrom(

@@ -1,9 +1,39 @@
+import 'package:bodybuddy_frontend/common/common.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:bodybuddy_frontend/api/auth_api.dart';
 
 class EtcWidget extends StatelessWidget {
   const EtcWidget({super.key});
+
+  Future<void> postLogoutUser() async {
+    await AuthApi().logoutUser();
+    // await Common().logout();
+  }
+
+  Future<void> deleteUser(BuildContext context) async {
+    try {
+      // 1. API 호출
+      await AuthApi().deleteUser();
+
+      // 2. 로그아웃 처리 (토큰 삭제 등)
+      // await Common().logout(); // 기존에 주석 처리 하신 부분
+
+      // 3. 성공 시 로그인 화면으로 이동 등 후속 처리
+      if (context.mounted) {
+        // 예: Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+        print("회원 탈퇴 성공");
+      }
+    } catch (e) {
+      // 4. 에러 발생 시 사용자에게 알림
+      print("회원 탈퇴 실패: $e");
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('회원 탈퇴 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -161,6 +191,7 @@ class EtcWidget extends StatelessWidget {
                         onPressed: () {
                           Navigator.of(context).pop();
                           // 여기에 로그아웃 로직 추가
+                          postLogoutUser();
                         },
                         child: const Text(
                           '로그아웃',
@@ -292,8 +323,7 @@ class EtcWidget extends StatelessWidget {
                         ),
                         onPressed: () {
                           Navigator.of(context).pop();
-                          // 여기에 회원 탈퇴 로직 추가
-                          // AuthApi().deleteUser('accessToken');
+                          deleteUser(context);
                         },
                         child: const Text(
                           '회원탈퇴',

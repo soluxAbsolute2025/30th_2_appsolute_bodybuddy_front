@@ -50,6 +50,7 @@ dependencies:
   image_cropper: ^11.0.0
   flutter_image_compress: ^2.4.0
   fluttertoast: ^9.0.0
+  mime: ^2.0.0
 
 dev_dependencies:
   flutter_test:
@@ -84,6 +85,7 @@ flutter:
     - assets/images/
     - assets/challenge/
     - assets/buddyzone/
+    - assets/buddyzone/friend_profile/
     - assets/mypage/
     - assets/home/
     - assets/bodylog/
