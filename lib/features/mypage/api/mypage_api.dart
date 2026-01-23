@@ -1,4 +1,5 @@
 import 'package:bodybuddy_frontend/api/dio_client.dart';
+import 'package:bodybuddy_frontend/features/mypage/models/mypage_myfeed_model.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
@@ -34,9 +35,10 @@ class MyPageAPI {
     return PrivacyResponse.fromJson(response.data);
   }
 
-  Future<void> getMyPageMyFeed() async {
+  Future<MyFeedModel> getMyPageMyFeed() async {
     final response = await _dio.get('/api/mypage/posts');
 
     print(response.data.toString());
+    return MyFeedModel.fromJson(response.data);
   }
 }

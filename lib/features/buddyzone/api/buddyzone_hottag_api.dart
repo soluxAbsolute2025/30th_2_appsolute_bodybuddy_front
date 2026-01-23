@@ -46,9 +46,10 @@ class FeedsApi {
     return List<String>.from(response.data);
   }
 
-  Future<void> detailFeeds({required int feedId}) async {
+  Future<FeedPost> detailFeeds({required int feedId}) async {
     final response = await _dio.delete('/api/feeds/${feedId}');
-    print(response);
+    print(response.data);
+    return FeedPost.fromJson(response.data);
   }
 
   Future<void> postFeedLike(int feedId) async {
