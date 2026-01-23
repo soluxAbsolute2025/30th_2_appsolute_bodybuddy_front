@@ -1,8 +1,8 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart'; // Dio 패키지 사용
+import '../../../../api/dio_client.dart'; // ✅ DioClient import (경로 확인해주세요!)
 import '../../../../pages/main_page.dart';
-import 'welcome_flow_page.dart';
+import 'welcome_flow_page.dart'; // 혹은 onboarding_page.dart
 import '../../../common/common.dart';
 
 class LoginPage extends StatefulWidget {
@@ -13,32 +13,12 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  static const String baseUrl = "http://52.79.228.227:8080";
   final TextEditingController _idController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
 
-  // 🛠️ [방법 1] 토큰(JWT) 내부를 까서 닉네임이 있는지 확인하는 함수
-  String? _getNicknameFromToken(String token) {
-    try {
-      final parts = token.split('.');
-      if (parts.length != 3) return null;
-
-      // JWT의 두 번째 부분(Payload)을 디코딩
-      final payload = parts[1];
-      String normalized = base64Url.normalize(payload);
-      String decoded = utf8.decode(base64Url.decode(normalized));
-
-      final Map<String, dynamic> payloadMap = jsonDecode(decoded);
-      print("🕵️ 토큰 내부 데이터 확인: $payloadMap");
-
-      // 토큰 안에 'nickname' 혹은 'sub' 등에 닉네임이 있는지 확인
-      return payloadMap['nickname'];
-    } catch (e) {
-      print("⚠️ 토큰 디코딩 실패: $e");
-      return null;
-    }
-  }
+  // ✅ [핵심] DioClient 사용 (토큰 자동 관리)
+  final Dio _dio = DioClient.dio;
 
   Future<void> _login() async {
     final loginId = _idController.text.trim();
@@ -53,85 +33,76 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       // 1. 로그인 요청
-      final loginUrl = Uri.parse('$baseUrl/api/users/login');
-      final loginResponse = await http.post(
-        loginUrl,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"loginId": loginId, "password": password}),
+      // (로그인은 토큰이 필요 없으므로 DioClient 써도 되고 그냥 Dio 써도 되지만 통일성 위해 사용)
+      final response = await _dio.post(
+        '/api/users/login',
+        data: {
+          "loginId": loginId,
+          "password": password
+        },
       );
 
-      if (loginResponse.statusCode == 200) {
-        final loginBody = jsonDecode(utf8.decode(loginResponse.bodyBytes));
-        String? accessToken = loginBody['accessToken'] ?? loginBody['data']?['accessToken'];
+      if (response.statusCode == 200) {
+        final data = response.data;
+        // 응답 구조에 따라 accessToken 위치 확인 (data['accessToken'] 또는 data['data']['accessToken'])
+        String? accessToken = data['accessToken'] ?? data['data']?['accessToken'];
 
         if (accessToken != null) {
+          // 2. 토큰 저장 (필수!)
           await Common.setToken(accessToken);
-          print("🔑 토큰 획득: $accessToken");
+          print("🔑 로그인 성공! 토큰 저장 완료.");
 
-          // -------------------------------------------------------
-          // 🚀 [방법 1 시도] 토큰 자체에 닉네임이 있는지 먼저 확인
-          // -------------------------------------------------------
-          String? nickname = _getNicknameFromToken(accessToken);
-
-          if (nickname != null && nickname.isNotEmpty) {
-            print("🎉 토큰 안에서 닉네임 발견! ($nickname)");
-            _navigateBasedOnNickname(nickname);
-          } else {
-            print("🚫 토큰에 닉네임 없음. [방법 2] 내 정보 조회 API 호출 시도...");
-            await _fetchMyPageAndRedirect(accessToken);
-          }
+          // 3. 회원 정보 조회하여 갈 곳 정하기
+          await _checkUserInfoAndRedirect();
         } else {
-          _showSnackBar("토큰을 찾을 수 없습니다.");
+          _showSnackBar("로그인 성공했으나 토큰이 없습니다.");
         }
-      } else {
-        _showSnackBar("로그인 실패: ${loginResponse.statusCode}");
       }
+    } on DioException catch (e) {
+      // 400, 401, 500 에러 등 처리
+      print("🔥 로그인 실패: ${e.response?.statusCode} / ${e.response?.data}");
+      String msg = "로그인에 실패했습니다.";
+      if (e.response?.statusCode == 400 || e.response?.statusCode == 401) {
+        msg = "아이디 또는 비밀번호를 확인해주세요.";
+      }
+      _showSnackBar(msg);
     } catch (e) {
-      print("🔥 에러: $e");
-      _showSnackBar("오류가 발생했습니다.");
+      print("🔥 기타 에러: $e");
+      _showSnackBar("알 수 없는 오류가 발생했습니다.");
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  // 🚀 [방법 2] 이미지(image_faa8e2.png) 구조에 맞춰 내 정보 조회
-  Future<void> _fetchMyPageAndRedirect(String accessToken) async {
+  // 🚀 [회원 정보 조회 및 분기 처리]
+  // 명세서 이미지(d7cd14.png)에 따라 '/api/users' 호출
+  Future<void> _checkUserInfoAndRedirect() async {
     try {
-      final myPageUrl = Uri.parse('$baseUrl/api/users/my-page');
-      final response = await http.get(
-        myPageUrl,
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer $accessToken",
-        },
-      );
+      print("🔎 회원 정보 조회 시작 (/api/users)...");
 
-      print("🔎 내 정보 조회 상태코드: ${response.statusCode}");
+      // ✅ DioClient가 헤더에 토큰을 자동으로 넣어줍니다.
+      final response = await _dio.get('/api/users');
 
       if (response.statusCode == 200) {
-        final String bodyString = utf8.decode(response.bodyBytes);
-        final Map<String, dynamic> json = jsonDecode(bodyString);
+        // ✅ JSON 구조 이미지(d7cfc0.png)에 맞춘 파싱
+        // { "status": 200, "data": { "nickname": "김눈송", ... } }
+        final Map<String, dynamic> responseData = response.data;
+        final Map<String, dynamic>? dataObj = responseData['data'];
 
-        // 📸 이미지(image_faa8e2.png) 분석 결과에 따른 경로 수정
-        // 구조: { "userProfile": { "nickname": "..." } }
-        String? nickname;
+        // nickname 확인
+        final String? nickname = dataObj?['nickname'];
 
-        if (json['userProfile'] != null) {
-          nickname = json['userProfile']['nickname'];
-        } else if (json['data'] != null) {
-          nickname = json['data']['nickname']; // 혹시 모를 대비
-        }
+        print("🔎 조회된 닉네임: $nickname");
 
-        print("🔎 서버에서 찾은 닉네임: $nickname");
         _navigateBasedOnNickname(nickname);
-
       } else {
-        // 조회 실패 시 일단 온보딩으로 보내서 닉네임 설정 유도
-        print("⚠️ 내 정보 조회 실패. 온보딩으로 이동");
+        // 200이 아닌 경우 (예: 정보 없음) -> 온보딩으로
+        print("⚠️ 회원 정보 조회 실패 (Status: ${response.statusCode})");
         _navigateBasedOnNickname(null);
       }
     } catch (e) {
-      print("🔥 내 정보 조회 중 에러: $e");
+      print("🔥 회원 정보 조회 중 에러: $e");
+      // 에러가 나면 안전하게 온보딩으로 보내거나, 재시도 안내
       _navigateBasedOnNickname(null);
     }
   }
@@ -140,14 +111,15 @@ class _LoginPageState extends State<LoginPage> {
     if (!mounted) return;
 
     if (nickname != null && nickname.isNotEmpty && nickname != "null") {
-      print("✅ 닉네임 존재 -> 메인 페이지로 이동");
+      print("✅ 닉네임 있음 ($nickname) -> 메인 페이지로 이동");
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const MainPage()),
             (route) => false,
       );
     } else {
-      print("🆕 닉네임 없음 -> 온보딩(닉네임 설정) 페이지로 이동");
+      print("🆕 닉네임 없음 -> 온보딩(프로필 설정) 페이지로 이동");
+      // WelcomeFlowPage 또는 OnboardingFlowScreen 등 본인 파일명에 맞게 수정
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const OnboardingFlowScreen()),
@@ -164,7 +136,6 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    // 기존 UI 코드 유지 (생략)
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(title: const Text("로그인")),
@@ -174,16 +145,30 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              TextField(controller: _idController, decoration: const InputDecoration(labelText: "아이디")),
+              TextField(
+                controller: _idController,
+                decoration: const InputDecoration(labelText: "아이디"),
+              ),
               const SizedBox(height: 16),
-              TextField(controller: _passwordController, obscureText: true, decoration: const InputDecoration(labelText: "비밀번호")),
+              TextField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: "비밀번호"),
+              ),
               const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _login,
-                  child: _isLoading ? const CircularProgressIndicator() : const Text("로그인"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF00E676),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text("로그인", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'features/onboarding/pages/onboarding_page.dart';
-import 'features/bodylog/pages/diet_tab.dart'; // 혹은 MainPage import
-import 'pages/main_page.dart'; // 실제 메인 페이지 import
+import 'features/onboarding/pages/onboarding_page.dart'; // 경로 확인
+import 'pages/main_page.dart'; // 경로 확인
 import 'common/common.dart';
 
 void main() async {
@@ -11,7 +10,10 @@ void main() async {
   // 한국어 날짜 데이터 초기화
   await initializeDateFormatting('ko_KR', null);
 
-  // 👇 [핵심] 여기서 저장된 토큰을 불러옵니다.
+  // ❌ [삭제 필] 이 줄을 지우거나 주석 처리해야 합니다!
+  // await Common.storage.deleteAll();
+
+  // ✅ [필수] 이제 토큰을 지우지 말고 '불러오기'만 합니다.
   await Common.init();
 
   runApp(const MyApp());
@@ -22,16 +24,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 토큰이 잘 로드되었는지 로그로 확인
+    // 저장된 토큰이 있는지 확인
     bool isLoggedIn = Common.token != null && Common.token!.isNotEmpty;
-    print("\n [앱 시작 상태] 토큰 존재 여부: $isLoggedIn / 토큰값: ${Common.token}\n");
+    print("🚀 [앱 시작] 로그인 상태: $isLoggedIn (토큰: ${Common.token == null ? '없음' : '있음'})");
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'BodyBuddy',
-
-      // ... (ThemeData 부분은 기존 코드 그대로 유지) ...
       theme: ThemeData(
+        // ... 기존 테마 설정 유지 ...
         primaryColor: const Color(0xFF00E676),
         scaffoldBackgroundColor: Colors.white,
         useMaterial3: true,
@@ -61,9 +62,7 @@ class MyApp extends StatelessWidget {
           hintStyle: const TextStyle(color: Color(0xFFB0B8C1)),
         ),
       ),
-
-      // 👇 [여기가 핵심 변경 포인트!]
-      // 토큰이 있으면(로그인 상태면) MainPage, 없으면 OnboardingPage 보여주기
+      // 토큰이 있으면 메인, 없으면 온보딩
       home: isLoggedIn ? const MainPage() : const OnboardingPage(),
     );
   }
