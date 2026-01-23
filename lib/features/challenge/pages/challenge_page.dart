@@ -10,6 +10,8 @@ import '../../../common/widgets/main_appbar.dart';
 import '../widgets/challenge_summary_card.dart';
 import '../data/dummy_challenge_summary.dart';
 import '../widgets/challenge_floating_button.dart';
+import '../modal/ongoing_challenge_detail_modal.dart';
+import '../modal/recommended_challenge_more_modal.dart';
 
 class ChallengePage extends StatefulWidget {
   const ChallengePage({super.key});
@@ -28,15 +30,24 @@ class _ChallengePageState extends State<ChallengePage> {
         ? dummyPersonalChallenges
         : dummyGroupChallenges;
 
+    final ongoingAll = challenges
+      .where((c) => c.category == 'WEEKLY' || c.category == 'DAILY')
+      .toList();
+
+    final weeklyOne = challenges.where((c) => c.category == 'WEEKLY').take(1);
+    final dailyOne = challenges.where((c) => c.category == 'DAILY').take(1);
+    final ongoingShow = [...weeklyOne, ...dailyOne].toList();
+
+    final recommendedShow = dummyRecommendedChallenges.take(2).toList();
+
     return Scaffold(
       appBar: MainAppbar(
-      navIndex: 2,
-      titleText: '바디 챌린지',
-      imageUrl: 'assets/challenge/shop.svg',
-      buttonText: '상점',
-      onButtonPressed: () {
-      },
-    ),
+        navIndex: 2,
+        titleText: '바디 챌린지',
+        imageUrl: 'assets/challenge/shop.svg',
+        buttonText: '상점',
+        onButtonPressed: () {},
+      ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -54,18 +65,47 @@ class _ChallengePageState extends State<ChallengePage> {
 
             // 진행 중인 챌린지 (개인일 때만)
             if (isPersonalSelected) ...[
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 17),
-                child: Text(
-                  '진행 중인 챌린지',
-                  style: TextStyle(
-                    fontFamily: 'Pretendard',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    height: 1.0,
-                    letterSpacing: 0,
-                    color: Colors.black,
-                  ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 17),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      '진행 중인 챌린지',
+                      style: TextStyle(
+                        fontFamily: 'Pretendard',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        height: 1.0,
+                        color: Colors.black,
+                      ),
+                    ),
+
+                    /// 더보기 버튼
+                    GestureDetector(
+                      onTap: () {
+                        OngoingChallengeMoreModal.show(
+                          context,
+                          items: ongoingAll.map((challenge) {
+                            return OngoingChallengeModalItem(
+                              challenge: challenge,
+                              onTap: () {
+                                Navigator.pop(context); 
+                                // TODO: 상세 모달 or 상세 페이지 이동
+                              },
+                            );
+                          }).toList(),
+                        );
+                      },
+                      child: const Text(
+                        '더보기',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFFA8A8A8),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
@@ -74,7 +114,7 @@ class _ChallengePageState extends State<ChallengePage> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
-                  children: challenges
+                  children: ongoingShow
                       .map(
                         (challenge) =>
                             OngoingChallengeCard(challenge: challenge),
@@ -88,12 +128,12 @@ class _ChallengePageState extends State<ChallengePage> {
 
             // 추천 챌린지
             if (isPersonalSelected) ...[
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 17),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 17),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
+                    const Text(
                       '추천 챌린지',
                       style: TextStyle(
                         fontFamily: 'Pretendard',
@@ -103,11 +143,26 @@ class _ChallengePageState extends State<ChallengePage> {
                         color: Colors.black,
                       ),
                     ),
-                    Text(
-                      '더보기',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF999999),
+
+                    /// 헤더의 더보기만 눌렀을 때 모달
+                    GestureDetector(
+                      onTap: () {
+                        RecommendedChallengeMoreModal.show(
+                          context,
+                          items: dummyRecommendedChallenges.map((c) {
+                            return RecommendedChallengeModalItem(
+                              challenge: c,
+                              onTap: () {
+                                Navigator.pop(context);
+                                // TODO: 추천 챌린지 상세 모달/상세페이지 이동
+                              },
+                            );
+                          }).toList(),
+                        );
+                      },
+                      child: const Text(
+                        '더보기',
+                        style: TextStyle(fontSize: 13, color: Color(0xFFA8A8A8)),
                       ),
                     ),
                   ],
@@ -116,14 +171,12 @@ class _ChallengePageState extends State<ChallengePage> {
 
               const SizedBox(height: 16),
 
+              /// 추천 카드 2개만 보여주기
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
-                  children: dummyRecommendedChallenges
-                      .map(
-                        (challenge) =>
-                            RecommendedChallengeCard(challenge: challenge),
-                      )
+                  children: recommendedShow
+                      .map((c) => RecommendedChallengeCard(challenge: c))
                       .toList(),
                 ),
               ),
@@ -169,14 +222,11 @@ class _ChallengePageState extends State<ChallengePage> {
               ),
 
               const SizedBox(height: 16),
-              
-              ChallengeSummaryCard(
-                summary: dummyChallengeSummary,
-              ),
+
+              ChallengeSummaryCard(summary: dummyChallengeSummary),
 
               const SizedBox(height: 24),
             ],
-
           ],
         ),
       ),
@@ -190,7 +240,6 @@ class _ChallengePageState extends State<ChallengePage> {
           : null,
 
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      
     );
   }
 }
