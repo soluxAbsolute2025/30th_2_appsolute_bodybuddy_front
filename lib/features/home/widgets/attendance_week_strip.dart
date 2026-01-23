@@ -29,7 +29,8 @@ class _AttendanceWeekStripState extends State<AttendanceWeekStrip> {
 
   // ✅ 서버 DateTime을 "KST dateOnly"로 정규화
   DateTime _kstDateOnly(DateTime dt) {
-    final kst = dt.isUtc ? dt.add(const Duration(hours: 9)) : dt;
+    final utc = dt.toUtc();
+    final kst = utc.add(const Duration(hours: 9));
     return DateTime(kst.year, kst.month, kst.day);
   }
 
