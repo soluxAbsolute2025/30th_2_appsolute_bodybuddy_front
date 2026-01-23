@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../data/dummy_completed_group_challenge.dart';
-import '../data/dummy_recruiting_group_challenges.dart';
 import '../widgets/participating_group_challenge_card.dart';
 import '../widgets/new_group_challenge_card.dart';
 import '../widgets/create_group_challenge_banner.dart';
@@ -13,6 +12,9 @@ import '../modal/participating_challenge_more_modal.dart';
 
 import '../api/ongoing_group_challenge_api.dart';
 import '../models/ongoing_group_challenge.dart';
+
+import '../api/group_challenge_list_api.dart';
+import '../models/group_challenge_list_item.dart';
 
 class GroupChallengePage extends StatefulWidget {
   const GroupChallengePage({super.key});
@@ -28,21 +30,31 @@ class _GroupChallengePageState extends State<GroupChallengePage> {
   Timer? _recruitingTimer;
   Timer? _completedTimer;
 
-  final api = OngoingGroupChallengeApi();
-
+  // 참여중(ongoing) API
+  final ongoingApi = OngoingGroupChallengeApi();
   List<OngoingGroupChallenge> participatingChallenges = [];
-  bool isLoading = true;
-  bool hasError = false;
+  bool participatingLoading = true;
+  bool participatingError = false;
+
+  // 새로운(Recruiting) API: /api/challenges/group 에서 RECRUITING만 추림
+  final groupListApi = GroupChallengeListApi();
+  List<GroupChallengeListItem> recruitingChallenges = [];
+  bool recruitingLoading = true;
+  bool recruitingError = false;
+
+  bool _isRecruitingUserScrolling = false;
 
   @override
   void initState() {
     super.initState();
 
     _loadParticipatingChallenges();
+    _loadRecruitingChallenges();
 
     // 새로운 그룹 챌린지 자동 스크롤
     _recruitingTimer = Timer.periodic(const Duration(milliseconds: 30), (_) {
       if (!_recruitingController.hasClients) return;
+      if (_isRecruitingUserScrolling) return;
 
       final maxScroll = _recruitingController.position.maxScrollExtent;
       final current = _recruitingController.offset;
@@ -54,7 +66,7 @@ class _GroupChallengePageState extends State<GroupChallengePage> {
       }
     });
 
-    // 완료한 그룹 챌린지 자동 스크롤
+    // 완료한 그룹 챌린지 자동 스크롤(더미)
     _completedTimer = Timer.periodic(const Duration(milliseconds: 30), (_) {
       if (!_completedController.hasClients) return;
 
@@ -71,22 +83,48 @@ class _GroupChallengePageState extends State<GroupChallengePage> {
 
   Future<void> _loadParticipatingChallenges() async {
     setState(() {
-      isLoading = true;
-      hasError = false;
+      participatingLoading = true;
+      participatingError = false;
     });
 
     try {
-      final result = await api.fetchOngoingGroupChallenges();
+      final result = await ongoingApi.fetchOngoingGroupChallenges();
       if (!mounted) return;
       setState(() {
         participatingChallenges = result;
-        isLoading = false;
+        participatingLoading = false;
       });
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       setState(() {
-        hasError = true;
-        isLoading = false;
+        participatingError = true;
+        participatingLoading = false;
+      });
+    }
+  }
+
+  Future<void> _loadRecruitingChallenges() async {
+    setState(() {
+      recruitingLoading = true;
+      recruitingError = false;
+    });
+
+    try {
+      final all = await groupListApi.fetchGroupChallenges();
+
+      // ✅ RECRUITING만 "새로운 그룹 챌린지" 섹션으로 사용
+      final recruiting = all.where((c) => c.isRecruiting).toList();
+
+      if (!mounted) return;
+      setState(() {
+        recruitingChallenges = recruiting;
+        recruitingLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        recruitingError = true;
+        recruitingLoading = false;
       });
     }
   }
@@ -102,8 +140,6 @@ class _GroupChallengePageState extends State<GroupChallengePage> {
 
   @override
   Widget build(BuildContext context) {
-    // ✅ 참여중은 API로 가져온 state 변수 사용
-    final recruitingChallenges = dummyRecruitingGroupChallenges;
     final completedChallenges = dummyCompletedGroupChallenges;
 
     return SingleChildScrollView(
@@ -128,9 +164,6 @@ class _GroupChallengePageState extends State<GroupChallengePage> {
                 ),
                 GestureDetector(
                   onTap: () {
-                    // ✅ 모달은 아직 더미용(ParticipatingChallengeModalItem)이면 타입이 안 맞을 수 있음
-                    // 지금은 참여중 API로 바꿨으니, 모달도 같이 바꾸는 게 정석.
-                    // 일단 "최소 수정"으로: 참여중이 있을 때만 열고, 내용은 API 기반으로 채움(필드 매핑)
                     ParticipatingChallengeMoreModal.show(
                       context,
                       items: participatingChallenges.map((c) {
@@ -138,11 +171,7 @@ class _GroupChallengePageState extends State<GroupChallengePage> {
                           title: c.title,
                           rank: c.myRank,
                           remainDays: c.remainingDays,
-                          // members는 모달이 GroupMember(List<GroupMember>)를 받는 구조라면
-                          // ParticipatingGroupChallengeCard처럼 매핑이 필요.
-                          // 여기서는 기존 모달 구조 유지 위해 "비워두는" 대신,
-                          // 모달의 item 모델을 API용으로 바꾸는 걸 추천.
-                          members: const [], // TODO: 모달 모델 리팩토링 권장
+                          members: const [], // TODO: 모달도 API 기준으로 바꾸면 여기 매핑 가능
                           imageUrl: c.imageUrl,
                           onTap: () {
                             Navigator.push(
@@ -185,39 +214,24 @@ class _GroupChallengePageState extends State<GroupChallengePage> {
           const SizedBox(height: 30),
 
           /// 새로운 그룹 챌린지
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 17),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
-                Text(
-                  '새로운 그룹 챌린지',
-                  style: TextStyle(
-                    fontFamily: 'Pretendard',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 17),
+            child: Text(
+              '새로운 그룹 챌린지',
+              style: TextStyle(
+                fontFamily: 'Pretendard',
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
 
           const SizedBox(height: 16),
 
-          /// 자동으로 천천히 이동하는 가로 리스트
-          SizedBox(
-            height: 180,
-            child: ListView.separated(
-              controller: _recruitingController,
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.only(left: 16, right: 16),
-              itemCount: recruitingChallenges.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 16),
-              itemBuilder: (context, index) {
-                final challenge = recruitingChallenges[index];
-                return NewGroupChallengeCard(challenge: challenge);
-              },
-            ),
+          /// 자동으로 천천히 이동하는 가로 리스트 (RECRUITING)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildRecruitingSection(),
           ),
 
           const SizedBox(height: 16),
@@ -232,21 +246,16 @@ class _GroupChallengePageState extends State<GroupChallengePage> {
 
           const SizedBox(height: 24),
 
-          /// 완료한 챌린지
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 17),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
-                Text(
-                  '완료한 챌린지',
-                  style: TextStyle(
-                    fontFamily: 'Pretendard',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
+          /// 완료한 챌린지 (더미)
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 17),
+            child: Text(
+              '완료한 챌린지',
+              style: TextStyle(
+                fontFamily: 'Pretendard',
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
 
@@ -291,16 +300,14 @@ class _GroupChallengePageState extends State<GroupChallengePage> {
   }
 
   Widget _buildParticipatingSection() {
-    if (isLoading) {
+    if (participatingLoading) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 24),
-        child: Center(
-          child: CircularProgressIndicator(),
-        ),
+        child: Center(child: CircularProgressIndicator()),
       );
     }
 
-    if (hasError) {
+    if (participatingError) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 24),
         child: Center(
@@ -334,10 +341,7 @@ class _GroupChallengePageState extends State<GroupChallengePage> {
         child: Center(
           child: Text(
             '참여 중인 그룹 챌린지가 없어요',
-            style: TextStyle(
-              fontSize: 14,
-              color: Color(0xFF999999),
-            ),
+            style: TextStyle(fontSize: 14, color: Color(0xFF999999)),
           ),
         ),
       );
@@ -350,11 +354,74 @@ class _GroupChallengePageState extends State<GroupChallengePage> {
             (challenge) => ParticipatingGroupChallengeCard(
               challenge: challenge,
               onImageTap: () {
-                // TODO: 그룹 챌린지 상세 페이지 이동
+                // TODO: 상세 이동
               },
             ),
           )
           .toList(),
+    );
+  }
+
+  Widget _buildRecruitingSection() {
+    if (recruitingLoading) {
+      return const SizedBox(
+        height: 180,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (recruitingError) {
+      return SizedBox(
+        height: 180,
+        child: Center(
+          child: GestureDetector(
+            onTap: _loadRecruitingChallenges,
+            child: const Text(
+              '새로운 그룹 챌린지를 불러오지 못했어요\n(다시 시도)',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: Color(0xFF3B82F6)),
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (recruitingChallenges.isEmpty) {
+      return const SizedBox(
+        height: 180,
+        child: Center(
+          child: Text(
+            '새로운 그룹 챌린지가 없어요',
+            style: TextStyle(fontSize: 14, color: Color(0xFF999999)),
+          ),
+        ),
+      );
+    }
+
+    return SizedBox(
+      height: 180,
+      child: NotificationListener<ScrollNotification>(
+        onNotification: (notification) {
+          if (notification is ScrollStartNotification) {
+            _isRecruitingUserScrolling = true;
+          } else if (notification is ScrollEndNotification) {
+            _isRecruitingUserScrolling = false;
+          }
+          return false;
+        },
+        child: ListView.separated(
+          controller: _recruitingController,
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          padding: EdgeInsets.zero,
+          itemCount: recruitingChallenges.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 16),
+          itemBuilder: (context, index) {
+            final challenge = recruitingChallenges[index];
+            return NewGroupChallengeCard(challenge: challenge);
+          },
+        ),
+      ),
     );
   }
 }
