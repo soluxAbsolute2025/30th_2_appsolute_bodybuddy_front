@@ -31,14 +31,14 @@ class OverlappingProfileStack extends StatelessWidget {
             Positioned(
               left: i * _overlap,
               child: _ProfileCircle(
-                imageUrl: visibleMembers[i].profileImageUrl,
+                imageUrl: visibleMembers[i].profileImageUrl, // nullable 가능
               ),
             ),
 
           if (extraCount > 0)
             Positioned(
               left: visibleCount * _overlap,
-              top: (_size - 24) / 2, 
+              top: (_size - 24) / 2,
               child: _PlusCircle(count: extraCount),
             ),
         ],
@@ -48,9 +48,17 @@ class OverlappingProfileStack extends StatelessWidget {
 }
 
 class _ProfileCircle extends StatelessWidget {
-  final String imageUrl;
+  final String? imageUrl;
 
   const _ProfileCircle({required this.imageUrl});
+
+  bool get _useNetwork {
+    final u = imageUrl?.trim();
+    if (u == null) return false;
+    if (u.isEmpty) return false;
+    if (u.toLowerCase() == 'null') return false;
+    return u.startsWith('http://') || u.startsWith('https://');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,16 +67,27 @@ class _ProfileCircle extends StatelessWidget {
       height: _size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: const Color(0xFFD8D8D8),
         border: Border.all(color: Colors.white, width: 1),
-        image: DecorationImage(
-          image: NetworkImage(imageUrl),
-          fit: BoxFit.cover,
-        ),
+      ),
+      child: ClipOval(
+        child: _useNetwork
+            ? Image.network(
+                imageUrl!.trim(),
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Image.asset(
+                  'assets/challenge/profile.png',
+                  fit: BoxFit.cover,
+                ),
+              )
+            : Image.asset(
+                'assets/challenge/profile.png',
+                fit: BoxFit.cover,
+              ),
       ),
     );
   }
 }
+
 
 class _PlusCircle extends StatelessWidget {
   final int count;
@@ -81,9 +100,9 @@ class _PlusCircle extends StatelessWidget {
       width: 24,
       height: 24,
       alignment: Alignment.center,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         shape: BoxShape.circle,
-        color: const Color(0xFFE9FFF9),
+        color: Color(0xFFE9FFF9),
       ),
       child: Text(
         '+$count',

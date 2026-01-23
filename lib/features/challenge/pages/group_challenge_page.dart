@@ -9,6 +9,7 @@ import '../widgets/create_group_challenge_banner.dart';
 import '../widgets/completed_group_challenge_card.dart';
 import '../pages/group_challenge_detail_page.dart';
 import '../data/dummy_group_challenge_detail.dart';
+import '../modal/participating_challenge_more_modal.dart';
 
 class GroupChallengePage extends StatefulWidget {
   const GroupChallengePage({super.key});
@@ -87,8 +88,8 @@ class _GroupChallengePageState extends State<GroupChallengePage> {
             padding: const EdgeInsets.symmetric(horizontal: 17),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
-                Text(
+              children: [
+                const Text(
                   '참여 중인 챌린지',
                   style: TextStyle(
                     fontFamily: 'Pretendard',
@@ -96,9 +97,35 @@ class _GroupChallengePageState extends State<GroupChallengePage> {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                Text(
-                  '더보기',
-                  style: TextStyle(fontSize: 13, color: Color(0xFF999999)),
+                GestureDetector(
+                  onTap: () {
+                    ParticipatingChallengeMoreModal.show(
+                      context,
+                      items: participatingChallenges.map((c) {
+                        return ParticipatingChallengeModalItem(
+                          title: c.title,
+                          rank: c.rank,
+                          remainDays: c.remainDays,
+                          members: c.members,
+                          imageUrl: c.imageUrl,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => GroupChallengeDetailPage(
+                                  challenge: dummyGroupChallengeDetail,
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      }).toList(),
+                    );
+                  },
+                  child: const Text(
+                    '더보기',
+                    style: TextStyle(fontSize: 13, color: Color(0xFFA8A8A8)),
+                  ),
                 ),
               ],
             ),
@@ -123,6 +150,7 @@ class _GroupChallengePageState extends State<GroupChallengePage> {
                   )
                 : Column(
                     children: participatingChallenges
+                        .take(1)
                         .map(
                           (challenge) => ParticipatingGroupChallengeCard(
                             title: challenge.title,
@@ -132,8 +160,7 @@ class _GroupChallengePageState extends State<GroupChallengePage> {
                             imageUrl: challenge.imageUrl,
 
                             onImageTap: () {
-                              Navigator.push(
-                                context,
+                              Navigator.of(context, rootNavigator: true).push(
                                 MaterialPageRoute(
                                   builder: (_) => GroupChallengeDetailPage(
                                     challenge: dummyGroupChallengeDetail,
@@ -170,10 +197,6 @@ class _GroupChallengePageState extends State<GroupChallengePage> {
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
-                ),
-                Text(
-                  '더보기',
-                  style: TextStyle(fontSize: 13, color: Color(0xFF999999)),
                 ),
               ],
             ),
@@ -221,12 +244,6 @@ class _GroupChallengePageState extends State<GroupChallengePage> {
                     fontFamily: 'Pretendard', 
                     fontSize: 16, 
                     fontWeight: FontWeight.w600, 
-                  ),
-                ),
-                Text( 
-                  '더보기', 
-                  style: TextStyle(
-                    fontSize: 13, color: Color(0xFF999999)
                   ),
                 ),
               ],
