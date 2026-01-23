@@ -153,20 +153,13 @@ class FeedPostRequst {
     try {
       final formData = FormData();
 
-      // 1. JSON 데이터 추가
-      // 백엔드 예시: request.files.add(http.MultipartFile.fromString('request', ...));
       formData.files.add(
         MapEntry(
           "request",
           MultipartFile.fromString(
             request.toJsonString(),
             // [핵심 수정] 문법을 고쳤습니다.
-            // application/json 이라고 붙여 쓰면 안되고, 콤마(,)로 나눠야 합니다.
             contentType: MediaType('application', 'json'),
-
-            // [수정] 백엔드 예시에 filename이 없으므로 우리도 뺍니다.
-            // 만약 그래도 안 되면 filename: 'request.json'을 다시 넣어야 하지만,
-            // MediaType이 틀렸던 게 가장 큰 원인이었을 겁니다.
           ),
         ),
       );

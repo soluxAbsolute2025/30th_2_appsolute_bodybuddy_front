@@ -26,11 +26,11 @@ class SubFeedPages extends StatefulWidget {
 
 class _SubFeedPagesState extends State<SubFeedPages> {
   final textController = TextEditingController();
-  final FocusNode _focusNode = FocusNode(); // 1. 포커스 제어용 노드 추가
+  final FocusNode _focusNode = FocusNode();
 
   bool isButtonEnabled = false;
-  int? editingCommentId; // 수정 중인 댓글 ID
-  int? editingCommentIndex; // 리스트 갱신을 위해 인덱스도 저장
+  int? editingCommentId;
+  int? editingCommentIndex;
 
   @override
   void initState() {
@@ -46,7 +46,7 @@ class _SubFeedPagesState extends State<SubFeedPages> {
   @override
   void dispose() {
     textController.dispose();
-    _focusNode.dispose(); // 메모리 해제
+    _focusNode.dispose();
     super.dispose();
   }
 

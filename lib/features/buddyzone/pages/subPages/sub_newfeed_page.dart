@@ -131,7 +131,6 @@ class _SubNewFeedPagesState extends State<SubNewFeedPages> {
                   _profileWidget(), // 이건 그냥 여기에 두는게 편합니다.
                   const SizedBox(height: 3.0),
 
-                  // [분리됨] 피드 입력창
                   Container(
                     margin: const EdgeInsets.only(left: 49.0, right: 16.0),
                     child: FeedTextField(
@@ -141,7 +140,7 @@ class _SubNewFeedPagesState extends State<SubNewFeedPages> {
                     ),
                   ),
 
-                  // [분리됨] 사진 미리보기
+                  // 사진 미리보기
                   if (_selectedImage != null)
                     FeedImagePreview(
                       imageFile: _selectedImage!,
