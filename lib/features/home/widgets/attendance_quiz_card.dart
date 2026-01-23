@@ -7,6 +7,9 @@ import '../../../common/kst_time.dart';
 import '../models/attendance_question_model.dart';
 import '../models/attendance_answer_result_model.dart';
 
+// ✅ 예시: 프로젝트에 있는 Common.userId를 사용한다고 가정
+import '../../../common/common.dart';
+
 class AttendanceQuizCard extends StatefulWidget {
   final VoidCallback? onSolved;
 
@@ -27,13 +30,32 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
   String? correctAnswer;
   int? earnedPoint;
 
-  static const _kAnsweredDate = 'attendance_quiz_answered_date';
-  static const _kSelectedOption = 'attendance_quiz_selected_option';
-  static const _kQuizCache = 'attendance_quiz_cache_json';
-  static const _kLastCorrect = 'attendance_quiz_last_correct';
+  // ✅ base key (고정 문자열은 base로만 유지)
+  static const _baseAnsweredDate = 'attendance_quiz_answered_date';
+  static const _baseSelectedOption = 'attendance_quiz_selected_option';
+  static const _baseQuizCache = 'attendance_quiz_cache_json';
+  static const _baseLastCorrect = 'attendance_quiz_last_correct';
+  static const _baseCorrectAnswer = 'attendance_quiz_correct_answer';
+  static const _baseEarnedPoint = 'attendance_quiz_earned_point';
 
-  static const _kCorrectAnswer = 'attendance_quiz_correct_answer';
-  static const _kEarnedPoint = 'attendance_quiz_earned_point';
+  // ✅ user prefix (userId 기반)
+  String _userPrefix() {
+    final uid = Common.userId; // int? 또는 String? 일 수 있음
+    // 로그인 전이면 임시 prefix (원하면 throw로 강제해도 됨)
+    if (uid == null) return 'user_unknown';
+    return 'user_$uid';
+  }
+
+  // ✅ 최종 key 생성기
+  String _k(String base) => '${_userPrefix()}_$base';
+
+  // ✅ 실제 사용할 key getter들
+  String get _answeredDateKey => _k(_baseAnsweredDate);
+  String get _selectedOptionKey => _k(_baseSelectedOption);
+  String get _quizCacheKey => _k(_baseQuizCache);
+  String get _lastCorrectKey => _k(_baseLastCorrect);
+  String get _correctAnswerKey => _k(_baseCorrectAnswer);
+  String get _earnedPointKey => _k(_baseEarnedPoint);
 
   @override
   void initState() {
@@ -63,20 +85,20 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
     SharedPreferences prefs,
     AttendanceQuestion quiz,
   ) async {
-    await prefs.setString(_kQuizCache, jsonEncode(quiz.toJson()));
+    await prefs.setString(_quizCacheKey, jsonEncode(quiz.toJson()));
   }
 
   Future<void> _clearIfNewDay(SharedPreferences prefs) async {
-    final savedDate = prefs.getString(_kAnsweredDate);
+    final savedDate = prefs.getString(_answeredDateKey);
     final today = _todayKey();
 
     if (savedDate != null && savedDate != today) {
-      await prefs.remove(_kAnsweredDate);
-      await prefs.remove(_kSelectedOption);
-      await prefs.remove(_kQuizCache);
-      await prefs.remove(_kLastCorrect);
-      await prefs.remove(_kCorrectAnswer);
-      await prefs.remove(_kEarnedPoint);
+      await prefs.remove(_answeredDateKey);
+      await prefs.remove(_selectedOptionKey);
+      await prefs.remove(_quizCacheKey);
+      await prefs.remove(_lastCorrectKey);
+      await prefs.remove(_correctAnswerKey);
+      await prefs.remove(_earnedPointKey);
     }
   }
 
@@ -85,14 +107,14 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
     await _clearIfNewDay(prefs);
 
     final today = _todayKey();
-    final savedDate = prefs.getString(_kAnsweredDate);
-    final savedOption = prefs.getInt(_kSelectedOption);
-    final cachedQuiz = _decodeQuiz(prefs.getString(_kQuizCache));
+    final savedDate = prefs.getString(_answeredDateKey);
+    final savedOption = prefs.getInt(_selectedOptionKey);
+    final cachedQuiz = _decodeQuiz(prefs.getString(_quizCacheKey));
 
     if (savedDate == today) {
-      final savedCorrect = prefs.getBool(_kLastCorrect);
-      final savedCorrectAnswer = prefs.getString(_kCorrectAnswer);
-      final savedEarnedPoint = prefs.getInt(_kEarnedPoint);
+      final savedCorrect = prefs.getBool(_lastCorrectKey);
+      final savedCorrectAnswer = prefs.getString(_correctAnswerKey);
+      final savedEarnedPoint = prefs.getInt(_earnedPointKey);
 
       setState(() {
         isAnswered = true;
@@ -169,11 +191,11 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
       );
 
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_kAnsweredDate, _todayKey());
-      await prefs.setInt(_kSelectedOption, optionId);
-      await prefs.setBool(_kLastCorrect, result.correct);
-      await prefs.setString(_kCorrectAnswer, result.correctAnswer);
-      await prefs.setInt(_kEarnedPoint, result.earnedPoint);
+      await prefs.setString(_answeredDateKey, _todayKey());
+      await prefs.setInt(_selectedOptionKey, optionId);
+      await prefs.setBool(_lastCorrectKey, result.correct);
+      await prefs.setString(_correctAnswerKey, result.correctAnswer);
+      await prefs.setInt(_earnedPointKey, result.earnedPoint);
       await _saveQuizCache(prefs, quiz);
 
       if (!mounted) return;
@@ -185,7 +207,6 @@ class _AttendanceQuizCardState extends State<AttendanceQuizCard> {
         earnedPoint = result.earnedPoint;
       });
 
-      // ✅ 핵심: 정답/오답 상관없이 "오늘 퀴즈 참여 완료"를 부모에 알림
       widget.onSolved?.call();
 
       showDialog(
