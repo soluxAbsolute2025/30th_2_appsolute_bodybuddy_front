@@ -8,7 +8,7 @@ import '../widgets/create_group_challenge_banner.dart';
 import '../widgets/completed_group_challenge_card.dart';
 import '../pages/group_challenge_detail_page.dart';
 import '../modal/participating_challenge_more_modal.dart';
-
+import '../models/top_participant_mapper.dart';
 import '../api/ongoing_group_challenge_api.dart';
 import '../models/ongoing_group_challenge.dart';
 
@@ -170,11 +170,12 @@ class _GroupChallengePageState extends State<GroupChallengePage> {
                           title: c.title,
                           rank: c.myRank,
                           remainDays: c.remainingDays,
-                          members: const [], // TODO: 모달도 API 기준으로 바꾸면 여기 매핑 가능
+                          members: c.topParticipants
+                              .map((p) => p.toGroupMember())
+                              .toList(),
                           imageUrl: c.imageUrl,
                           onTap: () {
                             Navigator.of(context, rootNavigator: true).pop();
-
                             Navigator.of(context, rootNavigator: true).push(
                               MaterialPageRoute(
                                 builder: (_) => GroupChallengeDetailPage(

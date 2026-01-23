@@ -57,14 +57,11 @@ class TopParticipant {
 
   factory TopParticipant.fromJson(Map<String, dynamic> json) {
     return TopParticipant(
-      rank: json['rank'] ?? 0,
-      nickname: json['nickname'] ?? '',
+      rank: int.tryParse('${json['rank']}') ?? 0,
+      nickname: json['nickname']?.toString() ?? '',
       profileImageUrl: json['profileImageUrl'] as String?,
-      achievementRate:
-          json['achievementRate'] == null
-              ? 0.0
-              : (json['achievementRate'] as num).toDouble(),
-      isMe: json['isMe'] ?? false,
+      achievementRate: (json['achievementRate'] as num?)?.toDouble() ?? 0.0,
+      isMe: json['isMe'] == true,
     );
   }
 }
