@@ -2,7 +2,7 @@ import 'dart:convert'; // JSON 처리
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // 키보드 입력 제한용
 import 'package:http/http.dart' as http; // API 통신
-import '../../../../common/common.dart'; // ✅ Common import (경로 확인해주세요!)
+import '../../../../common/common.dart'; // ✅ Common import
 import '../../../../pages/main_page.dart'; // 메인 페이지 경로
 
 class OnboardingFlowScreen extends StatefulWidget {
@@ -16,18 +16,16 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
   // ★ 서버 주소
   static const String baseUrl = "http://52.79.228.227:8080";
 
-  // ❌ [삭제] storage 직접 사용 안 함
-  // final storage = const FlutterSecureStorage();
-
   final PageController _pageController = PageController();
   int _currentPage = 0;
   bool _isLoading = false;
 
-  // ✨ 디자인 컬러 (민트)
-  final Color _activeColor = const Color(0xFF00E676); // 메인 컬러와 통일 (선택 사항)
+  // 🎨 [색상 복구] 민트색 제거 -> 블랙으로 변경
+  final Color _activeColor = Colors.black;
 
   // --- 1단계: 닉네임 ---
   final TextEditingController _nicknameController = TextEditingController();
+  bool _isNicknameChecked = false; // 닉네임 중복확인 완료 여부
 
   // --- 2단계: 신체 정보 ---
   final TextEditingController _ageController = TextEditingController();
@@ -48,8 +46,16 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
   @override
   void initState() {
     super.initState();
-    // 상태 변경 감지 리스너 등록
-    _nicknameController.addListener(_updateState);
+    // 닉네임이 바뀌면 중복확인 상태 초기화 (다시 확인해야 함)
+    _nicknameController.addListener(() {
+      if (_isNicknameChecked) {
+        setState(() {
+          _isNicknameChecked = false;
+        });
+      }
+      setState(() {});
+    });
+
     _ageController.addListener(_updateState);
     _heightController.addListener(_updateState);
     _weightController.addListener(_updateState);
@@ -75,11 +81,11 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     super.dispose();
   }
 
-  // 각 단계별 유효성 검사 (버튼 활성화용)
+  // 각 단계별 유효성 검사
   bool get _isCurrentStepValid {
     switch (_currentPage) {
-      case 0: // 닉네임
-        return _nicknameController.text.trim().isNotEmpty;
+      case 0: // 닉네임: 입력되어 있고 + 중복확인까지 마쳐야 함
+        return _nicknameController.text.trim().isNotEmpty && _isNicknameChecked;
       case 1: // 신체정보
         return _ageController.text.isNotEmpty &&
             _heightController.text.isNotEmpty &&
@@ -97,25 +103,55 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     }
   }
 
-  // [API 1] 닉네임 중복 확인
-  Future<void> _checkNicknameAndNext() async {
+  // ✅ [Helper] 토큰 가져오기
+  Future<String?> _getToken() async {
+    String? token = Common.token;
+    if (token == null) {
+      token = await Common.storage.read(key: 'accessToken');
+    }
+    return token;
+  }
+
+  // ✅ [API 1] 닉네임 중복 확인 (버튼 클릭 시 실행)
+  Future<void> _checkNickname() async {
     final nickname = _nicknameController.text.trim();
     if (nickname.isEmpty) return;
 
+    // 키보드 내리기
+    FocusScope.of(context).unfocus();
     setState(() => _isLoading = true);
+
+    String? token = await _getToken();
+    if (token == null) {
+      _showSnackBar("로그인 정보가 없습니다. 다시 로그인해주세요.");
+      setState(() => _isLoading = false);
+      return;
+    }
 
     try {
       final url = Uri.parse('$baseUrl/api/users/check-nickname?nickname=$nickname');
 
-      // ✅ [API] 닉네임 중복 체크
-      final response = await http.get(url);
+      final response = await http.get(
+        url,
+        headers: {
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      print("📩 [닉네임 확인] 상태코드: ${response.statusCode}");
 
       if (response.statusCode == 200) {
-        // 중복 아님 -> 다음 페이지로
-        _goToNextPage();
+        // ✅ 사용 가능
+        setState(() {
+          _isNicknameChecked = true;
+        });
+        _showSnackBar("사용 가능한 닉네임입니다!");
       } else {
-        // 409 Conflict 등
-        _showSnackBar("이미 사용 중인 닉네임입니다. 다른 이름을 써주세요!");
+        // ❌ 사용 불가 (409 Conflict 등)
+        setState(() {
+          _isNicknameChecked = false;
+        });
+        _showSnackBar("이미 사용 중인 닉네임입니다. 다른 이름을 써주세요.");
       }
     } catch (e) {
       print("Error: $e");
@@ -125,21 +161,11 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     }
   }
 
-  // [API 2] 온보딩 정보 등록 (최종 제출)
+  // ✅ [API 2] 온보딩 정보 등록 (최종 제출)
   Future<void> _submitOnboarding() async {
     setState(() => _isLoading = true);
 
-    // 1. 메모리에 있는 토큰 우선 조회
-    String? token = Common.token;
-
-    // 2. 메모리에 없으면 스토리지에서 직접 조회 (방어 코드)
-    if (token == null) {
-      // 💡 [수정 포인트]
-      // 1. const storage = ... 에러 해결을 위해 Common.storage 사용
-      // 2. Common._key는 private이라 접근 못하므로 문자열 'accessToken' 직접 사용
-      // (Common.dart에서 _key = 'accessToken' 이라고 하셨으므로 동일하게 맞춤)
-      token = await Common.storage.read(key: 'accessToken');
-    }
+    String? token = await _getToken();
 
     if (token == null) {
       _showSnackBar("로그인 정보가 없습니다. 다시 로그인해주세요.");
@@ -160,6 +186,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
         "dailyWorkoutGoal": int.parse(_exerciseTimeController.text),
         "dailySleepHoursGoal": int.parse(_sleepHourController.text),
         "dailySleepMinutesGoal": int.parse(_sleepMinController.text),
+        "dailyWaterGoal": 2000,
         "interests": _selectedInterests.toList(),
         "referrerId": "none"
       };
@@ -170,7 +197,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
         url,
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer $token", // 토큰 사용
+          "Authorization": "Bearer $token",
         },
         body: jsonEncode(bodyData),
       );
@@ -247,7 +274,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                         shape: BoxShape.circle,
                         color: (_currentPage - 1) == index
                             ? _activeColor
-                            : const Color(0xFFEEEEEE),
+                            : Colors.grey.shade300,
                       ),
                     );
                   }),
@@ -278,19 +305,19 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                 height: 52,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _isCurrentStepValid ? _activeColor : const Color(0xFFE0E0E0),
-                    foregroundColor: _isCurrentStepValid ? Colors.white : const Color(0xFF9E9E9E),
+                    backgroundColor: _isCurrentStepValid ? _activeColor : Colors.grey.shade300,
+                    foregroundColor: _isCurrentStepValid ? Colors.white : Colors.grey,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
+                  // 로딩 중이 아니고 유효할 때만 클릭 가능
                   onPressed: (_isCurrentStepValid && !_isLoading)
                       ? () {
-                    if (_currentPage == 0) {
-                      _checkNicknameAndNext();
-                    } else if (_currentPage == 3) {
-                      _submitOnboarding();
+                    // 0페이지에서는 이미 중복확인이 끝났으므로 바로 넘어감
+                    if (_currentPage == 3) {
+                      _submitOnboarding(); // 최종 등록
                     } else {
                       _goToNextPage();
                     }
@@ -315,7 +342,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     );
   }
 
-  // --- 이하 UI 빌더 함수들은 기존과 동일 ---
+  // --- 1단계: 닉네임 (수정됨) ---
   Widget _buildNicknameStep() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -328,43 +355,86 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, height: 1.4),
           ),
           const SizedBox(height: 100),
-          Stack(
-            alignment: Alignment.centerRight,
+
+          // ✨ [수정] 입력창 + 중복확인 버튼 Row 배치
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              TextField(
-                controller: _nicknameController,
-                maxLength: 10,
-                style: const TextStyle(fontSize: 18),
-                decoration: const InputDecoration(
-                  hintText: "닉네임을 입력해주세요",
-                  hintStyle: TextStyle(color: Color(0xFFBDBDBD), fontSize: 16),
-                  counterText: "",
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFFE0E0E0)),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Colors.black),
-                  ),
-                  contentPadding: EdgeInsets.only(right: 30, bottom: 8),
+              Expanded(
+                child: Stack(
+                  alignment: Alignment.centerRight,
+                  children: [
+                    TextField(
+                      controller: _nicknameController,
+                      maxLength: 10,
+                      style: const TextStyle(fontSize: 18),
+                      decoration: const InputDecoration(
+                        hintText: "닉네임을 입력해주세요",
+                        hintStyle: TextStyle(color: Color(0xFFBDBDBD), fontSize: 16),
+                        counterText: "",
+                        enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Color(0xFFE0E0E0)),
+                        ),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.black),
+                        ),
+                        contentPadding: EdgeInsets.only(right: 30, bottom: 8),
+                      ),
+                    ),
+                    if (_nicknameController.text.isNotEmpty)
+                      IconButton(
+                        icon: const Icon(Icons.cancel, color: Color(0xFFBDBDBD), size: 20),
+                        onPressed: () => _nicknameController.clear(),
+                      ),
+                  ],
                 ),
               ),
-              if (_nicknameController.text.isNotEmpty)
-                IconButton(
-                  icon: const Icon(Icons.cancel, color: Color(0xFFBDBDBD), size: 20),
-                  onPressed: () => _nicknameController.clear(),
+              const SizedBox(width: 10),
+
+              // ✨ [추가] 중복 확인 버튼
+              SizedBox(
+                height: 40,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black, // 버튼 색상
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                  ),
+                  onPressed: _nicknameController.text.trim().isEmpty
+                      ? null
+                      : _checkNickname, // 버튼 누르면 API 호출
+                  child: const Text("중복 확인", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                 ),
+              ),
             ],
           ),
+
           const SizedBox(height: 8),
-          Text(
-            "(${_nicknameController.text.length}/10)",
-            style: const TextStyle(color: Color(0xFF9E9E9E), fontSize: 12),
+
+          // 안내 문구 (확인 여부에 따라 다르게 표시 가능)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              if (_isNicknameChecked)
+                const Text("✅ 사용 가능한 닉네임입니다.", style: TextStyle(color: Colors.green, fontSize: 12))
+              else
+                const Text("닉네임 중복 확인을 해주세요.", style: TextStyle(color: Color(0xFF9E9E9E), fontSize: 12)),
+
+              Text(
+                "(${_nicknameController.text.length}/10)",
+                style: const TextStyle(color: Color(0xFF9E9E9E), fontSize: 12),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
+  // --- 2단계 UI ---
   Widget _buildPersonalInfoStep() {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -412,6 +482,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     );
   }
 
+  // --- 3단계 UI ---
   Widget _buildDailyGoalStep() {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -459,6 +530,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     );
   }
 
+  // --- 4단계 UI ---
   Widget _buildInterestStep() {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -490,7 +562,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   decoration: BoxDecoration(
-                    color: isSelected ? _activeColor.withOpacity(0.1) : Colors.white,
+                    color: isSelected ? Colors.black.withOpacity(0.05) : Colors.white,
                     border: Border.all(
                       color: isSelected ? _activeColor : const Color(0xFFE0E0E0),
                     ),
@@ -563,7 +635,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
       child: Container(
         height: 50,
         decoration: BoxDecoration(
-          color: isSelected ? _activeColor.withOpacity(0.1) : Colors.white,
+          color: isSelected ? Colors.black.withOpacity(0.05) : Colors.white,
           border: Border.all(
             color: isSelected ? _activeColor : const Color(0xFFE0E0E0),
             width: 1.5,

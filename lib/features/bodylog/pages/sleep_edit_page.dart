@@ -22,13 +22,12 @@ class SleepEditPage extends StatefulWidget {
 class _SleepEditPageState extends State<SleepEditPage> {
   final SleepApiService _apiService = SleepApiService();
 
-  late TextEditingController _sleepTimeController;
+  late TextEditingController _bedTimeController;
   late TextEditingController _wakeTimeController;
 
   String _selectedQuality = '좋음';
   final List<String> _qualityOptions = ['매우 좋음', '좋음', '보통', '나쁨', '매우 나쁨'];
 
-  // 서버로 보낼 매핑 값
   final Map<String, String> _qualityMapping = {
     '매우 좋음': 'VERY_GOOD',
     '좋음': 'GOOD',
@@ -37,23 +36,23 @@ class _SleepEditPageState extends State<SleepEditPage> {
     '매우 나쁨': 'VERY_BAD',
   };
 
+  bool _isAnalyzing = false;
+  String? _analyzedMessage;
+
   @override
   void initState() {
     super.initState();
-    // 데이터가 있으면 채워넣고, 없으면 기본값
-    _sleepTimeController = TextEditingController(text: widget.record?.sleepTime ?? "23:00");
+    // 모델의 bedTime 사용
+    _bedTimeController = TextEditingController(text: widget.record?.bedTime ?? "23:00");
     _wakeTimeController = TextEditingController(text: widget.record?.wakeTime ?? "07:00");
 
     if (widget.record != null) {
-      // 기존 품질값을 한글로 역매핑 (여기서는 간단히 처리)
       _selectedQuality = widget.record!.qualityKor;
       if (!_qualityOptions.contains(_selectedQuality)) _selectedQuality = '보통';
     }
   }
 
-  // 시간 선택 팝업
   Future<void> _pickTime(TextEditingController controller) async {
-    // 현재 입력된 시간 파싱
     List<String> parts = controller.text.split(':');
     int initialHour = int.parse(parts[0]);
     int initialMinute = int.parse(parts[1]);
@@ -64,7 +63,6 @@ class _SleepEditPageState extends State<SleepEditPage> {
     );
 
     if (picked != null) {
-      // 24시간 형식으로 변환 (HH:mm)
       String formattedTime = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
       setState(() {
         controller.text = formattedTime;
@@ -72,34 +70,77 @@ class _SleepEditPageState extends State<SleepEditPage> {
     }
   }
 
-  // 저장 (추가/수정)
+  Future<void> _fetchSleepAnalysis() async {
+    setState(() {
+      _isAnalyzing = true;
+      _analyzedMessage = null;
+    });
+
+    try {
+      String dateStr = DateFormat('yyyy-MM-dd').format(widget.selectedDate);
+      final result = await _apiService.getSleepQuality(dateStr, dateStr);
+
+      double avgHours = 0.0;
+      if (result['averageSleepHours'] != null) {
+        avgHours = (result['averageSleepHours'] as num).toDouble();
+      }
+
+      String qualityFromServer = result['sleepQuality'] ?? 'NORMAL';
+      String korQuality = '보통';
+      _qualityMapping.forEach((key, value) {
+        if (value == qualityFromServer) korQuality = key;
+      });
+
+      setState(() {
+        _analyzedMessage = "AI 분석 결과: 평균 $avgHours시간 / 품질 '$korQuality'";
+        if (_qualityOptions.contains(korQuality)) {
+          _selectedQuality = korQuality;
+        }
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('수면 분석 완료')));
+    } catch (e) {
+      print("분석 에러: $e");
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('분석 실패')));
+    } finally {
+      setState(() => _isAnalyzing = false);
+    }
+  }
+
   Future<void> _save() async {
     try {
       final data = {
         "sleepDate": DateFormat('yyyy-MM-dd').format(widget.selectedDate),
-        "sleepTime": _sleepTimeController.text,
+        "bedTime": _bedTimeController.text, // bedTime 필드명 확인 (HH:mm)
         "wakeTime": _wakeTimeController.text,
         "sleepQuality": _qualityMapping[_selectedQuality] ?? 'NORMAL',
-        // totalSleepMinute은 보통 서버에서 계산하거나, 여기서 계산해서 보냄
       };
+
+      print("서버 전송 데이터: $data");
 
       if (widget.record == null) {
         await _apiService.createSleepLog(data);
       } else {
-        await _apiService.updateSleepLog(widget.record!.sleepId, data);
+        // ★ [수정] record!.sleepRecordId 사용 (이제 빨간줄 안 뜸)
+        await _apiService.updateSleepLog(widget.record!.sleepRecordId, data);
       }
 
-      if (mounted) Navigator.pop(context, true); // 성공
+      if (mounted) Navigator.pop(context, true);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('저장 실패')));
+      print("저장 오류: $e");
+      String msg = '저장 실패: 서버 오류가 발생했습니다.';
+      if (e.toString().contains('500')) {
+        msg = '저장 실패: 입력 형식을 확인해주세요.';
+      }
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     }
   }
 
-  // 삭제
   Future<void> _delete() async {
     if (widget.record == null) return;
     try {
-      await _apiService.deleteSleepLog(widget.record!.sleepId);
+      // ★ [수정] 여기도 sleepRecordId 사용
+      await _apiService.deleteSleepLog(widget.record!.sleepRecordId);
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('삭제 실패')));
@@ -126,61 +167,62 @@ class _SleepEditPageState extends State<SleepEditPage> {
             _buildLabel('취침 시간'),
             const SizedBox(height: 8),
             GestureDetector(
-              onTap: () => _pickTime(_sleepTimeController),
-              child: AbsorbPointer(
-                child: _buildTextField(_sleepTimeController),
-              ),
+              onTap: () => _pickTime(_bedTimeController),
+              child: AbsorbPointer(child: _buildTextField(_bedTimeController)),
             ),
-
             const SizedBox(height: 24),
-
             _buildLabel('기상 시간'),
             const SizedBox(height: 8),
             GestureDetector(
               onTap: () => _pickTime(_wakeTimeController),
-              child: AbsorbPointer(
-                child: _buildTextField(_wakeTimeController),
-              ),
+              child: AbsorbPointer(child: _buildTextField(_wakeTimeController)),
             ),
-
             const SizedBox(height: 24),
-
-            _buildLabel('수면 품질'),
-            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildLabel('수면 품질'),
+                TextButton.icon(
+                  onPressed: _isAnalyzing ? null : _fetchSleepAnalysis,
+                  icon: _isAnalyzing
+                      ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Icon(Icons.analytics_outlined, size: 18),
+                  label: Text(_isAnalyzing ? '분석 중...' : 'AI 분석'),
+                  style: TextButton.styleFrom(foregroundColor: const Color(0xFF4BECBE)),
+                ),
+              ],
+            ),
+            if (_analyzedMessage != null) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(color: const Color(0xFFE0F7FA), borderRadius: BorderRadius.circular(8)),
+                child: Text(_analyzedMessage!, style: const TextStyle(color: Color(0xFF006064), fontSize: 13, fontWeight: FontWeight.w600)),
+              ),
+            ],
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey[300]!),
-                borderRadius: BorderRadius.circular(12),
-              ),
+              decoration: BoxDecoration(border: Border.all(color: Colors.grey[300]!), borderRadius: BorderRadius.circular(12)),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
                   value: _selectedQuality,
                   isExpanded: true,
-                  items: _qualityOptions.map((String value) {
-                    return DropdownMenuItem<String>(value: value, child: Text(value));
-                  }).toList(),
-                  onChanged: (newValue) => setState(() => _selectedQuality = newValue!),
+                  items: _qualityOptions.map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+                  onChanged: (v) => setState(() => _selectedQuality = v!),
                 ),
               ),
             ),
-
             const Spacer(),
-
             SizedBox(
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
                 onPressed: _save,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4BECBE),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                child: Text(isEditMode ? '수정하기' : '기록하기', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4BECBE), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                child: Text(isEditMode ? '수정하기' : '기록하기', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
               ),
             ),
-
             if (isEditMode) ...[
               const SizedBox(height: 12),
               SizedBox(
@@ -188,12 +230,8 @@ class _SleepEditPageState extends State<SleepEditPage> {
                 height: 52,
                 child: OutlinedButton(
                   onPressed: _delete,
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xFFFF6B6B)),
-                    foregroundColor: const Color(0xFFFF6B6B),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: const Text('삭제하기', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  style: OutlinedButton.styleFrom(side: const BorderSide(color: Color(0xFFFF6B6B)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                  child: const Text('삭제하기', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFFFF6B6B))),
                 ),
               ),
             ],
@@ -204,23 +242,15 @@ class _SleepEditPageState extends State<SleepEditPage> {
     );
   }
 
-  Widget _buildLabel(String text) {
-    return Text(text, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14));
-  }
-
-  Widget _buildTextField(TextEditingController controller) {
-    return TextField(
-      controller: controller,
-      readOnly: true, // 직접 입력 방지, 팝업 사용
-      decoration: InputDecoration(
-        suffixIcon: const Icon(Icons.access_time, color: Colors.grey),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-      ),
-    );
-  }
+  Widget _buildLabel(String text) => Text(text, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14));
+  Widget _buildTextField(TextEditingController controller) => TextField(
+    controller: controller,
+    readOnly: true,
+    decoration: InputDecoration(
+      suffixIcon: const Icon(Icons.access_time, color: Colors.grey),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey[300]!)),
+    ),
+  );
 }

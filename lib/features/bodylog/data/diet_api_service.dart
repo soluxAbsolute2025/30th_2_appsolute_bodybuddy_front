@@ -2,37 +2,43 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:http_parser/http_parser.dart';
-import '../../../api/dio_client.dart';
+import '../../../api/dio_client.dart'; // 경로는 본인 프로젝트에 맞게 확인
 import 'package:bodybuddy_frontend/common/common.dart';
 import 'diet_model.dart';
 
 class DietApiService {
-  // DioClient에서 만든 dio 인스턴스 (인터셉터로 토큰 자동 주입됨)
   final Dio _dio = DioClient.dio;
 
   // ------------------------------------------------------------------------
   // [GET] 식단 목록 조회
-  // 엔드포인트: /api/meal-log
   // ------------------------------------------------------------------------
   Future<List<DietRecord>> getMealLogs(String date) async {
     try {
       final response = await _dio.get(
-        '/api/meal-log', // ★ 수정됨 (/api/diets -> /api/meal-log)
+        '/api/meal-log',
         queryParameters: {'date': date},
       );
 
-      // 응답 데이터 처리
+      // 🔍 [수정됨] Dio에서는 bodyBytes 대신 data를 바로 찍습니다.
+      print("🔥 [DEBUG] 서버 응답 코드: ${response.statusCode}");
+      print("🔥 [DEBUG] 서버 응답 데이터: ${response.data}");
+
       if (response.statusCode == 200) {
-        // 서버 응답이 배열인지, 객체 감싸져 있는지 확인 필요하지만
-        // 보통 List<dynamic>으로 옵니다.
-        final List<dynamic> list = response.data;
-        return list.map((e) => DietRecord.fromJson(e)).toList();
+        // 데이터가 List인지 Map인지 확인하여 처리
+        if (response.data is List) {
+          return (response.data as List).map((e) => DietRecord.fromJson(e)).toList();
+        } else if (response.data is Map && response.data['data'] is List) {
+          // 만약 { "status": 200, "data": [...] } 형태라면
+          return (response.data['data'] as List).map((e) => DietRecord.fromJson(e)).toList();
+        } else {
+          print("⚠️ 데이터 형식이 예상과 다릅니다: ${response.data.runtimeType}");
+          return [];
+        }
       }
       return [];
     } on DioException catch (e) {
-      // 403 에러 등의 경우 여기서 잡힘
-      print('데이터 조회 실패: ${e.message} / ${e.response?.statusCode}');
-      // 필요시 rethrow;
+      print('데이터 조회 실패: ${e.message}');
+      print('서버 응답 내용: ${e.response?.data}');
       return [];
     } catch (e) {
       print('기타 에러: $e');
@@ -41,10 +47,7 @@ class DietApiService {
   }
 
   // ------------------------------------------------------------------------
-  // [POST] 식단 기록 생성 (이미지 업로드 포함)
-  // 엔드포인트: /api/meal-log
-  // 방식: Multipart/form-data
-  // 규칙: 'request'(JSON) + 'image'(File)
+  // [POST] 식단 기록 생성
   // ------------------------------------------------------------------------
   Future<void> createMeal({
     required String mealType,
@@ -66,24 +69,22 @@ class DietApiService {
         "memo": memo,
       };
 
-      // 2. JSON 파트 추가 (Content-Type: application/json 강제 지정)
-      // ★ formData.files.add로 넣어야 헤더가 꼬이지 않습니다.
+      // 2. JSON 파트 추가
       formData.files.add(
         MapEntry(
-          "request", // 서버가 요구한 Key 이름
+          "request",
           MultipartFile.fromString(
             jsonEncode(jsonMap),
-            contentType: MediaType('application', 'json'), // ★ 핵심 포인트
+            contentType: MediaType('application', 'json'),
           ),
         ),
       );
 
-      // 3. 이미지 파트 추가 (있을 경우만)
+      // 3. 이미지 파트 추가
       if (imageFile != null) {
         final String path = imageFile.path;
         final String fileName = path.split('/').last;
 
-        // 확장자 확인
         MediaType contentType = MediaType('image', 'jpeg');
         if (path.toLowerCase().endsWith('.png')) {
           contentType = MediaType('image', 'png');
@@ -91,7 +92,7 @@ class DietApiService {
 
         formData.files.add(
           MapEntry(
-            "image", // 서버가 요구한 Key 이름
+            "image",
             await MultipartFile.fromFile(
               path,
               filename: fileName,
@@ -100,14 +101,12 @@ class DietApiService {
           ),
         );
       }
-      print("🔥 서비스에서 사용하는 토큰: ${Common.token}");
 
       // 4. 전송
       await _dio.post(
-        '/api/meal-log', // ★ 수정됨
+        '/api/meal-log',
         data: formData,
       );
-
       print("✅ 식단 업로드 성공");
 
     } on DioException catch (e) {
@@ -122,11 +121,10 @@ class DietApiService {
 
   // ------------------------------------------------------------------------
   // [DELETE] 식단 삭제
-  // 엔드포인트: /api/meal-log/{id}
   // ------------------------------------------------------------------------
   Future<void> deleteMeal(int id) async {
     try {
-      await _dio.delete('/api/meal-log/$id'); // ★ 수정됨
+      await _dio.delete('/api/meal-log/$id');
     } catch (e) {
       print("삭제 실패: $e");
       throw e;
@@ -135,14 +133,11 @@ class DietApiService {
 
   // ------------------------------------------------------------------------
   // [PATCH] 식단 수정
-  // 엔드포인트: /api/meal-log/{id}
-  // 주의: 수정 시에도 이미지를 바꾼다면 POST처럼 Multipart를 써야 할 수도 있음.
-  // 현재는 텍스트만 수정한다고 가정하고 JSON 전송으로 구현.
   // ------------------------------------------------------------------------
   Future<void> updateMeal(int id, Map<String, dynamic> data) async {
     try {
       await _dio.patch(
-        '/api/meal-log/$id', // ★ 수정됨
+        '/api/meal-log/$id',
         data: data,
       );
     } catch (e) {

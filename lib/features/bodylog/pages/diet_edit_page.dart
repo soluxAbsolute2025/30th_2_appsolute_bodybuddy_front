@@ -55,7 +55,7 @@ class _DietEditPageState extends State<DietEditPage> {
     }
 
     // 2. 시간 설정 (기존 데이터 없으면 현재 시간)
-    String timeValue = widget.record?.intakeTime ?? DateFormat('HH:mm').format(DateTime.now());
+    String timeValue = widget.record?.time ?? DateFormat('HH:mm').format(DateTime.now());
     _timeController = TextEditingController(text: timeValue);
 
     // 3. 메모 설정
@@ -102,9 +102,9 @@ class _DietEditPageState extends State<DietEditPage> {
 
       if (widget.isEditMode && widget.record != null) {
         // [수정 모드]
-        await _apiService.updateMeal(widget.record!.dietRecordId, {
+        await _apiService.updateMeal(widget.record!.id, {
           "mealType": _selectedMealType,
-          "intakeTime": _timeController.text,
+          "time": _timeController.text,
           "memo": _memoController.text,
           "foods": foods,
         });
@@ -157,7 +157,7 @@ class _DietEditPageState extends State<DietEditPage> {
     if (confirm == true) {
       setState(() => _isSaving = true);
       try {
-        await _apiService.deleteMeal(widget.record!.dietRecordId);
+        await _apiService.deleteMeal(widget.record!.id);
         if (mounted) Navigator.pop(context, true);
       } catch (e) {
         if (mounted) {

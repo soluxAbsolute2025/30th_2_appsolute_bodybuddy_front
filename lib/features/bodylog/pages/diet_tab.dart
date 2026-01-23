@@ -192,32 +192,132 @@ class _DietTabState extends State<DietTab> {
   }
 
   Widget _buildFilledCard(DietRecord r) {
+    // 🔍 [디버깅용 로그] 콘솔에서 확인해보세요
+    print("--------------------------------");
+    print("📌 식사 타입: ${r.mealTypeKor}");
+    print("📌 원본 이미지 URL: ${r.imageUrl}");
+    print("📌 음식 리스트: ${r.foods}");
+    print("--------------------------------");
+
+    // 1. 이미지 URL 처리 (http가 없으면 서버 주소 붙이기)
+    String fullImageUrl = "";
+    if (r.imageUrl != null && r.imageUrl!.isNotEmpty) {
+      if (r.imageUrl!.startsWith("http")) {
+        fullImageUrl = r.imageUrl!;
+      } else {
+        // ⚠️ 서버 도메인 추가
+        fullImageUrl = "http://52.79.228.227:8080${r.imageUrl!.startsWith('/') ? '' : '/'}${r.imageUrl}";
+      }
+    }
+
     return GestureDetector(
       onTap: () => _navigateAndRefresh(isEdit: true, record: r),
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)]),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-          Text("${r.mealTypeKor} 식사", style: const TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          Row(children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                r.imageUrl ?? '',
-                width: 60,
-                height: 60,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported),
-              ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            )
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // [상단] 타이틀 + 수정 아이콘
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      "${r.mealTypeKor} 식사",
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    const SizedBox(width: 6),
+                    const Icon(Icons.edit, size: 14, color: Colors.grey),
+                  ],
+                ),
+                // 시간 표시 부분 제거함 (데이터 모델에 time이 없으므로)
+              ],
             ),
-            const SizedBox(width: 10),
-            SizedBox(
-              width: 180,
-              child: Text(r.foods.join("\n"), maxLines: 4, overflow: TextOverflow.ellipsis),
+            const SizedBox(height: 12),
+
+            // [하단] 이미지 + 리스트
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 🖼️ 이미지 영역
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: fullImageUrl.isNotEmpty
+                      ? ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      fullImageUrl,
+                      fit: BoxFit.cover,
+                      // 👇 로딩 과정을 확인하기 위한 코드
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(child: CircularProgressIndicator(strokeWidth: 2));
+                      },
+                      // 👇 에러 원인을 보기 위한 코드
+                      errorBuilder: (context, error, stackTrace) {
+                        print("🚨 이미지 로드 에러 발생!");
+                        print("❌ 시도한 URL: $fullImageUrl");
+                        print("❌ 에러 내용: $error");
+                        return Container(
+                          color: Colors.grey[200],
+                          child: const Icon(Icons.broken_image, color: Colors.grey),
+                        );
+                      },
+                    ),
+                  )
+                      : const Icon(Icons.camera_alt, color: Colors.grey),
+                ),
+                const SizedBox(width: 16),
+
+                // 📋 음식 리스트 영역
+                Expanded(
+                  child: (r.foods.isNotEmpty)
+                      ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: r.foods.map((food) => Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text("• ", style: TextStyle(fontSize: 14, height: 1.4)),
+                          Expanded(
+                            child: Text(
+                              food,
+                              style: const TextStyle(fontSize: 14, height: 1.4, color: Colors.black87),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )).toList(),
+                  )
+                      : const Text(
+                    "음식 정보 없음",
+                    style: TextStyle(color: Colors.grey, fontSize: 13),
+                  ),
+                ),
+              ],
             ),
-          ]),
-        ]),
+          ],
+        ),
       ),
     );
   }
