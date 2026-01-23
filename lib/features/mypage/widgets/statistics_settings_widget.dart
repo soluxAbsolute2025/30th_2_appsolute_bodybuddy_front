@@ -1,5 +1,7 @@
+import 'package:bodybuddy_frontend/features/mypage/pages/mypage_myfeed_page.dart';
 import 'package:bodybuddy_frontend/features/mypage/pages/mypage_passward_page.dart';
 import 'package:bodybuddy_frontend/features/mypage/pages/mypage_profile_page.dart';
+import 'package:bodybuddy_frontend/features/mypage/pages/mypage_range_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -33,7 +35,13 @@ class StatisticsSettingsWidget extends StatelessWidget {
                   ),
                 ),
                 TextButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.of(context, rootNavigator: true).push(
+                      MaterialPageRoute(
+                        builder: (context) => const MypageRangePage(),
+                      ),
+                    );
+                  },
                   style: TextButton.styleFrom(
                     foregroundColor: Color(0x1188D3BD),
                     padding: EdgeInsets.symmetric(
@@ -75,7 +83,13 @@ class StatisticsSettingsWidget extends StatelessWidget {
                   ),
                 ),
                 TextButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.of(context, rootNavigator: true).push(
+                      MaterialPageRoute(
+                        builder: (context) => const MypageMyfeedPage(),
+                      ),
+                    );
+                  },
                   style: TextButton.styleFrom(
                     foregroundColor: Color(0x1188D3BD),
                     padding: EdgeInsets.symmetric(
@@ -100,6 +114,7 @@ class StatisticsSettingsWidget extends StatelessWidget {
           ),
           SizedBox(height: 16.0),
           Divider(color: Color(0xFFF3F3F3)),
+
           // 비밀번호 변경
           Padding(
             padding: const EdgeInsets.only(top: 16.0, bottom: 24.0),

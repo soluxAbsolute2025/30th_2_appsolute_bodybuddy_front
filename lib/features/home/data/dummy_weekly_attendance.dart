@@ -2,31 +2,31 @@ import '../models/weekly_attendance_model.dart';
 
 final dummyWeeklyAttendance = [
   WeeklyAttendance(
-    date: DateTime(2025, 12, 29),
-    status: AttendanceStatus.success,
-  ),
-  WeeklyAttendance(
-    date: DateTime(2025, 12, 30),
-    status: AttendanceStatus.success,
-  ),
-  WeeklyAttendance(
-    date: DateTime(2025, 12, 31),
+    date: DateTime(2026, 1, 19),
     status: AttendanceStatus.none,
   ),
   WeeklyAttendance(
-    date: DateTime(2026, 01, 01),
+    date: DateTime(2026, 1, 20),
     status: AttendanceStatus.success,
   ),
   WeeklyAttendance(
-    date: DateTime(2026, 01, 02),
+    date: DateTime(2026, 1, 21),
     status: AttendanceStatus.none,
   ),
   WeeklyAttendance(
-    date: DateTime(2026, 01, 03),
+    date: DateTime(2026, 1, 22),
+    status: AttendanceStatus.success,
+  ),
+  WeeklyAttendance(
+    date: DateTime(2026, 1, 23),
     status: AttendanceStatus.none,
   ),
   WeeklyAttendance(
-    date: DateTime(2026, 01, 04),
+    date: DateTime(2026, 1, 24),
+    status: AttendanceStatus.none,
+  ),
+  WeeklyAttendance(
+    date: DateTime(2026, 1, 25),
     status: AttendanceStatus.none,
   ),
 ];

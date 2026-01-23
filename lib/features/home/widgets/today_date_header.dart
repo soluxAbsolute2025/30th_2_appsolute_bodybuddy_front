@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'today_body_card.dart';
 import 'ongoing_challenge_section.dart';
 import 'today_todo_section.dart';
+import '../../../common/kst_time.dart';
 
 class TodayDateHeader extends StatelessWidget {
   const TodayDateHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
+    final now = nowKST();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -34,11 +35,11 @@ class TodayDateHeader extends StatelessWidget {
 
         // 오늘의 바디 카드
         const TodayBodyCard(),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
 
         /// 오늘의 할 일
         const TodayTodoSection(),
-        const SizedBox(height: 16),
+        const SizedBox(height: 20),
 
         /// 진행 중인 챌린지
         const OngoingChallengeSection(),

@@ -79,16 +79,15 @@ class MyfriendBlock extends StatelessWidget {
             ),
           ),
           Container(
-            margin: const EdgeInsets.only(right: 10.0),
-            width: 35.0,
-            height: 35.0,
+            margin: const EdgeInsets.only(right: 5.0),
+
             child: TextButton(
               onPressed: () {
                 print("손 흔들기 클릭!");
               },
               style: TextButton.styleFrom(
                 foregroundColor: Color(0x1188D3BD),
-                padding: EdgeInsets.zero,
+                padding: EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
                 minimumSize: Size.zero,
                 tapTargetSize:
                     MaterialTapTargetSize.shrinkWrap, // 터치 영역을 내용물에 맞춤

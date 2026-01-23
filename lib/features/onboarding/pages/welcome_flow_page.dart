@@ -1,7 +1,9 @@
-// 파일 위치: lib/features/onboarding/pages/welcome_flow_page.dart
+import 'dart:convert'; // JSON 처리
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // 숫자 입력 제한
-import '../../../../pages/main_page.dart';
+import 'package:flutter/services.dart'; // 키보드 입력 제한용
+import 'package:http/http.dart' as http; // API 통신
+import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // 토큰 관리
+import '../../../../pages/main_page.dart'; // 메인 페이지 경로 (프로젝트 구조에 맞게 유지)
 
 class OnboardingFlowScreen extends StatefulWidget {
   const OnboardingFlowScreen({super.key});
@@ -11,10 +13,15 @@ class OnboardingFlowScreen extends StatefulWidget {
 }
 
 class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
+  // ★ 서버 주소
+  static const String baseUrl = "http://52.79.228.227:8080";
+  final storage = const FlutterSecureStorage();
+
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  bool _isLoading = false;
 
-  // ✨ [디자인] 요청하신 민트색 적용 완료!
+  // ✨ 디자인 컬러 (민트)
   final Color _activeColor = const Color(0xFF4BECBE);
 
   // --- 1단계: 닉네임 ---
@@ -39,7 +46,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
   @override
   void initState() {
     super.initState();
-    // 상태 감지를 위한 리스너 등록
+    // 상태 변경 감지 리스너 등록
     _nicknameController.addListener(_updateState);
     _ageController.addListener(_updateState);
     _heightController.addListener(_updateState);
@@ -66,17 +73,17 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     super.dispose();
   }
 
-  // 버튼 활성화 여부 체크
+  // 각 단계별 유효성 검사 (버튼 활성화용)
   bool get _isCurrentStepValid {
     switch (_currentPage) {
       case 0: // 닉네임
         return _nicknameController.text.trim().isNotEmpty;
-      case 1: // 신체 정보
+      case 1: // 신체정보
         return _ageController.text.isNotEmpty &&
             _heightController.text.isNotEmpty &&
             _weightController.text.isNotEmpty &&
             _selectedGender != null;
-      case 2: // 일일 목표
+      case 2: // 목표설정
         return _stepsController.text.isNotEmpty &&
             _exerciseTimeController.text.isNotEmpty &&
             _sleepHourController.text.isNotEmpty &&
@@ -86,6 +93,109 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
       default:
         return false;
     }
+  }
+
+  // [API 1] 닉네임 중복 확인
+  Future<void> _checkNicknameAndNext() async {
+    final nickname = _nicknameController.text.trim();
+    if (nickname.isEmpty) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      // 쿼리 파라미터로 전송
+      final url = Uri.parse('$baseUrl/api/users/check-nickname?nickname=$nickname');
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        _goToNextPage();
+      } else {
+        _showSnackBar("이미 사용 중인 닉네임입니다. 다른 이름을 써주세요!");
+      }
+    } catch (e) {
+      print("Error: $e");
+      _showSnackBar("서버 연결에 실패했습니다.");
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  // [API 2] 온보딩 정보 등록 (최종 제출)
+  Future<void> _submitOnboarding() async {
+    setState(() => _isLoading = true);
+
+    // 저장된 토큰 가져오기
+    String? token = await storage.read(key: 'ACCESS_TOKEN');
+
+    if (token == null) {
+      _showSnackBar("로그인 정보가 없습니다. 다시 로그인해주세요.");
+      setState(() => _isLoading = false);
+      // 필요하다면 로그인 페이지로 이동 로직 추가 가능
+      return;
+    }
+
+    try {
+      final url = Uri.parse('$baseUrl/api/users/onboarding');
+
+      final bodyData = {
+        "nickname": _nicknameController.text.trim(),
+        "age": int.parse(_ageController.text), // 나이는 정수
+        "gender": _selectedGender == "Male" ? "MALE" : "FEMALE",
+        "height": double.parse(_heightController.text), // 키는 실수
+        "weight": double.parse(_weightController.text), // 몸무게는 실수
+        "dailyStepGoal": int.parse(_stepsController.text),
+        "dailyWorkoutGoal": int.parse(_exerciseTimeController.text),
+        "dailySleepHoursGoal": int.parse(_sleepHourController.text),
+        "dailySleepMinutesGoal": int.parse(_sleepMinController.text),
+        "interests": _selectedInterests.toList(),
+        "referrerId": "none"
+      };
+
+      print("🚀 [전송 데이터]: $bodyData");
+
+      final response = await http.post(
+        url,
+        headers: {
+          "Content-Type": "application/json",
+          // ★ [핵심 수정] Bearer + 공백 + 토큰
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode(bodyData),
+      );
+
+      print("📩 [응답 상태]: ${response.statusCode}");
+      print("📩 [응답 내용]: ${utf8.decode(response.bodyBytes)}");
+
+      if (response.statusCode == 200) {
+        if (!mounted) return;
+        // 성공 시 메인 페이지로 이동 (이전 기록 제거)
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const MainPage()),
+              (route) => false,
+        );
+      } else {
+        _showSnackBar("저장에 실패했습니다. (코드: ${response.statusCode})");
+      }
+    } catch (e) {
+      print("🔥 [에러] $e");
+      _showSnackBar("오류가 발생했습니다: $e");
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _goToNextPage() {
+    _pageController.nextPage(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.ease,
+    );
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   @override
@@ -112,26 +222,26 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // 상단 인디케이터 (점)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Row(
-                children: List.generate(4, (index) {
-                  return Container(
-                    margin: const EdgeInsets.only(right: 8),
-                    width: 10,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      // 현재 페이지일 때 지정해주신 민트색 적용
-                      color: _currentPage == index
-                          ? _activeColor
-                          : const Color(0xFFEEEEEE),
-                    ),
-                  );
-                }),
+            // 상단 인디케이터 (1단계 제외)
+            if (_currentPage > 0)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Row(
+                  children: List.generate(3, (index) {
+                    return Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: (_currentPage - 1) == index
+                            ? _activeColor
+                            : const Color(0xFFEEEEEE),
+                      ),
+                    );
+                  }),
+                ),
               ),
-            ),
 
             const SizedBox(height: 10),
 
@@ -141,15 +251,15 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                 physics: const NeverScrollableScrollPhysics(),
                 onPageChanged: (idx) => setState(() => _currentPage = idx),
                 children: [
-                  _buildNicknameStep(),     // 1단계
-                  _buildPersonalInfoStep(), // 2단계
-                  _buildDailyGoalStep(),    // 3단계
-                  _buildInterestStep(),     // 4단계
+                  _buildNicknameStep(),     // 0: 닉네임
+                  _buildPersonalInfoStep(), // 1: 신체정보
+                  _buildDailyGoalStep(),    // 2: 목표
+                  _buildInterestStep(),     // 3: 관심사
                 ],
               ),
             ),
 
-            // 하단 버튼
+            // 하단 '다음' / '시작하기' 버튼
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
               child: SizedBox(
@@ -157,7 +267,6 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                 height: 52,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    // 활성화되면 지정해주신 민트색, 아니면 회색
                     backgroundColor: _isCurrentStepValid ? _activeColor : const Color(0xFFE0E0E0),
                     foregroundColor: _isCurrentStepValid ? Colors.white : const Color(0xFF9E9E9E),
                     elevation: 0,
@@ -165,23 +274,24 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  onPressed: _isCurrentStepValid
+                  onPressed: (_isCurrentStepValid && !_isLoading)
                       ? () {
-                    if (_currentPage < 3) {
-                      _pageController.nextPage(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.ease,
-                      );
+                    if (_currentPage == 0) {
+                      _checkNicknameAndNext();
+                    } else if (_currentPage == 3) {
+                      _submitOnboarding();
                     } else {
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(builder: (_) => const MainPage()),
-                            (route) => false,
-                      );
+                      _goToNextPage();
                     }
                   }
                       : null,
-                  child: Text(
+                  child: _isLoading
+                      ? const SizedBox(
+                      height: 24,
+                      width: 24,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                  )
+                      : Text(
                     _currentPage == 3 ? '바디버디 시작하기' : '다음',
                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
@@ -194,7 +304,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     );
   }
 
-  // --- 1단계: 닉네임 ---
+  // --- 1단계 UI ---
   Widget _buildNicknameStep() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -244,7 +354,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     );
   }
 
-  // --- 2단계: 신체 정보 ---
+  // --- 2단계 UI ---
   Widget _buildPersonalInfoStep() {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -264,7 +374,8 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
           const SizedBox(height: 40),
           _buildLabel("나이"),
           const SizedBox(height: 8),
-          _buildBoxTextField(controller: _ageController, hint: "예) 28살", isNumber: true),
+          _buildBoxTextField(controller: _ageController, hint: "예) 28", isNumber: true),
+
           const SizedBox(height: 24),
           _buildLabel("성별"),
           const SizedBox(height: 8),
@@ -275,21 +386,25 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
               Expanded(child: _buildGenderButton("여성", "Female")),
             ],
           ),
+
           const SizedBox(height: 24),
           _buildLabel("키(cm)"),
           const SizedBox(height: 8),
-          _buildBoxTextField(controller: _heightController, hint: "예) 170", isNumber: true),
+          // 키: 소수점 허용 (isDecimal: true)
+          _buildBoxTextField(controller: _heightController, hint: "예) 170.5", isNumber: true, isDecimal: true),
+
           const SizedBox(height: 24),
           _buildLabel("몸무게(kg)"),
           const SizedBox(height: 8),
-          _buildBoxTextField(controller: _weightController, hint: "예) 65", isNumber: true),
+          // 몸무게: 소수점 허용 (isDecimal: true)
+          _buildBoxTextField(controller: _weightController, hint: "예) 65.4", isNumber: true, isDecimal: true),
           const SizedBox(height: 20),
         ],
       ),
     );
   }
 
-  // --- 3단계: 일일 목표 ---
+  // --- 3단계 UI ---
   Widget _buildDailyGoalStep() {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -306,14 +421,17 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
             "개인 맞춤 건강 관리를 위해 필요해요",
             style: TextStyle(fontSize: 14, color: Color(0xFF9E9E9E)),
           ),
+
           const SizedBox(height: 40),
           _buildLabel("걸음 수"),
           const SizedBox(height: 8),
           _buildBoxTextField(controller: _stepsController, hint: "입력해주세요", isNumber: true),
+
           const SizedBox(height: 24),
           _buildLabel("운동 시간(분)"),
           const SizedBox(height: 8),
           _buildBoxTextField(controller: _exerciseTimeController, hint: "입력해주세요", isNumber: true),
+
           const SizedBox(height: 24),
           _buildLabel("수면 시간"),
           const SizedBox(height: 8),
@@ -334,7 +452,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     );
   }
 
-  // --- 4단계: 관심사 ---
+  // --- 4단계 UI ---
   Widget _buildInterestStep() {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -366,9 +484,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   decoration: BoxDecoration(
-                    // 선택 시 연한 배경 (지정해주신 색상 + 투명도)
                     color: isSelected ? _activeColor.withOpacity(0.1) : Colors.white,
-                    // 선택 시 테두리 색상
                     border: Border.all(
                       color: isSelected ? _activeColor : const Color(0xFFE0E0E0),
                     ),
@@ -377,7 +493,6 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                   child: Text(
                     interest,
                     style: TextStyle(
-                      // 선택 시 텍스트 색상
                       color: isSelected ? _activeColor : const Color(0xFF9E9E9E),
                       fontWeight: FontWeight.bold,
                     ),
@@ -392,7 +507,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     );
   }
 
-  // --- 공통 위젯 ---
+  // Helper Widgets
   Widget _buildLabel(String text) {
     return Text(
       text,
@@ -400,15 +515,27 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     );
   }
 
+  // ✨ [수정] 소수점 입력 지원 (isDecimal 추가)
   Widget _buildBoxTextField({
     required TextEditingController controller,
     required String hint,
     bool isNumber = false,
+    bool isDecimal = false, // 소수점 허용 여부
   }) {
     return TextFormField(
       controller: controller,
-      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-      inputFormatters: isNumber ? [FilteringTextInputFormatter.digitsOnly] : [],
+      // 숫자 키패드: 소수점 옵션 활성화
+      keyboardType: isNumber
+          ? TextInputType.numberWithOptions(decimal: isDecimal)
+          : TextInputType.text,
+      inputFormatters: isNumber
+          ? [
+        // isDecimal이면 소수점 포함 허용, 아니면 숫자만 허용
+        FilteringTextInputFormatter.allow(
+          isDecimal ? RegExp(r'^\d+\.?\d*') : RegExp(r'^\d+'),
+        )
+      ]
+          : [],
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(color: Color(0xFFBDBDBD), fontSize: 14),
@@ -434,9 +561,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
       child: Container(
         height: 50,
         decoration: BoxDecoration(
-          // 선택 시 연한 배경 (지정해주신 색상 + 투명도)
           color: isSelected ? _activeColor.withOpacity(0.1) : Colors.white,
-          // 선택 시 테두리 색상
           border: Border.all(
             color: isSelected ? _activeColor : const Color(0xFFE0E0E0),
             width: 1.5,
