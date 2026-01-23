@@ -60,17 +60,13 @@ class GroupChallengeRankItem extends StatelessWidget {
 
           /// 프로필
           Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
+            width: 17,
+            height: 17,
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              color: const Color(0xFFD8D8D8),
-              image: rank.profileImageUrl != null
-                  ? DecorationImage(
-                      image: NetworkImage(rank.profileImageUrl!),
-                      fit: BoxFit.cover,
-                    )
-                  : null,
+            ),
+            child: ClipOval(
+              child: _RankProfileImage(url: rank.profileImageUrl),
             ),
           ),
           const SizedBox(width: 8),
@@ -126,6 +122,36 @@ class GroupChallengeRankItem extends StatelessWidget {
   }
 }
 
+class _RankProfileImage extends StatelessWidget {
+  final String? url;
+
+  const _RankProfileImage({required this.url});
+
+  bool get _useNetwork {
+    final u = url?.trim();
+    if (u == null) return false;
+    if (u.isEmpty) return false;
+    if (u.toLowerCase() == 'null') return false;
+    return u.startsWith('http://') || u.startsWith('https://');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _useNetwork
+        ? Image.network(
+            url!.trim(),
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) {
+              return Image.asset(
+                'assets/challenge/profile.png',
+                fit: BoxFit.cover,
+              );
+            },
+          )
+        : Image.asset(
+            'assets/challenge/profile.png',
+            fit: BoxFit.cover,
+          );
 // 커스텀 바 위젯
 class _RoundedLinearProgressBar extends StatelessWidget {
   final double value;
