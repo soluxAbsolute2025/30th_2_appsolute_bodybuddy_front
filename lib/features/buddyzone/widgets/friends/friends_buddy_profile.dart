@@ -141,7 +141,11 @@ class _BuddyProfileDialogState extends State<BuddyProfileDialog> {
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            SvgPicture.asset(imageUrl),
+            Padding(
+              padding: const EdgeInsets.only(top: 2.0),
+              child: SvgPicture.asset(imageUrl),
+            ),
+            SizedBox(width: 6.0),
             Expanded(
               child: Text(
                 text,
@@ -154,7 +158,7 @@ class _BuddyProfileDialogState extends State<BuddyProfileDialog> {
               ),
             ),
             Text(
-              '${start}/${end}${offset}',
+              '${start.toInt()} / ${end.toInt()}${offset}',
               style: TextStyle(
                 color: Colors.black,
                 fontSize: 12,
@@ -263,8 +267,8 @@ class _BuddyProfileDialogState extends State<BuddyProfileDialog> {
             alignment: Alignment.topLeft,
             child: TextButton(
               onPressed: () {
-                print("친구 추가 클릭!");
-                // _showdialog(context);
+                print("닫기 버튼 클릭");
+                Navigator.of(context).pop();
               },
               style: TextButton.styleFrom(
                 foregroundColor: Color(0x1188D3BD),
