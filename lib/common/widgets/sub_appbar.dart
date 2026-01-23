@@ -7,6 +7,7 @@ class SubAppbar extends StatefulWidget implements PreferredSizeWidget {
   final bool? isButton;
   final VoidCallback? onButtonPressed;
   final bool? isFormValid;
+  final VoidCallback? onFormSubmit;
 
   const SubAppbar({
     super.key,
@@ -15,6 +16,7 @@ class SubAppbar extends StatefulWidget implements PreferredSizeWidget {
     this.imageUrl,
     this.isButton = false,
     this.isFormValid,
+    this.onFormSubmit,
   });
 
   @override
@@ -73,7 +75,7 @@ class _SubAppbarState extends State<SubAppbar> {
           Container(
             margin: EdgeInsets.only(right: 16.0),
             child: TextButton(
-              onPressed: widget.isFormValid! ? () {} : null,
+              onPressed: widget.isFormValid! ? widget.onFormSubmit! : null,
               style: TextButton.styleFrom(
                 padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                 minimumSize: Size.zero,
