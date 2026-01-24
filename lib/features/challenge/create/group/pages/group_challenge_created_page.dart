@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class GroupChallengeCreatedPage extends StatelessWidget {
   final String groupCode;
 
-  const GroupChallengeCreatedPage({
-    super.key,
-    required this.groupCode,
-  });
+  const GroupChallengeCreatedPage({super.key, required this.groupCode});
 
   @override
   Widget build(BuildContext context) {
@@ -58,8 +56,8 @@ class GroupChallengeCreatedPage extends StatelessWidget {
               /// 중앙 캐릭터 이미지
               Expanded(
                 child: Center(
-                  child: Image.asset(
-                    'assets/challenge/success.svg',
+                  child: SvgPicture.asset(
+                    'assets/challenge/success.png',
                     width: 180,
                     fit: BoxFit.contain,
                   ),
@@ -71,9 +69,7 @@ class GroupChallengeCreatedPage extends StatelessWidget {
               /// 그룹 코드 복사 버튼
               GestureDetector(
                 onTap: () async {
-                  await Clipboard.setData(
-                    ClipboardData(text: groupCode),
-                  );
+                  await Clipboard.setData(ClipboardData(text: groupCode));
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('그룹 코드가 복사됐어요!')),
@@ -91,7 +87,7 @@ class GroupChallengeCreatedPage extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Image.asset(
-                        'assets/challenge/group_copy.png', 
+                        'assets/challenge/group_copy.png',
                         width: 18,
                         height: 18,
                       ),
