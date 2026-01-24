@@ -1,17 +1,68 @@
+import 'package:bodybuddy_frontend/features/buddyzone/api/buddyzone_friends_api.dart';
+import 'package:bodybuddy_frontend/features/buddyzone/models/friends/buddy_detail_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class BuddyProfileDialog extends StatefulWidget {
-  int? userId;
-  BuddyProfileDialog({super.key, this.userId});
+  final int buddyId; // final로 변경 권장
+  final bool isPocked;
+  final Future<void> Function({required int userId}) onPocked;
+
+  BuddyProfileDialog({
+    super.key,
+    required this.buddyId,
+    required this.isPocked,
+    required this.onPocked,
+  });
 
   @override
   State<BuddyProfileDialog> createState() => _BuddyProfileDialogState();
 }
 
 class _BuddyProfileDialogState extends State<BuddyProfileDialog> {
+  BuddyDetail? _buddyDetail;
+  bool _isLoading = true; // 로딩 상태 추가
+  bool _isPocked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _getBuddyDetail(userId: widget.buddyId);
+    _isPocked = widget.isPocked;
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  void _getBuddyDetail({required int userId}) async {
+    try {
+      final response = await BuddysApi().getBuddyDetail(userId: userId);
+      if (mounted) {
+        setState(() {
+          _buddyDetail = response;
+          _isLoading = false; // 로딩 완료
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // 1. 데이터 로딩 중이거나 _buddyDetail이 null이면 로딩 바 표시
+    if (_isLoading || _buddyDetail == null) {
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFF1AEDB0)),
+      );
+    }
+
+    // 이제부터는 _buddyDetail이 null이 아님이 보장됩니다.
+    final detail = _buddyDetail!;
+
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 20.0),
       backgroundColor: Colors.white,
@@ -24,166 +75,98 @@ class _BuddyProfileDialogState extends State<BuddyProfileDialog> {
           children: [
             Padding(
               padding: const EdgeInsets.only(top: 5.0, bottom: 17.0),
-              child: _friendProfile(),
+              child: _friendProfile(detail), // 데이터를 넘겨줌
             ),
-
-            Divider(color: Color(0xFFF5F5F5)),
-
+            const Divider(color: Color(0xFFF5F5F5)),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 17.0),
-                  child: Text(
+                  child: const Text(
                     '오늘의 목표 달성률',
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 14,
-                      fontFamily: 'Pretendard Variable',
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
+                // 2. 각 섹션에 안전하게 데이터 전달 (null이면 기본값 0 또는 1 제공)
                 _dialogButtonWidget(
-                  text: '운동',
-                  start: 45,
-                  end: 60,
-                  imageUrl: 'assets/buddyzone/friend_profile/heart.svg',
-                  offset: '분',
+                  text: '수분',
+                  current: detail.homeData?.water?.current ?? 0,
+                  goal: detail.homeData?.water?.goal ?? 2000, // 기본 목표치
+                  imageUrl: 'assets/buddyzone/friend_profile/water.svg',
+                  offset: 'ml',
                 ),
-                SizedBox(height: 12.0),
+                const SizedBox(height: 12.0),
                 _dialogButtonWidget(
                   text: '식사',
-                  start: 7500,
-                  end: 10000,
+                  current: detail.homeData?.meal?.current ?? 0,
+                  goal: detail.homeData?.meal?.goal ?? 3,
                   imageUrl: 'assets/buddyzone/friend_profile/diet.svg',
-                  offset: '걸음',
+                  offset: '회',
                 ),
-                SizedBox(height: 12.0),
+                const SizedBox(height: 12.0),
                 _dialogButtonWidget(
                   text: '수면',
-                  start: 7.5,
-                  end: 8,
+                  current: detail.homeData?.sleep?.current ?? 0,
+                  goal: detail.homeData?.sleep?.goal ?? 8,
                   imageUrl: 'assets/buddyzone/friend_profile/medi.svg',
                   offset: '시간',
                 ),
               ],
             ),
-            SizedBox(height: 40.0),
-            Row(
-              children: [
-                // 취소 버튼
-                Expanded(
-                  child: Container(
-                    margin: EdgeInsets.symmetric(
-                      // horizontal: 16.0,
-                      // vertical: 5.0,
-                    ),
-                    alignment: Alignment.center,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.all(Radius.circular(10.0)),
-                      color: Color(0xFF1AEDB0),
-                    ),
-                    child: TextButton(
-                      onPressed: () {},
-                      style: TextButton.styleFrom(
-                        foregroundColor: Color(0xFF669588),
-                        padding: EdgeInsets.zero,
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      child: Container(
-                        padding: EdgeInsets.all(16.0),
-                        child: Center(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              SvgPicture.asset(
-                                'assets/buddyzone/friend_profile/hand_white.svg',
-                              ),
-                              SizedBox(width: 12.0),
-                              Text(
-                                '콕 찌르기',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 14,
-                                  fontFamily: 'Pretendard Variable',
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            const SizedBox(height: 40.0),
+            _pokeButton(detail.userId),
           ],
         ),
       ),
     );
   }
 
+  // 3. 헬퍼 위젯: 파라미터 타입을 명확히 하고 계산식 수정
   Widget _dialogButtonWidget({
     required String text,
-    required double start,
-    required double end,
+    required int current,
+    required int goal,
     required String imageUrl,
     required String offset,
   }) {
-    double? ratio = start / end;
+    // 0으로 나누기 방지 및 비율 계산
+    double ratio = (goal > 0) ? (current / goal) : 0.0;
+    if (ratio > 1.0) ratio = 1.0; // 100% 초과 방지
+
     return Column(
       children: [
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 2.0),
-              child: SvgPicture.asset(imageUrl),
-            ),
-            SizedBox(width: 6.0),
-            Expanded(
-              child: Text(
-                text,
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 14,
-                  fontFamily: 'Pretendard Variable',
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-            ),
+            SvgPicture.asset(imageUrl),
+            const SizedBox(width: 6.0),
+            Expanded(child: Text(text, style: const TextStyle(fontSize: 14))),
             Text(
-              '${start.toInt()} / ${end.toInt()}${offset}',
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 12,
-                fontFamily: 'Pretendard Variable',
-                fontWeight: FontWeight.w300,
-              ),
+              '$current / $goal$offset',
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w300),
             ),
           ],
         ),
-        SizedBox(height: 10.0),
-
+        const SizedBox(height: 10.0),
         Container(
           width: double.infinity,
-          alignment: Alignment.centerLeft,
           height: 10.0,
           decoration: BoxDecoration(
-            color: Color(0xFFEBEBEB),
+            color: const Color(0xFFEBEBEB),
             borderRadius: BorderRadius.circular(10.0),
           ),
-          // 경험치 비율에 맞게 조정
           child: FractionallySizedBox(
+            alignment: Alignment.centerLeft,
             widthFactor: ratio,
             child: Container(
               decoration: BoxDecoration(
-                color: Color(0xFF1AEDB0),
+                color: const Color(0xFF1AEDB0),
                 borderRadius: BorderRadius.circular(10.0),
               ),
             ),
@@ -193,95 +176,137 @@ class _BuddyProfileDialogState extends State<BuddyProfileDialog> {
     );
   }
 
-  Widget _friendProfile() {
+  Widget _friendProfile(BuddyDetail detail) {
     return Row(
       children: [
-        SizedBox(
+        const SizedBox(
           width: 51.0,
           height: 51.0,
           child: ClipOval(
-            child: Image(
-              // image: widget.comment.writerProfileImageUrl == null
-              //     ? AssetImage('assets/buddyzone/myprofile.png')
-              //     : NetworkImage(widget.comment.writerProfileImageUrl!),
-              image: AssetImage('assets/buddyzone/myprofile.png'),
-            ),
+            child: Image(image: AssetImage('assets/buddyzone/myprofile.png')),
           ),
         ),
-        SizedBox(width: 16.0),
+        const SizedBox(width: 16.0),
         Expanded(
           child: Column(
-            children: <Widget>[
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Row(
                 children: [
                   Text(
-                    '김헬스',
-                    style: TextStyle(
+                    detail.nickname,
+                    style: const TextStyle(
                       fontSize: 14.0,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(width: 10.0),
+                  const SizedBox(width: 10.0),
                   Container(
-                    // height: 17.0,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        vertical: 1.0,
-                        horizontal: 10.0,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Color(0xFFE9FFF9),
-                        borderRadius: BorderRadius.circular(5.0),
-                      ),
-                      child: Text(
-                        // 'Lv.${widget.comment.writerLevel}',
-                        'Lv. 15',
-                        style: TextStyle(
-                          color: Color(0xFF1AEDB1),
-                          fontSize: 11.0,
-                          fontWeight: FontWeight.w500,
-                        ),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 1.0,
+                      horizontal: 10.0,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE9FFF9),
+                      borderRadius: BorderRadius.circular(5.0),
+                    ),
+                    child: Text(
+                      'Lv. ${detail.level}',
+                      style: const TextStyle(
+                        color: Color(0xFF1AEDB1),
+                        fontSize: 11.0,
                       ),
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: 6.0),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  textAlign: TextAlign.left,
-                  '${timeago.format(DateTime.now(), locale: 'ko_custom')} 활동',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 14.0),
-                ),
+              const SizedBox(height: 6.0),
+              Text(
+                '${detail.status}',
+                style: TextStyle(color: Colors.grey[600], fontSize: 14.0),
               ),
             ],
           ),
         ),
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(5.0),
-            color: Colors.white,
+        TextButton(
+          onPressed: () => {Navigator.of(context).pop()},
+          style: TextButton.styleFrom(
+            foregroundColor: Color(0x1188D3BD),
+            padding: EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(5.0),
+            ),
           ),
-          child: Align(
-            alignment: Alignment.topLeft,
+
+          child: Center(
+            child: SvgPicture.asset(
+              'assets/buddyzone/friend_profile/x_button.svg',
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _pokeButton(int userId) {
+    return Row(
+      children: [
+        // 취소 버튼
+        Expanded(
+          child: Container(
+            margin: EdgeInsets.symmetric(
+              // horizontal: 16.0,
+              // vertical: 5.0,
+            ),
+            alignment: Alignment.center,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(10.0)),
+              color: _isPocked ? Color(0xFFE4E4E4) : Color(0xFF1AEDB0),
+            ),
             child: TextButton(
-              onPressed: () {
-                print("닫기 버튼 클릭");
-                Navigator.of(context).pop();
-              },
+              onPressed: _isPocked
+                  ? null
+                  : () async {
+                      print("손 흔들기 클릭!");
+                      await widget.onPocked(userId: widget.buddyId);
+                      if (mounted) {
+                        setState(() {
+                          _isPocked = true;
+                        });
+                      }
+                    },
               style: TextButton.styleFrom(
-                foregroundColor: Color(0x1188D3BD),
-                padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                foregroundColor: Color(0xFF669588),
+                padding: EdgeInsets.zero,
                 minimumSize: Size.zero,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(5.0),
-                ),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              child: Center(
-                child: SvgPicture.asset(
-                  'assets/buddyzone/friend_profile/x_button.svg',
+              child: Container(
+                padding: EdgeInsets.all(16.0),
+                child: Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (!_isPocked) ...[
+                        SvgPicture.asset(
+                          'assets/buddyzone/friend_profile/hand_white.svg',
+                        ),
+                      ],
+                      SizedBox(width: 12.0),
+                      Text(
+                        _isPocked ? '콕 찌르기 완료' : '콕 찌르기',
+                        style: TextStyle(
+                          color: _isPocked ? Color(0xFFA7A7A7) : Colors.white,
+                          fontSize: 14,
+                          fontFamily: 'Pretendard Variable',
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

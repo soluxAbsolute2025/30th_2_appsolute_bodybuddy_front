@@ -3,20 +3,26 @@ import '../../../api/dio_client.dart';
 import '../models/group_checkin_response.dart';
 
 class GroupChallengeCheckInApi {
-  Future<GroupCheckInResponse> checkIn({
-    required int challengeId,
-  }) async {
+  Future<GroupCheckInResponse> checkIn({required int challengeId}) async {
     final dio = DioClient.dio;
 
     final res = await dio.post(
       '/api/challenges/group/$challengeId/check-in',
-      data: null, // ✅ RequestBody 없음
       options: Options(
-        // 필요하면 statusCode 201도 허용(기본도 통과됨)
-        validateStatus: (status) => status != null && status >= 200 && status < 300,
+        // ✅ 전역 Content-Type 강제 제거
+        contentType: null,
+        headers: {
+          'Content-Type': null,
+          'Accept': 'application/json',
+        },
+        validateStatus: (s) => s != null && s >= 200 && s < 300,
       ),
     );
 
-    return GroupCheckInResponse.fromJson(res.data as Map<String, dynamic>);
+    final data = res.data;
+    if (data is! Map<String, dynamic>) {
+      throw Exception('Unexpected response: ${res.data}');
+    }
+    return GroupCheckInResponse.fromJson(data);
   }
 }

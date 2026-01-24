@@ -89,6 +89,10 @@ class _FeedOnlyWidgetState extends State<FeedOnlyWidget> {
                   ),
                   SizedBox(width: 10.0),
                   _LevelBadge(),
+                  if (widget.feed.visibility == "SECRET") ...[
+                    SizedBox(width: 8.0),
+                    SvgPicture.asset('assets/buddyzone/mine.svg'),
+                  ],
                 ],
               ),
             ),
@@ -247,30 +251,7 @@ class _FeedOnlyWidgetState extends State<FeedOnlyWidget> {
   Widget _metaInfo() {
     return Row(
       children: [
-        SvgPicture.asset('assets/buddyzone/time.svg'),
-        SizedBox(width: 5.0),
-        Text(
-          timeago.format(widget.feed.createdAt, locale: 'ko_custom'),
-          style: TextStyle(
-            fontSize: 12.0,
-            fontWeight: FontWeight.w400,
-            color: Color(0xFF7D7C7C),
-            fontFamily: 'Pretendard',
-          ),
-        ),
-
         if (widget.feed.place != null) ...[
-          SizedBox(width: 5.0),
-          Text(
-            '·',
-            style: TextStyle(
-              fontSize: 12.0,
-              fontWeight: FontWeight.w400,
-              color: Color(0xFF7D7C7C),
-              fontFamily: 'Pretendard',
-            ),
-          ),
-          SizedBox(width: 5.0),
           SvgPicture.asset('assets/buddyzone/gps.svg'),
           SizedBox(width: 5.0),
           Text(
@@ -282,7 +263,29 @@ class _FeedOnlyWidgetState extends State<FeedOnlyWidget> {
               fontFamily: 'Pretendard',
             ),
           ),
+          SizedBox(width: 5.0),
+          Text(
+            '·',
+            style: TextStyle(
+              fontSize: 12.0,
+              fontWeight: FontWeight.w400,
+              color: Color(0xFF7D7C7C),
+              fontFamily: 'Pretendard',
+            ),
+          ),
+          SizedBox(width: 5.0),
         ],
+        SvgPicture.asset('assets/buddyzone/time.svg'),
+        SizedBox(width: 5.0),
+        Text(
+          timeago.format(widget.feed.createdAt, locale: 'ko_custom'),
+          style: TextStyle(
+            fontSize: 12.0,
+            fontWeight: FontWeight.w400,
+            color: Color(0xFF7D7C7C),
+            fontFamily: 'Pretendard',
+          ),
+        ),
       ],
     );
   }

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import '../models/personal_challenge_create_model.dart'; 
 
 class GoalTypeTabs extends StatelessWidget {
-  final PersonalGoalType value;
-  final ValueChanged<PersonalGoalType> onChanged;
+  final String value; // 'PERIOD' | 'COUNT'
+  final ValueChanged<String> onChanged;
 
   const GoalTypeTabs({
     super.key,
@@ -19,31 +19,29 @@ class GoalTypeTabs extends StatelessWidget {
 
     return Column(
       children: [
-        // 탭 텍스트 라인
         Row(
           children: [
             Expanded(
               child: _TabItem(
                 text: '기간형',
-                isActive: value == PersonalGoalType.period,
+                isActive: value == 'PERIOD',
                 activeColor: active,
                 inactiveColor: inactive,
-                onTap: () => onChanged(PersonalGoalType.period),
+                onTap: () => onChanged('PERIOD'),
               ),
             ),
             Expanded(
               child: _TabItem(
                 text: '횟수형',
-                isActive: value == PersonalGoalType.count,
+                isActive: value == 'COUNT',
                 activeColor: active,
                 inactiveColor: inactive,
-                onTap: () => onChanged(PersonalGoalType.count),
+                onTap: () => onChanged('COUNT'),
               ),
             ),
           ],
         ),
 
-        // 밑줄/디바이더
         LayoutBuilder(
           builder: (context, constraints) {
             final half = constraints.maxWidth / 2;
@@ -51,13 +49,13 @@ class GoalTypeTabs extends StatelessWidget {
             return Stack(
               children: [
                 Container(height: 1, color: divider),
-
                 AnimatedAlign(
                   duration: const Duration(milliseconds: 180),
                   curve: Curves.easeOut,
-                  alignment: value == PersonalGoalType.period
-                      ? Alignment.centerLeft
-                      : Alignment.centerRight,
+                  alignment:
+                      value == 'PERIOD'
+                          ? Alignment.centerLeft
+                          : Alignment.centerRight,
                   child: Container(
                     width: half,
                     height: 3,

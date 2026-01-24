@@ -153,7 +153,9 @@ class _MypageMyFeedWidget extends State<MypageMyFeedWidget> {
                 borderRadius: BorderRadius.circular(10.0),
                 child: Image(
                   fit: BoxFit.fitWidth,
-                  image: widget.feed?.postImageUrl != null
+                  image:
+                      widget.feed?.postImageUrl != null ||
+                          widget.feed.postImageUrl != ''
                       ? NetworkImage(widget.feed.postImageUrl)
                       : AssetImage('assets/mypage/myprofile.png'),
                 ),

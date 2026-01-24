@@ -1,47 +1,29 @@
-import 'dart:io';
-import '../widgets/personal_challenge_options.dart';
-
-enum PersonalGoalType { period, count }
-
-extension PersonalGoalTypeApiX on PersonalGoalType {
-  String toApi() => this == PersonalGoalType.period ? 'PERIOD' : 'COUNT';
-}
+import 'package:image_picker/image_picker.dart';
 
 class PersonalChallengeCreateModel {
-  String title;
-  String description;
-
-  PersonalGoalType goalType;
-
+  String title = '';
+  String description = '';
+  String goalType = 'PERIOD'; // PERIOD | COUNT
   int? targetDays;
   int? dailyGoal;
+  String unit = '';
+  String category = 'DAILY';  // DAILY | WEEKLY 등
+  String? visibility;         // ✅ PUBLIC | PRIVATE
+  int? estimatedReward;
+  XFile? imageFile;
 
-  String unit;       // "걸음/분/회/km" 같은 UI값이면 서버용 변환 필요
-  String category;   // DAILY / WEEKLY
-  int estimatedReward;
-
-  File? imageFile;
-
-  PersonalChallengeCreateModel({
-    this.title = '',
-    this.description = '',
-    this.goalType = PersonalGoalType.period,
-    this.targetDays,
-    this.dailyGoal,
-    this.unit = '',
-    this.category = 'DAILY',
-    this.estimatedReward = 0,
-    this.imageFile,
-  });
-
-  Map<String, dynamic> toJson() => {
-    'title': title,
-    'description': description,
-    'goalType': goalType.toApi(),
-    'targetDays': targetDays,
-    'dailyGoal': dailyGoal,
-    'unit': PersonalChallengeOptions.unitToApi[unit] ?? unit,
-    'category': category,
-    'estimatedReward': estimatedReward,
-  };
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'description': description,
+      'goalType': goalType,
+      'targetDays': targetDays,
+      'dailyGoal': dailyGoal,
+      'unit': unit,
+      'category': category,
+      'visibility': visibility,     // ✅ 변경
+      'estimatedReward': estimatedReward,
+    };
+  }
 }
+

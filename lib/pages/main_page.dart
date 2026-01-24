@@ -19,6 +19,7 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   int _currentIndex = 0;
+  bool _hideBottomNav = false;
 
   final List<GlobalKey<NavigatorState>> _navigatorKeys = [
     GlobalKey<NavigatorState>(),
@@ -43,23 +44,39 @@ class _MainPageState extends State<MainPage> {
         ],
       ),
 
-      floatingActionButton: _shouldShowFloating()
+      floatingActionButton: (!_hideBottomNav && _shouldShowFloating())
           ? MainFloating(navigatorKey: _navigatorKeys[_currentIndex])
           : null,
-      bottomNavigationBar: MainBottomNav(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-      ),
+      bottomNavigationBar: _hideBottomNav
+          ? null
+          : MainBottomNav(
+              currentIndex: _currentIndex,
+              onTap: (index) {
+                setState(() {
+                  _currentIndex = index;
+                  _hideBottomNav =
+                      _navigatorKeys[_currentIndex].currentState?.canPop() ?? false;
+                });
+              },
+            ),
     );
   }
 
   Widget _buildNavigator(int index, Widget page) {
     return Navigator(
       key: _navigatorKeys[index],
+      observers: [
+        _TabNavObserver(
+          onChanged: () {
+            final nav = _navigatorKeys[_currentIndex].currentState;
+            final shouldHide = nav?.canPop() ?? false;
+
+            if (mounted && _hideBottomNav != shouldHide) {
+              setState(() => _hideBottomNav = shouldHide);
+            }
+          },
+        ),
+      ],
       onGenerateRoute: (routeSettings) {
         return MaterialPageRoute(builder: (context) => page);
       },
@@ -70,4 +87,21 @@ class _MainPageState extends State<MainPage> {
   bool _shouldShowFloating() {
     return true;
   }
+}
+
+class _TabNavObserver extends NavigatorObserver {
+  final VoidCallback onChanged;
+  _TabNavObserver({required this.onChanged});
+
+  @override
+  void didPush(Route route, Route? previousRoute) => onChanged();
+
+  @override
+  void didPop(Route route, Route? previousRoute) => onChanged();
+
+  @override
+  void didRemove(Route route, Route? previousRoute) => onChanged();
+
+  @override
+  void didReplace({Route? newRoute, Route? oldRoute}) => onChanged();
 }

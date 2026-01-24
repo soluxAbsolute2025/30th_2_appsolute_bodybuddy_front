@@ -17,14 +17,14 @@ class GroupChallengeTypePage extends StatefulWidget {
 }
 
 class _GroupChallengeTypePageState extends State<GroupChallengeTypePage> {
-  late final controller = GroupChallengeCreateController(widget.model);
   late final TextEditingController _periodController;
 
   @override
   void initState() {
     super.initState();
-    _periodController =
-        TextEditingController(text: widget.model.period?.toString() ?? '');
+    _periodController = TextEditingController(
+      text: widget.model.period?.toString() ?? '',
+    );
   }
 
   @override
@@ -34,15 +34,16 @@ class _GroupChallengeTypePageState extends State<GroupChallengeTypePage> {
   }
 
   void _dec() => setState(() {
-        if (widget.model.maxParticipants > 2) widget.model.maxParticipants--;
-      });
+    if (widget.model.maxParticipants > 2) widget.model.maxParticipants--;
+  });
 
   void _inc() => setState(() {
-        if (widget.model.maxParticipants < 99) widget.model.maxParticipants++;
-      });
+    if (widget.model.maxParticipants < 99) widget.model.maxParticipants++;
+  });
 
   @override
   Widget build(BuildContext context) {
+    final controller = GroupChallengeCreateController(widget.model);
     final isValid = controller.isTypePageValid;
 
     return Scaffold(
@@ -71,7 +72,7 @@ class _GroupChallengeTypePageState extends State<GroupChallengeTypePage> {
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
+        padding: const EdgeInsets.fromLTRB(16, 32, 16, 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -80,7 +81,7 @@ class _GroupChallengeTypePageState extends State<GroupChallengeTypePage> {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 40),
-            
+
             LabeledTextField(
               label: '기간',
               hint: '최소 7일 이상으로 설정해 주세요',
@@ -90,14 +91,16 @@ class _GroupChallengeTypePageState extends State<GroupChallengeTypePage> {
               suffixText: '일',
               onChanged: (value) {
                 final parsed = int.tryParse(value.trim());
-                widget.model.period = parsed;
+                widget.model.period = parsed; // int?
                 setState(() {});
               },
             ),
 
             const SizedBox(height: 25),
-            const Text('최대 인원',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+            const Text(
+              '최대 인원',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
             GroupChallengeParticipantCounter(
               value: widget.model.maxParticipants,
               onDecrease: _dec,
@@ -109,9 +112,11 @@ class _GroupChallengeTypePageState extends State<GroupChallengeTypePage> {
               text: '다음',
               isEnabled: isValid,
               onPressed: () {
-                Navigator.of(context, rootNavigator: true).push(
+                Navigator.push(
+                  context,
                   MaterialPageRoute(
-                    builder: (_) => GroupChallengePrivacyPage(model: widget.model),
+                    builder: (_) =>
+                        GroupChallengePrivacyPage(model: widget.model),
                   ),
                 );
               },

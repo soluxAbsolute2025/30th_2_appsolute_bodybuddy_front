@@ -9,8 +9,12 @@ class GroupChallengeListApi {
   Future<List<GroupChallengeListItem>> fetchGroupChallenges() async {
     try {
       final res = await _dio.get('/api/challenges/group');
-      print('[GROUP] body=${res.data}');
 
+print('[GROUP] statusCode=${res.statusCode}');
+print('[GROUP] runtimeType=${res.data.runtimeType}');
+print('[GROUP] body=${res.data}');
+
+      print('[GROUP] body=${res.data}');
 
       final body = res.data;
       final rawList = (body['data'] as List<dynamic>? ?? []);

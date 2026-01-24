@@ -102,16 +102,6 @@ class _BuddyFeedPageState extends State<BuddyFeedPage> {
             sliver: SliverToBoxAdapter(
               child: Column(
                 children: [
-                  TextButton(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) =>
-                            BuddyProfileDialog(userId: userId),
-                      );
-                    },
-                    child: Text('테스트 버튼'),
-                  ),
                   FeedSearchWidget(
                     onSearchFeed: onSearchFeed,
                     controller: searchController,
@@ -158,7 +148,9 @@ class _BuddyFeedPageState extends State<BuddyFeedPage> {
           // 로딩 중 또는 마지막 페이지에 도달한 경우
           SliverToBoxAdapter(
             child: isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(
+                    child: CircularProgressIndicator(color: Color(0xFF1AEDB0)),
+                  )
                 : (isLast ? _endFeeds() : const SizedBox(height: 80)),
           ),
         ],

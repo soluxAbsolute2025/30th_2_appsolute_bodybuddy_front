@@ -103,11 +103,6 @@ class _GroupChallengePageState extends State<GroupChallengePage> {
   }
 
   Future<void> _loadRecruitingChallenges() async {
-    setState(() {
-      recruitingLoading = true;
-      recruitingError = false;
-    });
-
     try {
       final all = await groupListApi.fetchGroupChallenges();
 

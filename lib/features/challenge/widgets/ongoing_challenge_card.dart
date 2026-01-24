@@ -6,10 +6,7 @@ import '../modal/ongoing_challenge_detail_modal.dart';
 class OngoingChallengeCard extends StatelessWidget {
   final Challenge challenge;
 
-  const OngoingChallengeCard({
-    super.key,
-    required this.challenge,
-  });
+  const OngoingChallengeCard({super.key, required this.challenge});
 
   @override
   Widget build(BuildContext context) {
@@ -44,8 +41,8 @@ class OngoingChallengeCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
-                          color: Color(0xFF505050)
-                         ),
+                          color: Color(0xFF505050),
+                        ),
                       ),
                       Text(
                         '${challenge.current} / ${challenge.total} 일',
@@ -63,7 +60,10 @@ class OngoingChallengeCard extends StatelessWidget {
                     children: [
                       const Text(
                         '예상 보상',
-                        style: TextStyle(fontSize: 12, color: Color(0xFF666666)),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF666666),
+                        ),
                       ),
                       Text(
                         '${challenge.rewardXp} XP',
@@ -126,17 +126,45 @@ class OngoingChallengeCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          challenge.title,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            height: 1.0,
-                          ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Flexible(
+                              fit: FlexFit.loose,
+                              child: Text(
+                                challenge.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+
+                            // 수정/삭제 (타이틀 바로 옆)
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                GestureDetector(
+                                  onTap: () {},
+                                  child: Image.asset(
+                                    'assets/challenge/edit.png',
+                                    width: 12,
+                                    height: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 10),
+
                         Text(
                           challenge.description,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,

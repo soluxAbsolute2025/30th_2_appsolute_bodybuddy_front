@@ -1,6 +1,8 @@
 import 'package:bodybuddy_frontend/common/widgets/sub_appbar.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/api/buddyzone_hottag_api.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/models/feeds/feed_post_model.dart';
+import 'package:bodybuddy_frontend/features/mypage/api/mypage_api.dart';
+import 'package:bodybuddy_frontend/features/mypage/models/mypage_info_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
@@ -31,10 +33,14 @@ class _SubNewFeedPagesState extends State<SubNewFeedPages> {
   File? _selectedImage;
   List<String> _tags = [];
 
+  MyPageResponse? userProfile;
+  bool _isLoading = true;
+
   @override
   void initState() {
     super.initState();
     postController = HashtagEditingController();
+    _setMyInfo();
   }
 
   @override
@@ -42,6 +48,26 @@ class _SubNewFeedPagesState extends State<SubNewFeedPages> {
     postController.dispose();
     locationController.dispose();
     super.dispose();
+  }
+
+  Future<void> _setMyInfo() async {
+    try {
+      MyPageResponse response = await MyPageAPI().getMyPageAllInfo();
+
+      if (mounted) {
+        setState(() {
+          userProfile = response;
+          _isLoading = false; // 로딩 끝
+        });
+      }
+    } catch (e) {
+      print("프로필 로딩 실패: $e");
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   Future<void> _postFeed() async {
@@ -115,6 +141,14 @@ class _SubNewFeedPagesState extends State<SubNewFeedPages> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading || userProfile == null) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFF1AEDB0)),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: SubAppbar(
         imageUrl: 'assets/buddyzone/xFeed.svg',
@@ -128,7 +162,12 @@ class _SubNewFeedPagesState extends State<SubNewFeedPages> {
             child: SingleChildScrollView(
               child: Column(
                 children: [
-                  _profileWidget(), // 이건 그냥 여기에 두는게 편합니다.
+                  _profileWidget(
+                    name: userProfile!.userProfile.userId.toString(),
+                    level: userProfile!.levelInfo.currentLevel.toString(),
+                    imageUrl: userProfile!.userProfile.profileImageUrl
+                        .toString(),
+                  ), // 이건 그냥 여기에 두는게 편합니다.
                   const SizedBox(height: 3.0),
 
                   Container(
@@ -221,7 +260,11 @@ class _SubNewFeedPagesState extends State<SubNewFeedPages> {
   }
 
   // 프로필 위젯은 데이터 바인딩 때문에 여기에 남겨둠
-  Widget _profileWidget() {
+  Widget _profileWidget({
+    required String imageUrl,
+    required String name,
+    required String level,
+  }) {
     return Container(
       padding: const EdgeInsets.only(left: 16.0, right: 16.0),
       child: Row(
@@ -232,17 +275,11 @@ class _SubNewFeedPagesState extends State<SubNewFeedPages> {
               SizedBox(
                 width: 37.0,
                 height: 37.0,
-                child: ClipOval(
-                  child: Image(
-                    image: const AssetImage(
-                      'assets/images/common/profile1.jpg',
-                    ),
-                  ),
-                ),
+                child: ClipOval(child: Image(image: NetworkImage(imageUrl))),
               ),
               const SizedBox(width: 10.0),
-              const Text(
-                '김헬스',
+              Text(
+                '$name',
                 style: TextStyle(
                   fontSize: 14.0,
                   fontWeight: FontWeight.bold,
@@ -260,8 +297,8 @@ class _SubNewFeedPagesState extends State<SubNewFeedPages> {
                   color: const Color(0xFFE9FFF9),
                   borderRadius: BorderRadius.circular(5.0),
                 ),
-                child: const Text(
-                  'Lv.15',
+                child: Text(
+                  'Lv. ${level}',
                   style: TextStyle(
                     color: Color(0xFF1AEDB1),
                     fontSize: 11.0,
@@ -305,13 +342,12 @@ class _SubNewFeedPagesState extends State<SubNewFeedPages> {
               const SizedBox(width: 6.0),
             ],
             if (visible == "SECRET") ...[
-              const Image(image: AssetImage('assets/buddyzone/link.png')),
-              const SizedBox(width: 4.0),
-              SvgPicture.asset('assets/buddyzone/friend.svg'),
-              const SizedBox(width: 6.0),
+              const SizedBox(width: 2.0),
+              SvgPicture.asset('assets/buddyzone/mine.svg'),
+              const SizedBox(width: 8.0),
             ],
             Text(
-              visible == "PUBLIC" ? '전체 공개' : '친구 공개',
+              visible == "PUBLIC" ? '전체 공개' : '나만 보기',
               style: const TextStyle(
                 color: Color(0xFF1AEDB0),
                 fontSize: 14,

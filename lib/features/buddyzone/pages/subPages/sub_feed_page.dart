@@ -2,6 +2,8 @@ import 'package:bodybuddy_frontend/common/widgets/sub_appbar.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/api/buddyzone_hottag_api.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/models/feeds/feed_content_model.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/widgets/feeds/feed_my_comment_widget.dart';
+import 'package:bodybuddy_frontend/features/mypage/api/mypage_api.dart';
+import 'package:bodybuddy_frontend/features/mypage/models/mypage_info_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -27,6 +29,8 @@ class SubFeedPages extends StatefulWidget {
 class _SubFeedPagesState extends State<SubFeedPages> {
   final textController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
+  MyPageResponse? myPageResponse;
+  bool _isLoading = true;
 
   bool isButtonEnabled = false;
   int? editingCommentId;
@@ -41,6 +45,8 @@ class _SubFeedPagesState extends State<SubFeedPages> {
         isButtonEnabled = textController.text.isNotEmpty;
       });
     });
+
+    _setMyInfo();
   }
 
   @override
@@ -48,6 +54,26 @@ class _SubFeedPagesState extends State<SubFeedPages> {
     textController.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  Future<void> _setMyInfo() async {
+    try {
+      MyPageResponse response = await MyPageAPI().getMyPageAllInfo();
+
+      if (mounted) {
+        setState(() {
+          myPageResponse = response;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print("프로필 로딩 실패: $e");
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   // void _sendMessage() async {
@@ -114,13 +140,11 @@ class _SubFeedPagesState extends State<SubFeedPages> {
       isButtonEnabled = true; // 버튼 활성화
     });
 
-    // 0.1초 뒤에 포커스 요청 (UI 렌더링 안정성 확보)
     Future.delayed(Duration(milliseconds: 100), () {
       FocusScope.of(context).requestFocus(_focusNode);
     });
   }
 
-  // 수정 취소 (필요하다면 UI에 취소 버튼을 만들어 연결)
   void _cancelEdit() {
     setState(() {
       editingCommentId = null;
@@ -148,6 +172,14 @@ class _SubFeedPagesState extends State<SubFeedPages> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading || myPageResponse == null) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFF1AEDB0)),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: SubAppbar(),
       body: Column(
@@ -208,25 +240,39 @@ class _SubFeedPagesState extends State<SubFeedPages> {
                             child: _nullCommentText(),
                           ),
                         ...widget.feed.comments.map((comment) {
+                          if (comment.writerNickname ==
+                              myPageResponse!.userProfile.nickname) {
+                            return FeedMyCommentWidget(
+                              comment: comment,
+                              onEdit: () => _onEditComment(
+                                comment.id,
+                                comment.content,
+                                widget.feed.comments.indexOf(comment),
+                              ),
+                              onDelete: () {
+                                deleteComment(comment.id);
+                              },
+                            );
+                          }
                           return FeedCommentWidget(comment: comment);
                         }).toList(),
-                        if (widget.feed.comments.isNotEmpty) ...[
-                          FeedMyCommentWidget(
-                            comment: widget.feed.comments[0], // 예시용
-                            onEdit: () {
-                              // [중요] 여기서 함수를 연결합니다!
-                              _onEditComment(
-                                widget.feed.comments[0].id,
-                                widget.feed.comments[0].content,
-                                0, // 인덱스
-                              );
-                            },
-                            onDelete: () {
-                              print(widget.feed.comments[0].id);
-                              deleteComment(1);
-                            },
-                          ),
-                        ],
+                        // if (widget.feed.comments.isNotEmpty) ...[
+                        //   FeedMyCommentWidget(
+                        //     comment: widget.feed.comments[0], // 예시용
+                        //     onEdit: () {
+                        //       // [중요] 여기서 함수를 연결합니다!
+                        //       _onEditComment(
+                        //         widget.feed.comments[0].id,
+                        //         widget.feed.comments[0].content,
+                        //         0, // 인덱스
+                        //       );
+                        //     },
+                        //     onDelete: () {
+                        //       print(widget.feed.comments[0].id);
+                        //       deleteComment(1);
+                        //     },
+                        //   ),
+                        // ],
                       ],
                     ),
                   ),
