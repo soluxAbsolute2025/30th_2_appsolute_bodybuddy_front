@@ -32,7 +32,7 @@ class DioClient {
                 } else {
                   // ✅ multipart는 Dio가 boundary 포함해서 세팅하게 둔다
                   options.headers.remove('Content-Type');
-                  options.contentType = 'multipart/form-data';
+                  //options.contentType = 'multipart/form-data';
                 }
 
                 print("[DIO] ${options.method} ${options.uri}");

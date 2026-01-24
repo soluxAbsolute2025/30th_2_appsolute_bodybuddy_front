@@ -11,7 +11,6 @@ class GroupChallengeListApi {
       final res = await _dio.get('/api/challenges/group');
       print('[GROUP] body=${res.data}');
 
-
       final body = res.data;
       final rawList = (body['data'] as List<dynamic>? ?? []);
 

@@ -14,6 +14,7 @@ import '../modal/challenge_verify_complete_modal.dart';
 import '../../shop/pages/shop_page.dart';
 import '../api/group_challenge_api.dart';
 import '../api/group_challenge_checkin_api.dart';
+import '../models/group_checkin_response.dart';
 
 class GroupChallengeDetailPage extends StatefulWidget {
   final int challengeId;
@@ -108,6 +109,8 @@ class _GroupChallengeDetailPageState extends State<GroupChallengeDetailPage> {
 
     final title = _challenge?.challengeInfo.title ?? '';
 
+    GroupCheckInResponse? result;
+
     final ok = await showChallengeVerifyConfirmModal(
       context: context,
       challengeTitle: title,
@@ -116,39 +119,24 @@ class _GroupChallengeDetailPageState extends State<GroupChallengeDetailPage> {
         setState(() => isLoading = true);
 
         try {
-          // ✅ 1) 체크인 API 호출
-          final res = await _checkinApi.checkIn(challengeId: widget.challengeId);
-
-          // ✅ 2) checkInTime 저장 (재진입 유지 핵심)
-          await _saveCheckInTime(res.data.checkInTime);
-
-          // ✅ 3) 완료 모달 (포인트: 서버값)
-          await showChallengeVerifyCompleteModal(
-            context: context,
-            point: res.data.earnedPoints,
-            onClosed: () {
-              // (선택) 닫기 누른 뒤 다음 모달 띄우고 싶으면 여기서!
-              // showCheckInResultModal(
-              //   context: context,
-              //   title: res.data.title,
-              //   updatedAchievementRate: res.data.myStatus.updatedAchievementRate,
-              //   currentRank: res.data.myStatus.currentRank,
-              //   groupAverageRate: res.data.groupAverageRate,
-              //   checkInTime: res.data.checkInTime,
-              // );
-            },
-          );
-
-          if (!mounted) return;
-          setState(() => isVerified = true);
+          result = await _checkinApi.checkIn(challengeId: widget.challengeId);
+          await _saveCheckInTime(result!.data.checkInTime);
         } finally {
-          if (!mounted) return;
-          setState(() => isLoading = false);
+          if (mounted) setState(() => isLoading = false);
         }
       },
     );
 
-    if (ok != true) return;
+    if (ok != true || result == null) return;
+
+    // ✅ confirm이 완전히 닫힌 뒤에 complete 띄우기
+    await showChallengeVerifyCompleteModal(
+      context: context,
+      point: result!.data.earnedPoints,
+    );
+
+    if (!mounted) return;
+    setState(() => isVerified = true);
   }
 
   @override
