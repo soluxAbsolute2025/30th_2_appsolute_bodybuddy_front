@@ -51,11 +51,29 @@ class _MedicineTabState extends State<MedicineTab> {
 
   // 복용 체크/취소
   Future<void> _toggleCheck(MedicineRecord med) async {
+    // 이미 체크된 상태라면 취소 로직이 필요할 수 있지만, 일단 '복용' 기능만 연결
+    if (med.isTaken) return;
+
     try {
-      await _apiService.toggleCheck(med.id);
-      _fetchData(); // 성공 후 목록 새로고침
+      // ❌ [삭제] await _apiService.toggleCheck(med.id);
+
+      // ✅ [수정] 객체 전체를 넘깁니다. (이름, 타이밍 정보가 필요해서)
+      await _apiService.toggleCheck(med);
+
+      setState(() {
+        med.isTaken = true; // 화면 즉시 반영
+      });
+
+      // 확실하게 하기 위해 서버 목록 다시 불러오기 (선택사항)
+      // _fetchData();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('복용 완료! 💊')),
+      );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('처리 실패')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('처리 실패')),
+      );
     }
   }
 
