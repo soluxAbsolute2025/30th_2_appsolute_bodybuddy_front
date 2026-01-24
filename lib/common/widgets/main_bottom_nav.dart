@@ -1,4 +1,4 @@
-// lib/common/widgets/main_bottom_nav.dart
+// lib/widgets/main_bottom_nav.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -14,28 +14,34 @@ class MainBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BottomNavigationBar(
-      backgroundColor: Colors.white,
-      currentIndex: currentIndex,
-      onTap: onTap,
-      type: BottomNavigationBarType.fixed,
+    return Theme(
+      data: ThemeData(
+        splashColor: Color(0xFFFDFAD4).withOpacity(0.25),
+        highlightColor: Color(0xFFFDFAD4).withOpacity(0.25),
+      ),
+      child: BottomNavigationBar(
+        backgroundColor: Colors.white,
+        currentIndex: currentIndex,
+        onTap: onTap,
+        type: BottomNavigationBarType.fixed,
 
-      // 커스텀
-      selectedFontSize: 10.0,
-      unselectedFontSize: 10.0,
-      selectedItemColor: Color(0xFF1AEDB1),
-      unselectedItemColor: Color(0xFF7D7C7C),
+        // 커스텀
+        selectedFontSize: 10.0,
+        unselectedFontSize: 10.0,
+        selectedItemColor: Color(0xFF1AEDB1),
+        unselectedItemColor: Color(0xFF7D7C7C),
 
-      items: _bottomNavItems.map((item) {
-        return BottomNavigationBarItem(
-          icon: SvgPicture.asset(
-            currentIndex == item.index ? item.actIcon : item.inactIcon,
-            width: 18,
-            height: 18,
-          ),
-          label: item.label,
-        );
-      }).toList(),
+        items: _bottomNavItems.map((item) {
+          return BottomNavigationBarItem(
+            icon: Image(
+              image: AssetImage(
+                currentIndex == item.index ? item.actIcon : item.inactIcon,
+              ),
+            ),
+            label: item.label,
+          );
+        }).toList(),
+      ),
     );
   }
 }
@@ -57,32 +63,32 @@ class BottomNavItem {
 const _bottomNavItems = [
   BottomNavItem(
     index: 0,
-    actIcon: 'assets/images/common/act_home.svg',
-    inactIcon: 'assets/images/common/home.svg',
+    actIcon: 'assets/images/home_true.png',
+    inactIcon: 'assets/images/home_false.png',
     label: '홈',
   ),
   BottomNavItem(
     index: 1,
-    actIcon: 'assets/images/common/bodylog.svg',
-    inactIcon: 'assets/images/common/home.svg',
+    actIcon: 'assets/images/bodylog_true.png',
+    inactIcon: 'assets/images/bodylog_false.png',
     label: '바디로그',
   ),
   BottomNavItem(
     index: 2,
-    actIcon: 'assets/images/common/challenge.svg',
-    inactIcon: 'assets/images/common/home.svg',
+    actIcon: 'assets/images/challenge_true.png',
+    inactIcon: 'assets/images/challenge_false.png',
     label: '챌린지',
   ),
   BottomNavItem(
     index: 3,
-    actIcon: 'assets/images/common/buddyzone.svg',
-    inactIcon: 'assets/images/common/home.svg',
+    actIcon: 'assets/images/buddyzone_true.png',
+    inactIcon: 'assets/images/buddyzone_false.png',
     label: '버디존',
   ),
   BottomNavItem(
     index: 4,
-    actIcon: 'assets/images/common/act_my.svg',
-    inactIcon: 'assets/images/common/my.svg',
+    actIcon: 'assets/images/mypage_true.png',
+    inactIcon: 'assets/images/mypage_false.png',
     label: '마이',
   ),
 ];

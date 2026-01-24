@@ -27,13 +27,16 @@ class Buddy {
   final int userId;
   final String nickname;
   final int level;
+  final String? profileImageUrl;
   final String lastActiveTime;
+
   final bool isPokedToday;
 
   Buddy({
     required this.userId,
     required this.nickname,
     required this.level,
+    this.profileImageUrl,
     required this.lastActiveTime,
     required this.isPokedToday,
   });
@@ -43,6 +46,7 @@ class Buddy {
       userId: json['userId'] ?? 0,
       nickname: json['nickname'] ?? '',
       level: json['level'] ?? 0,
+      profileImageUrl: json['profileImageUrl'] ?? null,
       lastActiveTime: json['lastActiveTime'] ?? '',
       isPokedToday: json['isPokedToday'] ?? false,
     );
@@ -52,6 +56,7 @@ class Buddy {
     'userId': userId,
     'nickname': nickname,
     'level': level,
+    'profileImageUrl': profileImageUrl ?? null,
     'lastActiveTime': lastActiveTime,
     'isPokedToday': isPokedToday,
   };
@@ -61,6 +66,7 @@ class BuddyRequest {
   final int requestId;
   final int userId;
   final String nickname;
+  final String? profileImageUrl;
   final int level;
   final String lastActiveTime;
 
@@ -68,6 +74,7 @@ class BuddyRequest {
     required this.requestId,
     required this.userId,
     required this.nickname,
+    this.profileImageUrl,
     required this.level,
     required this.lastActiveTime,
   });
@@ -77,6 +84,7 @@ class BuddyRequest {
       requestId: json['requestId'] ?? 0,
       userId: json['userId'] ?? 0,
       nickname: json['nickname'] ?? '',
+      profileImageUrl: json['profileImageUrl'] ?? null,
       level: json['level'] ?? 0,
       lastActiveTime: json['lastActiveTime'] ?? '',
     );
@@ -86,6 +94,7 @@ class BuddyRequest {
     'requestId': requestId,
     'userId': userId,
     'nickname': nickname,
+    'profileImageUrl': profileImageUrl ?? null,
     'level': level,
     'lastActiveTime': lastActiveTime,
   };

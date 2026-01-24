@@ -7,7 +7,6 @@ import '../../models/feeds/feed_content_model.dart';
 
 class FeedMyCommentWidget extends StatefulWidget {
   final FeedComment comment;
-  // [추가] 부모로부터 받을 함수들 정의
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
@@ -40,7 +39,9 @@ class _FeedMyCommentWidgetState extends State<FeedMyCommentWidget> {
               height: 37.0,
               child: ClipOval(
                 child: Image(
-                  image: AssetImage('assets/images/common/profile1.jpg'),
+                  image: widget.comment.writerProfileImageUrl != null
+                      ? NetworkImage(widget.comment.writerProfileImageUrl!)
+                      : AssetImage('assets/buddyzone/myprofile.png'),
                 ),
               ),
             ),
@@ -71,7 +72,7 @@ class _FeedMyCommentWidgetState extends State<FeedMyCommentWidget> {
                             borderRadius: BorderRadius.circular(5.0),
                           ),
                           child: Text(
-                            'Lv.${widget.comment.id}',
+                            'Lv.${widget.comment.writerLevel}',
                             style: TextStyle(
                               color: Color(0xFF1AEDB1),
                               fontSize: 11.0,
@@ -115,18 +116,16 @@ class _FeedMyCommentWidgetState extends State<FeedMyCommentWidget> {
               child: PopupMenuButton<String>(
                 icon: SvgPicture.asset('assets/buddyzone/dot3.svg'),
 
-                // 버튼 자체의 터치 영역과 패딩을 최소화
                 padding: EdgeInsets.zero,
                 constraints: BoxConstraints(),
 
-                // 위치 조정 (버튼 아래로 35px 이동)
                 offset: const Offset(-20, 40),
 
                 onSelected: (value) {
                   if (value == 'edit') {
-                    widget.onEdit(); // 부모가 준 수정 함수 실행!
+                    widget.onEdit();
                   } else if (value == 'delete') {
-                    widget.onDelete(); // 부모가 준 삭제 함수 실행!
+                    widget.onDelete();
                   }
                 },
 

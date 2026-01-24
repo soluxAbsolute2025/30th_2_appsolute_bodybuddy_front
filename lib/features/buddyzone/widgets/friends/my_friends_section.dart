@@ -1,22 +1,79 @@
 // features/home/widgets/home_content.dart
+import 'package:bodybuddy_frontend/features/buddyzone/api/buddyzone_friends_api.dart';
+import 'package:bodybuddy_frontend/features/buddyzone/models/friends/buddy_detail_model.dart';
+import 'package:bodybuddy_frontend/features/buddyzone/models/friends/buddy_list_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../friends/myfriendBlock.dart';
 
-class MyFriendsSection extends StatelessWidget {
-  const MyFriendsSection({super.key});
+class MyFriendsSection extends StatefulWidget {
+  final BuddyResponse myFriends;
+  final Function({required int userId}) onMyFriendDetail;
+
+  const MyFriendsSection({
+    super.key,
+    required this.myFriends,
+    required this.onMyFriendDetail,
+  });
+
+  @override
+  State<MyFriendsSection> createState() => _MyFriendsSectionState();
+}
+
+class _MyFriendsSectionState extends State<MyFriendsSection> {
+  final TextEditingController _nicknameController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    // 2. [수정] 메모리 누수 방지를 위해 컨트롤러 해제
+    _nicknameController.dispose();
+    super.dispose();
+  }
+
+  // 3. [수정] 인자를 int가 아닌 String(nickname)으로 변경
+  Future<void> _buddyRequest({required String nickname}) async {
+    BuddyDetail? buddyDetail;
+
+    try {
+      final response = await BuddysApi().getBuddySearch(
+        userName: nickname.toString(),
+      );
+      print("친구 요청 성공: $nickname : ${response.toJson()}");
+
+      buddyDetail = response;
+    } catch (e) {
+      print("친구 요청 실패: $e");
+
+      buddyDetail = null;
+    }
+
+    if (buddyDetail == null) return;
+
+    try {
+      await BuddysApi().postBuddyRequest(userId: buddyDetail.userId);
+      print("친구 요청 성공: ${buddyDetail.userId}");
+    } catch (e) {
+      print("친구 요청 실패: $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       color: Colors.white,
       padding: EdgeInsets.only(
-        bottom: 25.0,
+        bottom: 17.0,
         right: 16.0,
         left: 16.0,
         top: 20.0,
       ),
+      constraints: BoxConstraints(minHeight: 200.0),
       child: Column(
         children: [
           Container(
@@ -36,7 +93,7 @@ class MyFriendsSection extends StatelessWidget {
                     ),
                     SizedBox(width: 5.0),
                     Text(
-                      '3',
+                      widget.myFriends.myBuddies.length.toString(),
                       style: TextStyle(
                         color: Color(0xFFA8A8A8),
                         fontSize: 17.0,
@@ -77,11 +134,17 @@ class MyFriendsSection extends StatelessWidget {
               ],
             ),
           ),
-          MyfriendBlock(),
-          SizedBox(height: 8.0),
-          MyfriendBlock(),
-          SizedBox(height: 8.0),
-          MyfriendBlock(),
+          if (widget.myFriends.myBuddies.length == 0) ...[_nullCommentText()],
+          ...widget.myFriends.myBuddies
+              .map(
+                (e) => Column(
+                  children: [
+                    MyfriendBlock(buddy: e),
+                    SizedBox(height: 8.0),
+                  ],
+                ),
+              )
+              .toList(),
         ],
       ),
     );
@@ -121,12 +184,30 @@ class MyFriendsSection extends StatelessWidget {
         content: Container(
           width: MediaQuery.of(context).size.width,
           margin: EdgeInsets.symmetric(horizontal: 16.0),
-          child: _TextFromFieldWidget(hintText: '친구 아이디 입력'),
+          child: _TextFromFieldWidget(
+            hintText: '친구 아이디 입력',
+            controller: _nicknameController,
+          ),
         ),
         actions: [
-          _dialogButtonWidget(text: '취소', context: context),
+          _dialogButtonWidget(
+            text: '취소',
+            context: context,
+            onPressed: () => Navigator.of(context).pop(),
+          ),
           SizedBox(width: 8.0),
-          _dialogButtonWidget(text: '추가', context: context),
+          _dialogButtonWidget(
+            text: '추가',
+            context: context,
+            onPressed: () async {
+              final nickname = _nicknameController.text;
+              await _buddyRequest(nickname: nickname);
+              _nicknameController.clear();
+              if (context.mounted) {
+                Navigator.of(context).pop();
+              }
+            },
+          ),
         ],
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
@@ -158,9 +239,7 @@ class MyFriendsSection extends StatelessWidget {
             borderRadius: BorderRadius.circular(5.0),
           ),
         ),
-        onPressed: () {
-          Navigator.of(context).pop();
-        },
+        onPressed: onPressed,
         child: Text(
           text,
           style: TextStyle(
@@ -174,9 +253,13 @@ class MyFriendsSection extends StatelessWidget {
     );
   }
 
-  Widget _TextFromFieldWidget({required String hintText}) {
+  Widget _TextFromFieldWidget({
+    required String hintText,
+    required TextEditingController controller,
+  }) {
     return Expanded(
       child: TextFormField(
+        controller: controller,
         style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.w500),
         decoration: InputDecoration(
           hintText: hintText,
@@ -205,6 +288,26 @@ class MyFriendsSection extends StatelessWidget {
             borderRadius: BorderRadius.circular(10.0),
             borderSide: const BorderSide(color: Color(0xFF1AEDB0), width: 1),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _nullCommentText() {
+    return Container(
+      padding: EdgeInsets.only(bottom: 16.0),
+      height: 127.0,
+      alignment: Alignment.center,
+      child: Text(
+        '나의 버디가 존재하지 않아요\n'
+        '어서 버디를 추가 해보세요!',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: const Color(0xFFA6A6A6),
+          fontSize: 14,
+          fontFamily: 'Pretendard Variable',
+          fontWeight: FontWeight.w400,
+          height: 1.50,
         ),
       ),
     );

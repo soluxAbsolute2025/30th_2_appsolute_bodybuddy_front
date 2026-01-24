@@ -3,6 +3,9 @@ import 'features/onboarding/pages/onboarding_page.dart';
 import 'pages/main_page.dart';
 import 'common/common.dart';
 
+final RouteObserver<ModalRoute<void>> routeObserver =
+    RouteObserver<ModalRoute<void>>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -66,6 +69,9 @@ class MyApp extends StatelessWidget {
           hintStyle: const TextStyle(color: Color(0xFFB0B8C1)),
         ),
       ),
+
+      // 새로고침 도입
+      navigatorObservers: [routeObserver],
 
       // 👇 앱 시작 페이지를 'OnboardingPage'로 설정
       home: const OnboardingPage(),

@@ -1,10 +1,20 @@
 // features/home/widgets/home_content.dart
 
+import 'package:bodybuddy_frontend/features/buddyzone/models/friends/buddy_list_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class FriendrequestBlock extends StatefulWidget {
-  const FriendrequestBlock({super.key});
+  BuddyRequest buddyRequest;
+  final VoidCallback onAccept;
+  final VoidCallback onReject;
+
+  FriendrequestBlock({
+    super.key,
+    required this.buddyRequest,
+    required this.onAccept,
+    required this.onReject,
+  });
 
   @override
   State<FriendrequestBlock> createState() => _FriendrequestState();
@@ -27,7 +37,14 @@ class _FriendrequestState extends State<FriendrequestBlock> {
             height: 50.0,
             child: ClipOval(
               child: Image(
-                image: AssetImage('assets/images/common/profile1.jpg'),
+                fit: BoxFit.cover, // 이미지가 꽉 차도록 설정
+                image:
+                    (widget.buddyRequest.profileImageUrl != null &&
+                        widget.buddyRequest.profileImageUrl!.isNotEmpty)
+                    ? NetworkImage(
+                        widget.buddyRequest.profileImageUrl.toString(),
+                      )
+                    : AssetImage('assets/buddyzone/myprofile.jpg'),
               ),
             ),
           ),
@@ -38,7 +55,7 @@ class _FriendrequestState extends State<FriendrequestBlock> {
                 Row(
                   children: [
                     Text(
-                      '김헬스',
+                      widget.buddyRequest.nickname.toString(),
                       style: TextStyle(
                         fontSize: 14.0,
                         fontWeight: FontWeight.bold,
@@ -57,7 +74,7 @@ class _FriendrequestState extends State<FriendrequestBlock> {
                           borderRadius: BorderRadius.circular(5.0),
                         ),
                         child: Text(
-                          'Lv.15',
+                          'Lv. ${widget.buddyRequest.level.toString()}',
                           style: TextStyle(
                             color: Color(0xFF1AEDB1),
                             fontSize: 11.0,
@@ -74,7 +91,7 @@ class _FriendrequestState extends State<FriendrequestBlock> {
                     Container(
                       child: Text(
                         textAlign: TextAlign.left,
-                        '30분 전 활동',
+                        '${widget.buddyRequest.lastActiveTime} 활동',
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontSize: 14.0,
@@ -98,6 +115,7 @@ class _FriendrequestState extends State<FriendrequestBlock> {
                   child: TextButton(
                     onPressed: () {
                       print("수락 클릭!");
+                      widget.onAccept;
                     },
                     style: TextButton.styleFrom(
                       foregroundColor: Color(0xFF669688),
@@ -132,6 +150,7 @@ class _FriendrequestState extends State<FriendrequestBlock> {
                   child: TextButton(
                     onPressed: () {
                       print("x 클릭!");
+                      widget.onReject;
                     },
                     style: TextButton.styleFrom(
                       foregroundColor: Color(0xFFF65A33),
