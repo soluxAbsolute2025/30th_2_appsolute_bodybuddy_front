@@ -9,16 +9,25 @@ import '../widgets/challenge_floating_button.dart';
 import 'personal_challenge_page.dart';
 import 'group_challenge_page.dart';
 import '../create/personal/pages/personal_challenge_type_page.dart';
+import '../../challenge/create/personal/pages/personal_challenge_info_page.dart';
 
 class ChallengePage extends StatefulWidget {
-  const ChallengePage({super.key});
+  final bool initialIsPersonalSelected;
+
+  const ChallengePage({super.key, this.initialIsPersonalSelected = true});
 
   @override
   State<ChallengePage> createState() => _ChallengePageState();
 }
 
 class _ChallengePageState extends State<ChallengePage> {
-  bool isPersonalSelected = true;
+  late bool isPersonalSelected;
+
+  @override
+  void initState() {
+    super.initState();
+    isPersonalSelected = widget.initialIsPersonalSelected;
+  }
 
   @override
   Widget build(BuildContext context) {

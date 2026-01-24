@@ -3,18 +3,16 @@ class OngoingGroupChallenge {
   final String title;
   final String groupCode;
   final String? imageUrl;
-
   final int myRank;
   final int participantCount;
   final int remainingDays;
-
   final List<TopParticipant> topParticipants;
 
-  const OngoingGroupChallenge({
+  OngoingGroupChallenge({
     required this.challengeId,
     required this.title,
     required this.groupCode,
-    this.imageUrl,
+    required this.imageUrl,
     required this.myRank,
     required this.participantCount,
     required this.remainingDays,
@@ -23,19 +21,16 @@ class OngoingGroupChallenge {
 
   factory OngoingGroupChallenge.fromJson(Map<String, dynamic> json) {
     return OngoingGroupChallenge(
-      challengeId: json['challengeId'] as int,
+      challengeId: (json['challengeId'] as num?)?.toInt() ?? 0,
       title: json['title'] ?? '',
       groupCode: json['groupCode'] ?? '',
       imageUrl: json['imageUrl'] as String?,
-
-      myRank: json['myRank'] ?? 0,
-      participantCount: json['participantCount'] ?? 0,
-      remainingDays: json['remainingDays'] ?? 0,
-
-      topParticipants: (json['topParticipants'] as List<dynamic>?)
-              ?.map((e) => TopParticipant.fromJson(e))
-              .toList() ??
-          [],
+      myRank: (json['myRank'] as num?)?.toInt() ?? 0,
+      participantCount: (json['participantCount'] as num?)?.toInt() ?? 0,
+      remainingDays: (json['remainingDays'] as num?)?.toInt() ?? 0,
+      topParticipants: (json['topParticipants'] as List<dynamic>? ?? [])
+          .map((e) => TopParticipant.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 }
@@ -47,21 +42,21 @@ class TopParticipant {
   final double achievementRate;
   final bool isMe;
 
-  const TopParticipant({
+  TopParticipant({
     required this.rank,
     required this.nickname,
-    this.profileImageUrl,
+    required this.profileImageUrl,
     required this.achievementRate,
     required this.isMe,
   });
 
   factory TopParticipant.fromJson(Map<String, dynamic> json) {
     return TopParticipant(
-      rank: int.tryParse('${json['rank']}') ?? 0,
-      nickname: json['nickname']?.toString() ?? '',
+      rank: (json['rank'] as num?)?.toInt() ?? 0,
+      nickname: json['nickname'] ?? '',
       profileImageUrl: json['profileImageUrl'] as String?,
       achievementRate: (json['achievementRate'] as num?)?.toDouble() ?? 0.0,
-      isMe: json['isMe'] == true,
+      isMe: json['isMe'] ?? false,
     );
   }
 }

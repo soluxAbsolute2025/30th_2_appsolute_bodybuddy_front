@@ -9,7 +9,7 @@ import '../widgets/labeled_text_field.dart';
 import '../widgets/bottom_primary_button.dart';
 import '../../../modal/top_notice_toast.dart';
 import '../api/personal_challenge_api.dart';
-import '../../../pages/personal_challenge_page.dart';
+import '../../../pages/challenge_page.dart';
 
 class PersonalChallengeInfoPage extends StatefulWidget {
   final PersonalChallengeCreateModel model;
@@ -31,7 +31,7 @@ class _PersonalChallengeInfoPageState extends State<PersonalChallengeInfoPage> {
 
   final _picker = ImagePicker();
 
-  File? get _pickedImage => widget.model.imageFile;
+  XFile? get _pickedImage => widget.model.imageFile;
 
   @override
   void initState() {
@@ -53,7 +53,7 @@ class _PersonalChallengeInfoPageState extends State<PersonalChallengeInfoPage> {
       if (xfile == null) return;
 
       setState(() {
-        widget.model.imageFile = File(xfile.path);
+        widget.model.imageFile = xfile;
       });
     } catch (_) {}
   }
@@ -147,7 +147,7 @@ class _PersonalChallengeInfoPageState extends State<PersonalChallengeInfoPage> {
                                 child: AspectRatio(
                                   aspectRatio: 16 / 9,
                                   child: Image.file(
-                                    _pickedImage!,
+                                    File(_pickedImage!.path),
                                     width: double.infinity,
                                     fit: BoxFit.cover,
                                   ),
@@ -179,7 +179,9 @@ class _PersonalChallengeInfoPageState extends State<PersonalChallengeInfoPage> {
               enabled: isValid,
               onPressed: () async {
                 try {
-                  await _api.createPersonalChallenge(widget.model);
+                  print('✅ [CREATE] start');
+                  final id = await _api.createPersonalChallenge(widget.model);
+                  print('✅ [CREATE] success id=$id');
 
                   if (!mounted) return;
 
@@ -188,15 +190,26 @@ class _PersonalChallengeInfoPageState extends State<PersonalChallengeInfoPage> {
                     message: '개인 챌린지를 만들었어요!',
                     duration: const Duration(milliseconds: 1200),
                   );
+                  print('✅ [CREATE] toast done');
 
                   if (!mounted) return;
 
                   Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (_) => const PersonalChallengePage()),
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          const ChallengePage(initialIsPersonalSelected: true),
+                    ),
                     (route) => false,
                   );
-                } catch (e) {
-                  // 에러 처리
+                  print('✅ [CREATE] navigated');
+                } catch (e, s) {
+                  print('❌ [CREATE] error: $e');
+                  print(s);
+
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('생성 실패: $e')));
                 }
               },
             ),
