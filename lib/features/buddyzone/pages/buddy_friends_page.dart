@@ -62,7 +62,8 @@ class _BuddyFriendPageState extends State<BuddyFriendPage> {
         // 3. 친구 목록에 추가
         _buddyResponse!.myBuddies.add(
           Buddy(
-            userId: targetRequest.userId, // 요청한 사람의 ID
+            userId: targetRequest.userId,
+            // 요청한 사람의 ID
             level: targetRequest.level,
             lastActiveTime: targetRequest.lastActiveTime,
             nickname: targetRequest.nickname,
@@ -77,10 +78,32 @@ class _BuddyFriendPageState extends State<BuddyFriendPage> {
     }
   }
 
+  // 🔥 [핵심 2] 거절 로직: API 호출 후 목록에서만 제거
+  void _handleRejectBuddy(int requestId) async {
+    try {
+      await BuddysApi().deleteBuddyRequest(requestId: requestId);
+
+      if (mounted) {
+        setState(() {
+          _buddyResponse!.requests.removeWhere(
+            (req) => req.requestId == requestId,
+          );
+        });
+      }
+    } catch (e) {
+      print("거절 실패: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading || _buddyResponse == null) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(30.0),
+          child: CircularProgressIndicator(color: Color(0xFF1AEDB0)),
+        ),
+      );
     }
 
     return Column(
@@ -90,7 +113,11 @@ class _BuddyFriendPageState extends State<BuddyFriendPage> {
           onMyFriendDetail: _getBuddyDetail,
         ),
         SizedBox(height: 10.0),
-        FriendRequestSection(myFriends: _buddyResponse!),
+        FriendRequestSection(
+          myFriends: _buddyResponse!,
+          onAccept: _handleAcceptBuddy,
+          onReject: _handleRejectBuddy,
+        ),
       ],
     );
   }

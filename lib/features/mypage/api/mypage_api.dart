@@ -47,6 +47,10 @@ class MyPageAPI {
     return MyFeedModel.fromJson(response.data);
   }
 
+  Future<void> deleteMypageProfile() async {
+    final response = await _dio.delete('/api/mypage/profile');
+  }
+
   Future<void> patchMypageProfile() async {
     final response = await _dio.patch('/api/mypage/profile');
   }

@@ -4,6 +4,7 @@ import 'package:bodybuddy_frontend/features/buddyzone/models/feeds/feed_content_
 import 'package:bodybuddy_frontend/features/buddyzone/models/feeds/feed_type_model.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/widgets/feeds/feed_frame_widget.dart';
 import 'package:bodybuddy_frontend/features/mypage/api/mypage_api.dart';
+import 'package:bodybuddy_frontend/features/mypage/models/mypage_myfeed_2_model.dart';
 import 'package:bodybuddy_frontend/features/mypage/models/mypage_myfeed_model.dart';
 import 'package:bodybuddy_frontend/features/mypage/widgets/mypage_myfeed_widget.dart';
 import 'package:flutter/material.dart';
@@ -19,6 +20,7 @@ class MypageMyfeedPage extends StatefulWidget {
 class _MypageMyfeedPageState extends State<MypageMyfeedPage> {
   List<FeedPost> feeds = [];
   bool isLoading = false;
+
   MyFeedModel? myFeedModel;
 
   @override
@@ -46,16 +48,10 @@ class _MypageMyfeedPageState extends State<MypageMyfeedPage> {
       appBar: SubAppbar(titleText: '내가 쓴 글'),
       body: isLoading && myFeedModel == null
           ? const Center(child: CircularProgressIndicator()) // 로딩 중일 때 표시
-          : (myFeedModel?.data == null || myFeedModel!.data.isEmpty)
+          : (myFeedModel?.data.isEmpty == null || myFeedModel!.data.isEmpty)
           ? _nullCommentText()
           : CustomScrollView(
               slivers: [
-                SliverToBoxAdapter(
-                  child: TextButton(
-                    onPressed: _getMyFeedList,
-                    child: Text('새로고침'),
-                  ),
-                ),
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(
                     vertical: 8.0,

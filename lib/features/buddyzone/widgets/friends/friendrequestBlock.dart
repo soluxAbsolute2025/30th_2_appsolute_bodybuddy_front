@@ -6,8 +6,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 class FriendrequestBlock extends StatefulWidget {
   BuddyRequest buddyRequest;
-  Function({required int requestId}) onAccept;
-  Function({required int requestId}) onReject;
+  final VoidCallback onAccept;
+  final VoidCallback onReject;
+
   FriendrequestBlock({
     super.key,
     required this.buddyRequest,
@@ -114,7 +115,7 @@ class _FriendrequestState extends State<FriendrequestBlock> {
                   child: TextButton(
                     onPressed: () {
                       print("수락 클릭!");
-                      widget.onAccept(requestId: widget.buddyRequest.requestId);
+                      widget.onAccept;
                     },
                     style: TextButton.styleFrom(
                       foregroundColor: Color(0xFF669688),
@@ -149,7 +150,7 @@ class _FriendrequestState extends State<FriendrequestBlock> {
                   child: TextButton(
                     onPressed: () {
                       print("x 클릭!");
-                      widget.onReject(requestId: widget.buddyRequest.requestId);
+                      widget.onReject;
                     },
                     style: TextButton.styleFrom(
                       foregroundColor: Color(0xFFF65A33),

@@ -1,76 +1,37 @@
-// features/home/widgets/home_content.dart
-import 'package:bodybuddy_frontend/features/buddyzone/api/buddyzone_friends_api.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/models/friends/buddy_list_model.dart';
 import 'package:flutter/material.dart';
 import '../friends/friendrequestBlock.dart';
 
-class FriendRequestSection extends StatefulWidget {
-  BuddyResponse myFriends;
-  FriendRequestSection({super.key, required this.myFriends});
+class FriendRequestSection extends StatelessWidget {
+  final BuddyResponse myFriends;
+  // 🔥 [수정] 함수 타입 명확하게 정의 (int를 받아서 void 반환)
+  final Function(int requestId) onAccept;
+  final Function(int requestId) onReject;
 
-  @override
-  State<FriendRequestSection> createState() => _FriendRequestSectionState();
-}
-
-class _FriendRequestSectionState extends State<FriendRequestSection> {
-  BuddyResponse? _buddyResponse;
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  void _acceptBuddyRequest({required int requestId}) async {
-    try {
-      await BuddysApi().acceptBuddyRequest(requestId: requestId);
-      widget.myFriends.requests.removeWhere(
-        (request) => request.requestId == requestId,
-      );
-    } catch (e) {
-      print("삭제 실패 (서버 에러): $e");
-    }
-  }
-
-  void _rejectBuddyRequest({required int requestId}) async {
-    try {
-      await BuddysApi().deleteBuddyRequest(requestId: requestId);
-
-      setState(() {
-        widget.myFriends.requests.removeWhere(
-          (request) => request.requestId == requestId,
-        );
-      });
-    } catch (e) {
-      print("삭제 실패 (서버 에러): $e");
-    }
-  }
+  const FriendRequestSection({
+    super.key,
+    required this.myFriends,
+    required this.onAccept,
+    required this.onReject,
+  });
 
   @override
   Widget build(BuildContext context) {
+    // StatefulWidget이 아니므로 context에서 테마나 사이즈를 바로 가져옵니다.
     return Container(
       color: Colors.white,
-      padding: EdgeInsets.only(
-        bottom: 25.0,
-        right: 16.0,
-        left: 16.0,
-        top: 25.0,
-      ),
-      constraints: BoxConstraints(minHeight: 200.0),
+      padding: const EdgeInsets.symmetric(vertical: 25.0, horizontal: 16.0),
+      constraints: const BoxConstraints(minHeight: 200.0),
       child: Column(
         children: [
           Container(
-            padding: EdgeInsets.only(bottom: 20.0),
+            padding: const EdgeInsets.only(bottom: 20.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   children: [
-                    Text(
+                    const Text(
                       '친구 요청',
                       style: TextStyle(
                         color: Colors.black,
@@ -78,10 +39,10 @@ class _FriendRequestSectionState extends State<FriendRequestSection> {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    SizedBox(width: 5.0),
+                    const SizedBox(width: 5.0),
                     Text(
-                      widget.myFriends.requests.length.toString(),
-                      style: TextStyle(
+                      myFriends.requests.length.toString(),
+                      style: const TextStyle(
                         color: Color(0xFF1AEDB1),
                         fontSize: 17.0,
                         fontWeight: FontWeight.w600,
@@ -92,16 +53,20 @@ class _FriendRequestSectionState extends State<FriendRequestSection> {
               ],
             ),
           ),
-          if (widget.myFriends.requests.length == 0) ...[_nullCommentText()],
-          ...widget.myFriends.requests.map(
+
+          // 요청이 없을 때 텍스트 표시
+          if (myFriends.requests.isEmpty) _nullCommentText(),
+
+          // 요청 목록 표시
+          ...myFriends.requests.map(
             (e) => Column(
               children: [
                 FriendrequestBlock(
                   buddyRequest: e,
-                  onAccept: _acceptBuddyRequest,
-                  onReject: _rejectBuddyRequest,
+                  onAccept: () => onAccept(e.requestId),
+                  onReject: () => onReject(e.requestId),
                 ),
-                SizedBox(height: 8.0),
+                const SizedBox(height: 8.0),
               ],
             ),
           ),
@@ -112,14 +77,14 @@ class _FriendRequestSectionState extends State<FriendRequestSection> {
 
   Widget _nullCommentText() {
     return Container(
-      padding: EdgeInsets.only(bottom: 16.0),
+      padding: const EdgeInsets.only(bottom: 16.0),
       height: 127.0,
       alignment: Alignment.center,
-      child: Text(
+      child: const Text(
         '친구 요청이 들어오지 않았습니다\n',
         textAlign: TextAlign.center,
         style: TextStyle(
-          color: const Color(0xFFA6A6A6),
+          color: Color(0xFFA6A6A6),
           fontSize: 14,
           fontFamily: 'Pretendard Variable',
           fontWeight: FontWeight.w400,

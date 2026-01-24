@@ -36,7 +36,6 @@ class FeedsApi {
         'visibility': visibility,
         'hashtags': hashtags,
       },
-      // options: Options(contentType: Header),
     );
     print(response);
   }
@@ -73,7 +72,7 @@ class FeedsApi {
 
   Future<void> deleteFeedComment(int commentId) async {
     final response = await _dio.delete('/api/feeds/comments/${commentId}');
-    print(response);
+    print('나의 반응 삭제 완료 : $response');
   }
 
   Future<void> patchFeedComment(int commentId, String content) async {

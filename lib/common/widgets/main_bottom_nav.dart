@@ -14,28 +14,34 @@ class MainBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BottomNavigationBar(
-      backgroundColor: Colors.white,
-      currentIndex: currentIndex,
-      onTap: onTap,
-      type: BottomNavigationBarType.fixed,
+    return Theme(
+      data: ThemeData(
+        splashColor: Color(0xFFFDFAD4).withOpacity(0.25),
+        highlightColor: Color(0xFFFDFAD4).withOpacity(0.25),
+      ),
+      child: BottomNavigationBar(
+        backgroundColor: Colors.white,
+        currentIndex: currentIndex,
+        onTap: onTap,
+        type: BottomNavigationBarType.fixed,
 
-      // 커스텀
-      selectedFontSize: 10.0,
-      unselectedFontSize: 10.0,
-      selectedItemColor: Color(0xFF1AEDB1),
-      unselectedItemColor: Color(0xFF7D7C7C),
+        // 커스텀
+        selectedFontSize: 10.0,
+        unselectedFontSize: 10.0,
+        selectedItemColor: Color(0xFF1AEDB1),
+        unselectedItemColor: Color(0xFF7D7C7C),
 
-      items: _bottomNavItems.map((item) {
-        return BottomNavigationBarItem(
-          icon: Image(
-            image: AssetImage(
-              currentIndex == item.index ? item.actIcon : item.inactIcon,
+        items: _bottomNavItems.map((item) {
+          return BottomNavigationBarItem(
+            icon: Image(
+              image: AssetImage(
+                currentIndex == item.index ? item.actIcon : item.inactIcon,
+              ),
             ),
-          ),
-          label: item.label,
-        );
-      }).toList(),
+            label: item.label,
+          );
+        }).toList(),
+      ),
     );
   }
 }
