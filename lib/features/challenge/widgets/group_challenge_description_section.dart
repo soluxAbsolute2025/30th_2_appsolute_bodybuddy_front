@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../models/group_challenge_detail_model.dart';
 
 class GroupChallengeDescriptionSection extends StatelessWidget {
   final GroupChallengeDetail challenge;
 
-  const GroupChallengeDescriptionSection({
-    super.key,
-    required this.challenge,
-  });
+  const GroupChallengeDescriptionSection({super.key, required this.challenge});
 
   @override
   Widget build(BuildContext context) {
@@ -21,13 +19,50 @@ class GroupChallengeDescriptionSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           /// 챌린지 내용
-          const Text(
-            '챌린지 내용',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.black,
-            ),
+          Row(
+            children: [
+              const Text(
+                '챌린지 내용',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                ),
+              ),
+              const Spacer(),
+
+              GestureDetector(
+                onTap: () {
+                  // TODO: 수정 로직
+                },
+                child: SvgPicture.asset(
+                  'assets/challenge/pencil.svg',
+                  width: 18,
+                  height: 18,
+                  colorFilter: const ColorFilter.mode(
+                    Color(0xFF9E9E9E),
+                    BlendMode.srcIn,
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 18),
+
+              GestureDetector(
+                onTap: () {
+                  // TODO: 삭제 로직
+                },
+                child: SvgPicture.asset(
+                  'assets/challenge/trash.svg',
+                  width: 18,
+                  height: 18,
+                  colorFilter: const ColorFilter.mode(
+                    Color(0xFFFF4D4F),
+                    BlendMode.srcIn,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 10),
 

@@ -25,7 +25,7 @@ class OngoingGroupChallenge {
       title: json['title'] ?? '',
       groupCode: json['groupCode'] ?? '',
       imageUrl: json['imageUrl'] as String?,
-      myRank: (json['myRank'] as num?)?.toInt() ?? 0,
+      myRank: (json['myRank'] as num?)?.toInt() ?? 1,
       participantCount: (json['participantCount'] as num?)?.toInt() ?? 0,
       remainingDays: (json['remainingDays'] as num?)?.toInt() ?? 0,
       topParticipants: (json['topParticipants'] as List<dynamic>? ?? [])
