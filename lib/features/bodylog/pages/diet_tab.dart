@@ -5,10 +5,8 @@ import '../data/diet_model.dart';
 import 'diet_edit_page.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
-import 'package:intl/date_symbol_data_local.dart'; // 한국어 날짜 초기화용
+import 'package:intl/date_symbol_data_local.dart';
 import '../../../common/common.dart';
-import 'diet_edit_page.dart'; // ★ 아까 만든 편집 페이지 import 필수
 
 class DietTab extends StatefulWidget {
   const DietTab({super.key});
@@ -41,6 +39,7 @@ class _DietTabState extends State<DietTab> {
 
   void _generateWeekDays() {
     final now = DateTime.now();
+    // 월요일부터 시작하도록 설정
     final monday = now.subtract(Duration(days: now.weekday - 1));
     _weekDays = List.generate(7, (i) => monday.add(Duration(days: i)));
   }
@@ -118,7 +117,7 @@ class _DietTabState extends State<DietTab> {
 
   Widget _buildWeekCalendar() {
     return SizedBox(
-      height: 70,
+      height: 80,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: _weekDays.map((date) {
@@ -135,16 +134,30 @@ class _DietTabState extends State<DietTab> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: isSelected ? const Color(0xFF4BECBE) : Colors.transparent,
-                  child: Text(
-                    "${date.day}",
-                    style: TextStyle(color: isSelected ? Colors.white : Colors.black, fontWeight: FontWeight.bold),
+                Text(
+                  "${date.day}",
+                  style: TextStyle(
+                      fontSize: 16,
+                      color: isSelected ? Colors.black : Colors.black,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(label, style: TextStyle(fontSize: 12, color: isSelected ? const Color(0xFF4BECBE) : Colors.grey)),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isSelected ? const Color(0xFF4BECBE) : Colors.transparent,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: isSelected ? Colors.white : Colors.grey,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal
+                    ),
+                  ),
+                ),
               ],
             ),
           );
@@ -156,58 +169,58 @@ class _DietTabState extends State<DietTab> {
   Widget _buildTimelineRow(String type, DietRecord? record, bool isLast) {
     final hasRecord = record != null;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final cardWidth = constraints.maxWidth - 60;
-
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: 50,
-              child: Column(
-                children: [
-                  Text(
-                    _mealTitleMap[type]!,
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: hasRecord ? const Color(0xFF4BECBE) : Colors.grey),
+    return IntrinsicHeight( // 자식들 중 가장 높은 요소에 맞춰 높이 자동 조절
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 왼쪽 타임라인 표시 영역
+          SizedBox(
+            width: 50,
+            child: Column(
+              children: [
+                const SizedBox(height: 5),
+                Text(
+                  _mealTitleMap[type]!,
+                  style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: hasRecord ? const Color(0xFF4BECBE) : Colors.grey[400]
                   ),
-                  const SizedBox(height: 4),
-                  CircleAvatar(radius: 5, backgroundColor: hasRecord ? const Color(0xFF4BECBE) : Colors.grey[300]),
-                  if (!isLast) Container(width: 2, height: 60, color: Colors.grey[200]),
-                ],
-              ),
+                ),
+                const SizedBox(height: 8),
+                CircleAvatar(
+                    radius: 5,
+                    backgroundColor: hasRecord ? const Color(0xFF4BECBE) : Colors.grey[300]
+                ),
+                if (!isLast)
+                  Expanded(
+                    child: Container(
+                      width: 2,
+                      color: Colors.grey[200],
+                    ),
+                  ),
+              ],
             ),
-            const SizedBox(width: 10),
-            SizedBox(
-              width: cardWidth > 0 ? cardWidth : 0,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 24),
-                child: hasRecord ? _buildFilledCard(record!) : _buildEmptyCard(type),
-              ),
+          ),
+          const SizedBox(width: 10),
+          // 오른쪽 카드 영역
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 24),
+              child: hasRecord ? _buildFilledCard(record!) : _buildEmptyCard(type),
             ),
-          ],
-        );
-      },
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildFilledCard(DietRecord r) {
-    // 🔍 [디버깅용 로그] 콘솔에서 확인해보세요
-    print("--------------------------------");
-    print("📌 식사 타입: ${r.mealTypeKor}");
-    print("📌 원본 이미지 URL: ${r.imageUrl}");
-    print("📌 음식 리스트: ${r.foods}");
-    print("--------------------------------");
-
-    // 1. 이미지 URL 처리 (http가 없으면 서버 주소 붙이기)
     String fullImageUrl = "";
     if (r.imageUrl != null && r.imageUrl!.isNotEmpty) {
-      if (r.imageUrl!.startsWith("http")) {
-        fullImageUrl = r.imageUrl!;
-      } else {
-        // ⚠️ 서버 도메인 추가
-        fullImageUrl = "http://52.79.228.227:8080${r.imageUrl!.startsWith('/') ? '' : '/'}${r.imageUrl}";
-      }
+      fullImageUrl = r.imageUrl!.startsWith("http")
+          ? r.imageUrl!
+          : "http://52.79.228.227:8080${r.imageUrl!.startsWith('/') ? '' : '/'}${r.imageUrl}";
     }
 
     return GestureDetector(
@@ -215,15 +228,8 @@ class _DietTabState extends State<DietTab> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: const Color(0xFFF8F9FA), // 가이드 이미지의 연회색 배경
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
-            )
-          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,26 +244,28 @@ class _DietTabState extends State<DietTab> {
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                     const SizedBox(width: 6),
-                    // 수정 아이콘을 클릭 가능한 버튼 느낌으로 강조
-                    const Icon(Icons.edit_note_rounded, size: 20, color: Color(0xFF4BECBE)),
+                    const Icon(Icons.edit_outlined, size: 16, color: Colors.grey),
                   ],
                 ),
-                // API 명세에 intakeTime이 있으므로 표시해주면 좋습니다.
-                Text(r.time ?? "", style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                Row(
+                  children: [
+                    const Icon(Icons.access_time, size: 14, color: Color(0xFF4BECBE)),
+                    const SizedBox(width: 4),
+                    Text(r.time ?? "", style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                  ],
+                ),
               ],
             ),
             const SizedBox(height: 12),
-
-            // [하단] 이미지 + 리스트
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 🖼️ 이미지 영역
+                // 음식 이미지
                 Container(
                   width: 100,
                   height: 100,
                   decoration: BoxDecoration(
-                    color: Colors.grey[200],
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: fullImageUrl.isNotEmpty
@@ -266,30 +274,15 @@ class _DietTabState extends State<DietTab> {
                     child: Image.network(
                       fullImageUrl,
                       fit: BoxFit.cover,
-                      // 👇 로딩 과정을 확인하기 위한 코드
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Center(child: CircularProgressIndicator(strokeWidth: 2));
-                      },
-                      // 👇 에러 원인을 보기 위한 코드
-                      errorBuilder: (context, error, stackTrace) {
-                        print("🚨 이미지 로드 에러 발생!");
-                        print("❌ 시도한 URL: $fullImageUrl");
-                        print("❌ 에러 내용: $error");
-                        return Container(
-                          color: Colors.grey[200],
-                          child: const Icon(Icons.broken_image, color: Colors.grey),
-                        );
-                      },
+                      errorBuilder: (c, e, s) => const Icon(Icons.broken_image, color: Colors.grey),
                     ),
                   )
                       : const Icon(Icons.camera_alt, color: Colors.grey),
                 ),
                 const SizedBox(width: 16),
-
-                // 📋 음식 리스트 영역
+                // 음식 명칭 리스트
                 Expanded(
-                  child: (r.foods.isNotEmpty)
+                  child: r.foods.isNotEmpty
                       ? Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: r.foods.map((food) => Padding(
@@ -297,23 +290,18 @@ class _DietTabState extends State<DietTab> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text("• ", style: TextStyle(fontSize: 14, height: 1.4)),
+                          const Text("• ", style: TextStyle(color: Colors.black54)),
                           Expanded(
                             child: Text(
-                              food,
-                              style: const TextStyle(fontSize: 14, height: 1.4, color: Colors.black87),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                                food,
+                                style: const TextStyle(fontSize: 14, color: Colors.black87, height: 1.3)
                             ),
                           ),
                         ],
                       ),
                     )).toList(),
                   )
-                      : const Text(
-                    "음식 정보 없음",
-                    style: TextStyle(color: Colors.grey, fontSize: 13),
-                  ),
+                      : const Text("기록된 음식이 없습니다.", style: TextStyle(color: Colors.grey, fontSize: 13)),
                 ),
               ],
             ),
@@ -325,20 +313,28 @@ class _DietTabState extends State<DietTab> {
 
   Widget _buildEmptyCard(String type) {
     return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
-      child: Row(children: [
-        const SizedBox(width: 180, child: Text("아직 기록하지 않았어요", style: TextStyle(color: Colors.grey))),
-        const SizedBox(width: 8),
-        SizedBox(
-          height: 32,
-          width: 72, // 🔥 핵심: 버튼 가로 고정
-          child: ElevatedButton(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F9FA),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Text("아직 기록하지 않았어요!", style: TextStyle(color: Colors.grey, fontSize: 14)),
+          ElevatedButton(
             onPressed: () => _navigateAndRefresh(isEdit: false, initialMealType: type),
-            child: const Text("기록하기", style: TextStyle(fontSize: 12)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4BECBE),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text("기록하기", style: TextStyle(fontWeight: FontWeight.bold)),
           ),
-        ),
-      ]),
+        ],
+      ),
     );
   }
 
