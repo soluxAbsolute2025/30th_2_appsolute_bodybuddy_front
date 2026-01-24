@@ -21,4 +21,14 @@ class BuddysApi {
 
     return BuddyDetail.fromJson(response.data);
   }
+
+  Future<void> acceptBuddyRequest({required int requestId}) async {
+    final response = await _dio.patch('/api/buddy/${requestId}/accept');
+    debugPrint(response.toString());
+  }
+
+  Future<void> deleteBuddyRequest({required int requestId}) async {
+    final response = await _dio.patch('/api/buddy/${requestId}/reject');
+    debugPrint(response.toString());
+  }
 }

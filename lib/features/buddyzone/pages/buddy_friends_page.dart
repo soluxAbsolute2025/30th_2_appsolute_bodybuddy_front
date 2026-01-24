@@ -44,6 +44,39 @@ class _BuddyFriendPageState extends State<BuddyFriendPage> {
     setState(() {});
   }
 
+  void _handleAcceptBuddy(int requestId) async {
+    try {
+      await BuddysApi().acceptBuddyRequest(requestId: requestId);
+
+      setState(() {
+        // 1. 요청 목록 속, 해당하는 요청 찾기
+        final targetRequest = _buddyResponse!.requests.firstWhere(
+          (req) => req.requestId == requestId,
+        );
+
+        // 2. 요청 목록에서 제거
+        _buddyResponse!.requests.removeWhere(
+          (req) => req.requestId == requestId,
+        );
+
+        // 3. 친구 목록에 추가
+        _buddyResponse!.myBuddies.add(
+          Buddy(
+            userId: targetRequest.userId, // 요청한 사람의 ID
+            level: targetRequest.level,
+            lastActiveTime: targetRequest.lastActiveTime,
+            nickname: targetRequest.nickname,
+            profileImageUrl: targetRequest.profileImageUrl,
+            isPokedToday: false,
+          ),
+        );
+      });
+    } catch (e) {
+      print("수락 실패: $e");
+      // 에러 시 다시 되돌리는 로직이 있으면 더 좋음
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading || _buddyResponse == null) {
@@ -52,14 +85,12 @@ class _BuddyFriendPageState extends State<BuddyFriendPage> {
 
     return Column(
       children: <Widget>[
-        TextButton(onPressed: () {}, child: Text('테스트 확인')),
-        TextButton(onPressed: () {}, child: Text('테스트 확인')),
         MyFriendsSection(
           myFriends: _buddyResponse!,
           onMyFriendDetail: _getBuddyDetail,
         ),
         SizedBox(height: 10.0),
-        FriendRequestSection(),
+        FriendRequestSection(myFriends: _buddyResponse!),
       ],
     );
   }

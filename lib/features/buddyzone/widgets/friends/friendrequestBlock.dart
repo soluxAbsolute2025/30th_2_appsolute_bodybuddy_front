@@ -1,10 +1,19 @@
 // features/home/widgets/home_content.dart
 
+import 'package:bodybuddy_frontend/features/buddyzone/models/friends/buddy_list_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class FriendrequestBlock extends StatefulWidget {
-  const FriendrequestBlock({super.key});
+  BuddyRequest buddyRequest;
+  Function({required int requestId}) onAccept;
+  Function({required int requestId}) onReject;
+  FriendrequestBlock({
+    super.key,
+    required this.buddyRequest,
+    required this.onAccept,
+    required this.onReject,
+  });
 
   @override
   State<FriendrequestBlock> createState() => _FriendrequestState();
@@ -38,7 +47,7 @@ class _FriendrequestState extends State<FriendrequestBlock> {
                 Row(
                   children: [
                     Text(
-                      '김헬스',
+                      widget.buddyRequest.nickname.toString(),
                       style: TextStyle(
                         fontSize: 14.0,
                         fontWeight: FontWeight.bold,
@@ -57,7 +66,7 @@ class _FriendrequestState extends State<FriendrequestBlock> {
                           borderRadius: BorderRadius.circular(5.0),
                         ),
                         child: Text(
-                          'Lv.15',
+                          'Lv. ${widget.buddyRequest.level.toString()}',
                           style: TextStyle(
                             color: Color(0xFF1AEDB1),
                             fontSize: 11.0,
@@ -74,7 +83,7 @@ class _FriendrequestState extends State<FriendrequestBlock> {
                     Container(
                       child: Text(
                         textAlign: TextAlign.left,
-                        '30분 전 활동',
+                        '${widget.buddyRequest.lastActiveTime} 활동',
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontSize: 14.0,
@@ -98,6 +107,7 @@ class _FriendrequestState extends State<FriendrequestBlock> {
                   child: TextButton(
                     onPressed: () {
                       print("수락 클릭!");
+                      widget.onAccept(requestId: widget.buddyRequest.requestId);
                     },
                     style: TextButton.styleFrom(
                       foregroundColor: Color(0xFF669688),
@@ -132,6 +142,7 @@ class _FriendrequestState extends State<FriendrequestBlock> {
                   child: TextButton(
                     onPressed: () {
                       print("x 클릭!");
+                      widget.onReject(requestId: widget.buddyRequest.requestId);
                     },
                     style: TextButton.styleFrom(
                       foregroundColor: Color(0xFFF65A33),

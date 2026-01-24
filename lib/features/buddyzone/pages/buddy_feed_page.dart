@@ -102,16 +102,6 @@ class _BuddyFeedPageState extends State<BuddyFeedPage> {
             sliver: SliverToBoxAdapter(
               child: Column(
                 children: [
-                  TextButton(
-                    onPressed: () {
-                      // showDialog(
-                      //   context: context,
-                      //   builder: (BuildContext context) =>
-                      //       // BuddyProfileDialog(userId: userId),
-                      // );
-                    },
-                    child: Text('테스트 버튼'),
-                  ),
                   FeedSearchWidget(
                     onSearchFeed: onSearchFeed,
                     controller: searchController,

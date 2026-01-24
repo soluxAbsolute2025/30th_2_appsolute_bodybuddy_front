@@ -1,9 +1,54 @@
 // features/home/widgets/home_content.dart
+import 'package:bodybuddy_frontend/features/buddyzone/api/buddyzone_friends_api.dart';
+import 'package:bodybuddy_frontend/features/buddyzone/models/friends/buddy_list_model.dart';
 import 'package:flutter/material.dart';
 import '../friends/friendrequestBlock.dart';
 
-class FriendRequestSection extends StatelessWidget {
-  const FriendRequestSection({super.key});
+class FriendRequestSection extends StatefulWidget {
+  BuddyResponse myFriends;
+  FriendRequestSection({super.key, required this.myFriends});
+
+  @override
+  State<FriendRequestSection> createState() => _FriendRequestSectionState();
+}
+
+class _FriendRequestSectionState extends State<FriendRequestSection> {
+  BuddyResponse? _buddyResponse;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  void _acceptBuddyRequest({required int requestId}) async {
+    try {
+      await BuddysApi().acceptBuddyRequest(requestId: requestId);
+      widget.myFriends.requests.removeWhere(
+        (request) => request.requestId == requestId,
+      );
+    } catch (e) {
+      print("삭제 실패 (서버 에러): $e");
+    }
+  }
+
+  void _rejectBuddyRequest({required int requestId}) async {
+    try {
+      await BuddysApi().deleteBuddyRequest(requestId: requestId);
+
+      setState(() {
+        widget.myFriends.requests.removeWhere(
+          (request) => request.requestId == requestId,
+        );
+      });
+    } catch (e) {
+      print("삭제 실패 (서버 에러): $e");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +79,7 @@ class FriendRequestSection extends StatelessWidget {
                     ),
                     SizedBox(width: 5.0),
                     Text(
-                      '3',
+                      widget.myFriends.requests.length.toString(),
                       style: TextStyle(
                         color: Color(0xFF1AEDB1),
                         fontSize: 17.0,
@@ -46,11 +91,18 @@ class FriendRequestSection extends StatelessWidget {
               ],
             ),
           ),
-          FriendrequestBlock(),
-          SizedBox(height: 8.0),
-          FriendrequestBlock(),
-          SizedBox(height: 8.0),
-          FriendrequestBlock(),
+          ...widget.myFriends.requests.map(
+            (e) => Column(
+              children: [
+                FriendrequestBlock(
+                  buddyRequest: e,
+                  onAccept: _acceptBuddyRequest,
+                  onReject: _rejectBuddyRequest,
+                ),
+                SizedBox(height: 8.0),
+              ],
+            ),
+          ),
         ],
       ),
     );
