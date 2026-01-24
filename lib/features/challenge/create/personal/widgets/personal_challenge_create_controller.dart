@@ -5,7 +5,7 @@ class PersonalChallengeCreateController {
 
   PersonalChallengeCreateController(this.model);
 
-  bool get _isCountType => model.goalType == PersonalGoalType.count;
+  bool get _isCountType => model.goalType == 'COUNT';
 
   bool get isTypePageValid {
     final hasDailyGoal = model.dailyGoal != null && model.dailyGoal! > 0;

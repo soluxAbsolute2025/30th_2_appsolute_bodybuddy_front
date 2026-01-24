@@ -5,7 +5,7 @@ import '../models/group_member_model.dart';
 import 'rank_badge.dart';
 import 'group_code_join_button.dart';
 import 'group_code_join_dialog.dart';
-
+import '../pages/group_challenge_detail_page.dart';
 import '../models/ongoing_group_challenge.dart';
 
 class ParticipatingGroupChallengeCard extends StatelessWidget {
@@ -40,7 +40,9 @@ class ParticipatingGroupChallengeCard extends StatelessWidget {
             width: double.infinity,
             height: 150,
             decoration: BoxDecoration(
-              color: challenge.imageUrl == null ? const Color(0xFFF5F5F5) : null,
+              color: challenge.imageUrl == null
+                  ? const Color(0xFFF5F5F5)
+                  : null,
               borderRadius: BorderRadius.circular(10),
               image: challenge.imageUrl != null
                   ? DecorationImage(
@@ -103,13 +105,19 @@ class ParticipatingGroupChallengeCard extends StatelessWidget {
 
         /// 그룹 코드로 참여 버튼 (참여중 카드라면 보통 "코드 공유/복사"가 더 자연스럽긴 함)
         GroupCodeJoinButton(
-          onTap: () {
-            showJoinGroupCodeDialog(
-              context: context,
-              onJoin: (code) {
-                debugPrint('그룹 코드: $code');
-                // TODO: 그룹 참여 API 호출
-              },
+          onTap: () async {
+            final challengeId = await showJoinGroupCodeDialog(context: context);
+            if (!context.mounted) return;
+            if (challengeId == null) return;
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('그룹 참여 완료!')),
+            );
+
+            Navigator.of(context, rootNavigator: true).push(
+              MaterialPageRoute(
+                builder: (_) => GroupChallengeDetailPage(challengeId: challengeId),
+              ),
             );
           },
         ),

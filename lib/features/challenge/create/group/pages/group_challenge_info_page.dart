@@ -1,12 +1,15 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../models/group_challenge_create_model.dart';
 import '../widgets/group_challenge_create_controller.dart';
-import '../widgets/group_challenge_api.dart';
-import '../widgets/group_challenge_created_modal.dart';
 import '../widgets/labeled_text_field.dart';
 import '../widgets/bottom_primary_button.dart';
+import '../api/group_challenge_api.dart';
+import '../pages/group_challenge_created_page.dart';
 
 class GroupChallengeInfoPage extends StatefulWidget {
   final GroupChallengeCreateModel model;
@@ -17,44 +20,71 @@ class GroupChallengeInfoPage extends StatefulWidget {
 }
 
 class _GroupChallengeInfoPageState extends State<GroupChallengeInfoPage> {
-  late final controller = GroupChallengeCreateController(widget.model);
-
   late final titleC = TextEditingController(text: widget.model.title);
   late final descC = TextEditingController(text: widget.model.description);
-  late final imageC = TextEditingController(text: widget.model.imageUrl);
 
   bool isLoading = false;
+
+  XFile? get _pickedImage => widget.model.imageFile;
 
   @override
   void dispose() {
     titleC.dispose();
     descC.dispose();
-    imageC.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final file = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
+
+    if (file == null) return;
+
+    setState(() {
+      widget.model.imageFile = file;
+    });
+  }
+
+  void _removeImage() {
+    setState(() {
+      widget.model.imageFile = null;
+    });
   }
 
   Future<void> _create() async {
     if (isLoading) return;
+
+    // ✅ create 직전에 모델 반영
+    widget.model.title = titleC.text.trim();
+    widget.model.description = descC.text.trim();
+
+    final controller = GroupChallengeCreateController(widget.model);
+    if (!controller.isCreateValid) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('입력값을 확인해 주세요.')));
+      return;
+    }
+
     setState(() => isLoading = true);
 
     try {
-      widget.model.title = titleC.text;
-      widget.model.description = descC.text;
-      widget.model.imageUrl = imageC.text;
-
-      final dio = Dio(BaseOptions(baseUrl: 'https://your-base-url.com'));
-      final api = GroupChallengeApi(dio);
-
-      final res = await api.create(widget.model);
+      // ✅ 너가 이미 만들어 둔 multipart API (DioClient.dio 사용 버전)로 연결해야 함
+      final api = GroupChallengeApi();
+      final res = await api.createGroupChallenge(widget.model);
 
       if (!mounted) return;
-      await showDialog(
-        context: context,
-        builder: (_) => GroupChallengeCreatedModal(groupCode: res.groupCode),
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => GroupChallengeCreatedPage(groupCode: res.groupCode),
+        ),
       );
-
       if (!mounted) return;
-      Navigator.popUntil(context, (route) => route.isFirst);
     } on DioException catch (e) {
       if (!mounted) return;
 
@@ -64,13 +94,15 @@ class _GroupChallengeInfoPageState extends State<GroupChallengeInfoPage> {
           : e.message;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('생성 실패${status != null ? ' ($status)' : ''}: $message')),
+        SnackBar(
+          content: Text('생성 실패${status != null ? ' ($status)' : ''}: $message'),
+        ),
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('생성 실패: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('생성 실패: $e')));
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
@@ -78,17 +110,14 @@ class _GroupChallengeInfoPageState extends State<GroupChallengeInfoPage> {
 
   @override
   Widget build(BuildContext context) {
-    widget.model.title = titleC.text;
-    widget.model.description = descC.text;
-    widget.model.imageUrl = imageC.text;
-
+    widget.model.title = titleC.text.trim();
+    widget.model.description = descC.text.trim();
+    // ✅ build에서는 controller만 읽기
+    final controller = GroupChallengeCreateController(widget.model);
     final isValid = controller.isCreateValid;
 
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
-        elevation: 0,
-        backgroundColor: Colors.white,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
           icon: Image.asset(
@@ -103,58 +132,122 @@ class _GroupChallengeInfoPageState extends State<GroupChallengeInfoPage> {
             fontFamily: 'Pretendard',
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            height: 1.0,
-            letterSpacing: 0,
-            color: Colors.black,
           ),
         ),
+        centerTitle: true,
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(16),
+          child: SizedBox(height: 16),
+        ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              '챌린지를 소개해 주세요',
-              style: TextStyle(
-                fontFamily: 'Pretendard',
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF111111),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              // ✅ 위 내용은 스크롤 영역
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        '챌린지를 소개해 주세요',
+                        style: TextStyle(
+                          fontFamily: 'Pretendard',
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+
+                      LabeledTextField(
+                        label: '챌린지 명',
+                        hint: '예) 함께 만보 걷기',
+                        controller: titleC,
+                        onChanged: (_) => setState(() {}),
+                      ),
+                      const SizedBox(height: 25),
+
+                      LabeledTextField(
+                        label: '챌린지 설명',
+                        hint: '예) 30일간 매일 10,000보 걷기',
+                        controller: descC,
+                        onChanged: (_) => setState(() {}),
+                      ),
+                      const SizedBox(height: 50),
+
+                      // ✅ 이미지 영역도 너무 커지지 않게 살짝 제한(선택이지만 추천)
+                            GestureDetector(
+                              onTap: _pickImage,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Divider(
+                                    height: 0.4,
+                                    color: Color(0xFFA6A6A6),
+                                  ),
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 16,
+                                    ),
+                                    alignment: Alignment.centerLeft,
+                                    child: _pickedImage == null
+                                        ? Image.asset(
+                                            'assets/challenge/image.png',
+                                            width: 30,
+                                            height: 30,
+                                          )
+                                        : ClipRRect(
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+                                            child: AspectRatio(
+                                              aspectRatio: 16 / 9,
+                                              child: Image.file(
+                                                File(_pickedImage!.path),
+                                                width: double.infinity,
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
+                                          ),
+                                  ),
+                            if (_pickedImage != null)
+                              Positioned(
+                                right: 8,
+                                top: 8,
+                                child: GestureDetector(
+                                  onTap: _removeImage,
+                                  child: Image.asset(
+                                    'assets/challenge/del_image.png',
+                                    width: 20,
+                                    height: 20,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+                    ],
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(height: 40),
 
-            LabeledTextField(
-              label: '챌린지 명',
-              hint: '예) 함께 만보 걷기',
-              controller: titleC,
-              onChanged: (_) => setState(() {}),
-            ),
-            const SizedBox(height: 14),
-
-            LabeledTextField(
-              label: '챌린지 설명',
-              hint: '예) 30일간 매일 10,000보 걷기',
-              controller: descC,
-              onChanged: (_) => setState(() {}),
-            ),
-            const SizedBox(height: 14),
-
-            LabeledTextField(
-              label: '이미지 업로드(선택)',
-              hint: '이미지',
-              controller: imageC,
-              onChanged: (_) => setState(() {}),
-            ),
-
-            const Spacer(),
-            BottomPrimaryButton(
-              text: isLoading ? '생성 중...' : '챌린지 생성하기',
-              isEnabled: isValid && !isLoading,
-              onPressed: _create,
-            ),
-          ],
+              // ✅ 아래 버튼은 항상 고정 + SafeArea로 홈 인디케이터 침범 방지
+              SafeArea(
+                top: false,
+                child: BottomPrimaryButton(
+                  text: isLoading ? '생성 중...' : '챌린지 생성하기',
+                  isEnabled: isValid && !isLoading,
+                  onPressed: _create,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

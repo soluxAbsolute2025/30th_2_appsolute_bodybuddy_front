@@ -1,22 +1,28 @@
+import 'package:image_picker/image_picker.dart';
+
 class GroupChallengeCreateModel {
-  String title = '';
-  String description = '';
-
-  String imageUrl = '';
-  String goalSummary = '';
-
+  String title;
+  String description;
   int? period;
-  int maxParticipants = 2;
-  String privacyScope = 'FRIENDS'; 
+  int maxParticipants;
+  String visibility; // "PUBLIC" | "SECRET"
 
-  Map<String, dynamic> toJson() {
-    return {
-      'title': title.trim(),
-      'description': description.trim(),
-      'imageUrl': imageUrl.trim().isEmpty ? null : imageUrl.trim(),
-      'period': period,
-      'maxParticipants': maxParticipants,
-      'privacyScope': privacyScope,
-    }..removeWhere((k, v) => v == null);
-  }
+  XFile? imageFile; 
+
+  GroupChallengeCreateModel({
+    this.title = '',
+    this.description = '',
+    this.period,
+    this.maxParticipants = 2,
+    this.visibility = 'PUBLIC',
+    this.imageFile,
+  });
+
+  Map<String, dynamic> toJson() => {
+        "title": title,
+        "description": description,
+        "period": period,
+        "maxParticipants": maxParticipants,
+        "visibility": visibility,
+      };
 }

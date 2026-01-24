@@ -10,6 +10,7 @@ import '../widgets/labeled_text_field.dart';
 import 'personal_challenge_info_page.dart';
 import '../widgets/number_formatter.dart';
 import '../widgets/reward_action_bar.dart';
+import 'personal_challenge_privacy_page.dart';
 
 class PersonalChallengeTypePage extends StatefulWidget {
   const PersonalChallengeTypePage({super.key});
@@ -53,7 +54,7 @@ class _PersonalChallengeTypePageState extends State<PersonalChallengeTypePage> {
 
   @override
   Widget build(BuildContext context) {
-    final isCountType = model.goalType == PersonalGoalType.count;
+    final isCountType = model.goalType == 'COUNT';
     final isValid = controller.isTypePageValid;
     final dailySuffix = _dailyGoalSuffix(model.unit);
 
@@ -97,10 +98,11 @@ class _PersonalChallengeTypePageState extends State<PersonalChallengeTypePage> {
         enabled: isValid,
         onPressed: () {
           model.estimatedReward = controller.rewardXp;
+
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => PersonalChallengeInfoPage(model: model),
+              builder: (_) => PersonalChallengePrivacyPage(model: model),
             ),
           );
         },
@@ -128,9 +130,9 @@ class _PersonalChallengeTypePageState extends State<PersonalChallengeTypePage> {
                     GoalTypeTabs(
                       value: model.goalType,
                       onChanged: (v) => setState(() {
-                        model.goalType = v;
-
-                        if (v == PersonalGoalType.count) {
+                        final value = v as String;
+                        model.goalType = value;
+                        if (v == 'COUNT') {
                           model.targetDays = null;
                           targetDaysController.clear();
                         }

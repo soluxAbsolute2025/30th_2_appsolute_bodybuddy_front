@@ -1,26 +1,25 @@
 import 'package:flutter/material.dart';
 
-import '../data/group_challenge_privacy_options.dart';
-import '../models/group_challenge_create_model.dart';
-import '../widgets/group_challenge_create_controller.dart';
-import '../widgets/group_challenge_privacy_tile.dart';
-import 'group_challenge_info_page.dart';
+import '../data/personal_challenge_privacy_options.dart';
+import '../models/personal_challenge_create_model.dart';
+import '../widgets/personal_challenge_privacy_tile.dart';
+import 'personal_challenge_info_page.dart';
 import '../widgets/bottom_primary_button.dart';
 
-class GroupChallengePrivacyPage extends StatefulWidget {
-  final GroupChallengeCreateModel model;
-  const GroupChallengePrivacyPage({super.key, required this.model});
+class PersonalChallengePrivacyPage extends StatefulWidget {
+  final PersonalChallengeCreateModel model;
+  const PersonalChallengePrivacyPage({super.key, required this.model});
 
   @override
-  State<GroupChallengePrivacyPage> createState() =>
-      _GroupChallengePrivacyPageState();
+  State<PersonalChallengePrivacyPage> createState() =>
+      _PersonalChallengePrivacyPageState();
 }
 
-class _GroupChallengePrivacyPageState extends State<GroupChallengePrivacyPage> {
+class _PersonalChallengePrivacyPageState
+    extends State<PersonalChallengePrivacyPage> {
   @override
   Widget build(BuildContext context) {
-    final controller = GroupChallengeCreateController(widget.model);
-    final isValid = controller.isPrivacyPageValid;
+    final isValid = widget.model.visibility != null;
 
     return Scaffold(
       appBar: AppBar(
@@ -36,7 +35,7 @@ class _GroupChallengePrivacyPageState extends State<GroupChallengePrivacyPage> {
           ),
         ),
         title: const Text(
-          '그룹 챌린지 만들기',
+          '개인 챌린지 만들기',
           style: TextStyle(
             fontFamily: 'Pretendard',
             fontSize: 20,
@@ -48,7 +47,7 @@ class _GroupChallengePrivacyPageState extends State<GroupChallengePrivacyPage> {
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 32, 16, 16),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -58,29 +57,31 @@ class _GroupChallengePrivacyPageState extends State<GroupChallengePrivacyPage> {
             ),
             const SizedBox(height: 40),
 
-            ...GroupChallengePrivacyOptions.items.map(
+            ...PersonalChallengePrivacyOptions.items.map(
               (opt) => Padding(
                 padding: const EdgeInsets.only(bottom: 12),
-                child: GroupChallengePrivacyTile(
+                child: PersonalChallengePrivacyTile(
                   value: opt.value,
                   title: opt.title,
                   subtitle: opt.subtitle,
-                  // ✅ privacyScope -> visibility
-                  groupValue: widget.model.visibility,
-                  onChanged: (v) => setState(() => widget.model.visibility = v),
+                  groupValue: widget.model.visibility, // ✅ 변경
+                  onChanged: (v) => setState(() {
+                    widget.model.visibility = v; // ✅ 변경
+                  }),
                 ),
               ),
             ),
 
             const Spacer(),
             BottomPrimaryButton(
-              text: '다음',
-              isEnabled: isValid,
+              label: '다음',
+              enabled: isValid, // ✅ 변경(또는 widget.model.visibility != null)
               onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => GroupChallengeInfoPage(model: widget.model),
+                    builder: (_) =>
+                        PersonalChallengeInfoPage(model: widget.model),
                   ),
                 );
               },
