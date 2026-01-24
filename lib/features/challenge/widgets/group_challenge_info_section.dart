@@ -11,18 +11,18 @@ class GroupChallengeInfoSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final info = challenge.challengeInfo; // ✅ 핵심
+
     return Column(
       children: [
         /// 이미지 영역
         Container(
           height: 250,
           decoration: BoxDecoration(
-            color: challenge.imageUrl == null
-                ? const Color(0xFFF5F5F5)
-                : null,
-            image: challenge.imageUrl != null
+            color: info.imageUrl == null ? const Color(0xFFF5F5F5) : null,
+            image: info.imageUrl != null
                 ? DecorationImage(
-                    image: NetworkImage(challenge.imageUrl!),
+                    image: NetworkImage(info.imageUrl!),
                     fit: BoxFit.cover,
                   )
                 : null,
@@ -39,7 +39,7 @@ class GroupChallengeInfoSection extends StatelessWidget {
             children: [
               /// 제목
               Text(
-                challenge.title,
+                info.title,
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -49,14 +49,13 @@ class GroupChallengeInfoSection extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              /// 기간
+              /// 기간 (API: "2025.11.27" 문자열)
               _InfoRow(
                 iconPath: 'assets/challenge/calender.png',
-                text:
-                    '${_format(challenge.startDate)} ~ ${_format(challenge.endDate)}',
+                text: '${_formatDateStr(info.startDate)} ~ ${_formatDateStr(info.endDate)}',
               ),
 
-              /// 참여 인원 (🔥 부분 스타일)
+              /// 참여 인원
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Row(
@@ -75,11 +74,10 @@ class GroupChallengeInfoSection extends StatelessWidget {
                         ),
                         children: [
                           TextSpan(
-                            text:
-                                '${challenge.currentParticipants}명 참여 ',
+                            text: '${info.currentParticipantCount}명 참여 ',
                           ),
                           TextSpan(
-                            text: '/ ${challenge.maxParticipants}명',
+                            text: '/ ${info.maxParticipantCount}명',
                             style: const TextStyle(
                               color: Color(0xFFA8A8A8),
                             ),
@@ -94,7 +92,7 @@ class GroupChallengeInfoSection extends StatelessWidget {
               /// 공개 여부
               _InfoRow(
                 iconPath: 'assets/challenge/lock.png',
-                text: challenge.isPublic ? '친구 공개' : '비공개',
+                text: info.isPublic ? '친구 공개' : '비공개',
               ),
             ],
           ),
@@ -103,7 +101,19 @@ class GroupChallengeInfoSection extends StatelessWidget {
     );
   }
 
-  String _format(DateTime d) => '${d.year}. ${d.month}. ${d.day}';
+  /// API가 "2025.11.27" / "2025.11.27" 같은 문자열을 준다는 전제
+  /// 표시를 "2025. 11. 27" 형태로만 맞춰줌
+  String _formatDateStr(String raw) {
+    // raw가 이미 "2025.11.27" 또는 "2025. 11. 27" 등일 수 있음
+    final cleaned = raw.replaceAll(' ', '');
+    final parts = cleaned.split('.');
+    if (parts.length != 3) return raw; // 예상 포맷 아니면 원본 그대로
+
+    final y = parts[0];
+    final m = parts[1];
+    final d = parts[2];
+    return '$y. $m. $d';
+  }
 }
 
 class _InfoRow extends StatelessWidget {
