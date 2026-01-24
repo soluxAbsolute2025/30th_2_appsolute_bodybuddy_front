@@ -36,7 +36,14 @@ class _FriendrequestState extends State<FriendrequestBlock> {
             height: 50.0,
             child: ClipOval(
               child: Image(
-                image: AssetImage('assets/images/common/profile1.jpg'),
+                fit: BoxFit.cover, // 이미지가 꽉 차도록 설정
+                image:
+                    (widget.buddyRequest.profileImageUrl != null &&
+                        widget.buddyRequest.profileImageUrl!.isNotEmpty)
+                    ? NetworkImage(
+                        widget.buddyRequest.profileImageUrl.toString(),
+                      )
+                    : AssetImage('assets/buddyzone/myprofile.jpg'),
               ),
             ),
           ),
