@@ -105,18 +105,19 @@ class ParticipatingGroupChallengeCard extends StatelessWidget {
 
         /// 그룹 코드로 참여 버튼 (참여중 카드라면 보통 "코드 공유/복사"가 더 자연스럽긴 함)
         GroupCodeJoinButton(
-          onTap: () {
-            showJoinGroupCodeDialog(
-              context: context,
-              onMoveToChallenge: (challengeId) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        GroupChallengeDetailPage(challengeId: challengeId),
-                  ),
-                );
-              },
+          onTap: () async {
+            final challengeId = await showJoinGroupCodeDialog(context: context);
+            if (!context.mounted) return;
+            if (challengeId == null) return;
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('그룹 참여 완료!')),
+            );
+
+            Navigator.of(context, rootNavigator: true).push(
+              MaterialPageRoute(
+                builder: (_) => GroupChallengeDetailPage(challengeId: challengeId),
+              ),
             );
           },
         ),
