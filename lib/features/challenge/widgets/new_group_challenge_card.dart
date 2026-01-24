@@ -4,16 +4,11 @@ import '../models/group_challenge_list_item.dart';
 class NewGroupChallengeCard extends StatelessWidget {
   final GroupChallengeListItem challenge;
 
-  const NewGroupChallengeCard({
-    super.key,
-    required this.challenge,
-  });
+  const NewGroupChallengeCard({super.key, required this.challenge});
 
   @override
   Widget build(BuildContext context) {
-    final isFull = challenge.currentParticipants >= challenge.maxParticipants;
-
-    // status가 RECRUITING이 아닌데도 이 카드에 들어오면 (실수 방지)
+    final isFull = challenge.isFull;
     final isRecruiting = challenge.isRecruiting;
 
     return SizedBox(
@@ -26,7 +21,8 @@ class NewGroupChallengeCard extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
-                child: (challenge.imageUrl != null &&
+                child:
+                    (challenge.imageUrl != null &&
                         challenge.imageUrl!.isNotEmpty)
                     ? Image.network(
                         challenge.imageUrl!,
@@ -111,21 +107,15 @@ class NewGroupChallengeCard extends StatelessWidget {
                   children: [
                     TextSpan(
                       text: '${challenge.currentParticipants}',
-                      style: const TextStyle(
-                        color: Color(0xFFFF4806),
-                      ),
+                      style: const TextStyle(color: Color(0xFFFF4806)),
                     ),
                     const TextSpan(
                       text: '/',
-                      style: TextStyle(
-                        color: Color(0xFF7D7C7C),
-                      ),
+                      style: TextStyle(color: Color(0xFF7D7C7C)),
                     ),
                     TextSpan(
                       text: '${challenge.maxParticipants}명',
-                      style: const TextStyle(
-                        color: Color(0xFF7D7C7C),
-                      ),
+                      style: const TextStyle(color: Color(0xFF7D7C7C)),
                     ),
                   ],
                 ),
@@ -140,10 +130,7 @@ class NewGroupChallengeCard extends StatelessWidget {
             challenge.description,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Color(0xFF7D7C7C),
-            ),
+            style: const TextStyle(fontSize: 12, color: Color(0xFF7D7C7C)),
           ),
         ],
       ),
