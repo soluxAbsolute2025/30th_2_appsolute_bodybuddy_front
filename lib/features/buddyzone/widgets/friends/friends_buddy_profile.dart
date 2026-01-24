@@ -1,3 +1,4 @@
+import 'package:bodybuddy_frontend/common/widgets/toast_widget.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/api/buddyzone_friends_api.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/models/friends/buddy_detail_model.dart';
 import 'package:flutter/material.dart';
@@ -272,6 +273,10 @@ class _BuddyProfileDialogState extends State<BuddyProfileDialog> {
                   : () async {
                       print("손 흔들기 클릭!");
                       await widget.onPocked(userId: widget.buddyId);
+                      CustomToast.show(
+                        context,
+                        "${_buddyDetail!.nickname}님을 콕 찔렀습니다!",
+                      );
                       if (mounted) {
                         setState(() {
                           _isPocked = true;

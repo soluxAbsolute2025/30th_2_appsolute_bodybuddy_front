@@ -53,9 +53,14 @@ class _MainPageState extends State<MainPage> {
               currentIndex: _currentIndex,
               onTap: (index) {
                 setState(() {
+                  // 마이페이지 새로 고침
+                  if (index == 4) {
+                    _navigatorKeys[4] = GlobalKey<NavigatorState>();
+                  }
                   _currentIndex = index;
                   _hideBottomNav =
-                      _navigatorKeys[_currentIndex].currentState?.canPop() ?? false;
+                      _navigatorKeys[_currentIndex].currentState?.canPop() ??
+                      false;
                 });
               },
             ),

@@ -52,8 +52,6 @@ class _MypagePageState extends State<MypagePage> with RouteAware {
   @override
   void didPopNext() {
     print("마이페이지로 돌아왔습니다. 데이터를 갱신합니다.");
-    // 이때는 로딩 화면을 보여주지 않고 조용히 데이터만 갱신하거나,
-    // 필요하다면 isLoading을 true로 바꿔 로딩을 보여줄 수도 있습니다.
     getMypageInfoAll();
   }
 
