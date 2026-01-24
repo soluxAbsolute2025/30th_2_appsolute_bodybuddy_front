@@ -1,4 +1,4 @@
-// lib/common/widgets/main_bottom_nav.dart
+// lib/widgets/main_bottom_nav.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -28,10 +28,10 @@ class MainBottomNav extends StatelessWidget {
 
       items: _bottomNavItems.map((item) {
         return BottomNavigationBarItem(
-          icon: SvgPicture.asset(
-            currentIndex == item.index ? item.actIcon : item.inactIcon,
-            width: 18,
-            height: 18,
+          icon: Image(
+            image: AssetImage(
+              currentIndex == item.index ? item.actIcon : item.inactIcon,
+            ),
           ),
           label: item.label,
         );
@@ -57,32 +57,32 @@ class BottomNavItem {
 const _bottomNavItems = [
   BottomNavItem(
     index: 0,
-    actIcon: 'assets/images/common/act_home.svg',
-    inactIcon: 'assets/images/common/home.svg',
+    actIcon: 'assets/images/home_true.png',
+    inactIcon: 'assets/images/home_false.png',
     label: '홈',
   ),
   BottomNavItem(
     index: 1,
-    actIcon: 'assets/images/common/bodylog.svg',
-    inactIcon: 'assets/images/common/home.svg',
+    actIcon: 'assets/images/bodylog_true.png',
+    inactIcon: 'assets/images/bodylog_false.png',
     label: '바디로그',
   ),
   BottomNavItem(
     index: 2,
-    actIcon: 'assets/images/common/challenge.svg',
-    inactIcon: 'assets/images/common/home.svg',
+    actIcon: 'assets/images/challenge_true.png',
+    inactIcon: 'assets/images/challenge_false.png',
     label: '챌린지',
   ),
   BottomNavItem(
     index: 3,
-    actIcon: 'assets/images/common/buddyzone.svg',
-    inactIcon: 'assets/images/common/home.svg',
+    actIcon: 'assets/images/buddyzone_true.png',
+    inactIcon: 'assets/images/buddyzone_false.png',
     label: '버디존',
   ),
   BottomNavItem(
     index: 4,
-    actIcon: 'assets/images/common/act_my.svg',
-    inactIcon: 'assets/images/common/my.svg',
+    actIcon: 'assets/images/mypage_true.png',
+    inactIcon: 'assets/images/mypage_false.png',
     label: '마이',
   ),
 ];

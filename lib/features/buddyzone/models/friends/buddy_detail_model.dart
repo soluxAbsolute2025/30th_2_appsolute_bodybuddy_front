@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+/// 전체 친구 상세 정보 모델
 class BuddyDetail {
   final int userId;
   final String loginId;
@@ -23,19 +24,17 @@ class BuddyDetail {
 
   factory BuddyDetail.fromJson(Map<String, dynamic> json) {
     return BuddyDetail(
-      userId: json['userId'] ?? 0,
-      // .toString()을 붙여서 Map이 들어와도 튕기지 않게 방어합니다.
+      userId: json['userId'] is int ? json['userId'] : 0,
       loginId: json['loginId']?.toString() ?? '',
       nickname: json['nickname']?.toString() ?? '',
-      level: json['level'] ?? 0,
-      // profileImageUrl이 객체{}로 오면 null 처리하거나 문자열로 변환
-      profileImageUrl: json['profileImageUrl'] is Map
-          ? null
-          : json['profileImageUrl']?.toString(),
+      level: json['level'] is int ? json['level'] : 0,
+      // profileImageUrl이 null이거나 실제 url string일 때만 가져옴
+      profileImageUrl: json['profileImageUrl']?.toString(),
       lastActivityTime: json['lastActivityTime']?.toString() ?? '',
       status: json['status']?.toString() ?? '',
+      // homeData가 null이 아니고 Map 형태일 때만 파싱
       homeData:
-          json['homeData'] != null && json['homeData'] is Map<String, dynamic>
+          (json['homeData'] != null && json['homeData'] is Map<String, dynamic>)
           ? HomeData.fromJson(json['homeData'])
           : null,
     );
@@ -53,6 +52,7 @@ class BuddyDetail {
   };
 }
 
+/// 홈 데이터 (물, 식사, 수면 포함)
 class HomeData {
   final String? date;
   final GoalProgress? water;
@@ -64,7 +64,7 @@ class HomeData {
   factory HomeData.fromJson(Map<String, dynamic> json) {
     return HomeData(
       date: json['date']?.toString(),
-      // 내부 데이터가 null이거나 비어있을 때를 대비한 안전한 파싱
+      // 각각의 데이터가 있는지 확인 후 파싱
       water: (json['water'] != null && json['water'] is Map<String, dynamic>)
           ? GoalProgress.fromJson(json['water'])
           : null,
@@ -85,17 +85,18 @@ class HomeData {
   };
 }
 
+/// 목표 진행 상황 (current, goal만 추출)
+/// Water, Meal, Sleep 모두 공통 구조를 가지므로 하나로 재사용합니다.
 class GoalProgress {
-  final int? current;
-  final int? goal;
+  final int current;
+  final int goal;
 
-  GoalProgress({this.current, this.goal});
+  GoalProgress({required this.current, required this.goal});
 
   factory GoalProgress.fromJson(Map<String, dynamic> json) {
     return GoalProgress(
-      // double로 올 경우를 대비해 toInt() 처리
-      current: (json['current'] ?? 0).toInt(),
-      goal: (json['goal'] ?? 3).toInt(),
+      current: (json['current'] is num) ? (json['current'] as num).toInt() : 0,
+      goal: (json['goal'] is num) ? (json['goal'] as num).toInt() : 0,
     );
   }
 

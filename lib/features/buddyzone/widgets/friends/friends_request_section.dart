@@ -60,6 +60,7 @@ class _FriendRequestSectionState extends State<FriendRequestSection> {
         left: 16.0,
         top: 25.0,
       ),
+      constraints: BoxConstraints(minHeight: 200.0),
       child: Column(
         children: [
           Container(
@@ -91,6 +92,7 @@ class _FriendRequestSectionState extends State<FriendRequestSection> {
               ],
             ),
           ),
+          if (widget.myFriends.requests.length == 0) ...[_nullCommentText()],
           ...widget.myFriends.requests.map(
             (e) => Column(
               children: [
@@ -104,6 +106,25 @@ class _FriendRequestSectionState extends State<FriendRequestSection> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _nullCommentText() {
+    return Container(
+      padding: EdgeInsets.only(bottom: 16.0),
+      height: 127.0,
+      alignment: Alignment.center,
+      child: Text(
+        '친구 요청이 들어오지 않았습니다\n',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: const Color(0xFFA6A6A6),
+          fontSize: 14,
+          fontFamily: 'Pretendard Variable',
+          fontWeight: FontWeight.w400,
+          height: 1.50,
+        ),
       ),
     );
   }

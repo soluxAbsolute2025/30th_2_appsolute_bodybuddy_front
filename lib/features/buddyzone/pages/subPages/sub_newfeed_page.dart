@@ -305,8 +305,9 @@ class _SubNewFeedPagesState extends State<SubNewFeedPages> {
               const SizedBox(width: 6.0),
             ],
             if (visible == "SECRET") ...[
+              const SizedBox(width: 2.0),
               SvgPicture.asset('assets/buddyzone/mine.svg'),
-              const SizedBox(width: 6.0),
+              const SizedBox(width: 8.0),
             ],
             Text(
               visible == "PUBLIC" ? '전체 공개' : '나만 보기',

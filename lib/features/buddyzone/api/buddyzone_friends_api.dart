@@ -31,4 +31,36 @@ class BuddysApi {
     final response = await _dio.patch('/api/buddy/${requestId}/reject');
     debugPrint(response.toString());
   }
+
+  Future<void> postBuddyRequest({required int userId}) async {
+    final response = await _dio.post(
+      '/api/buddy',
+      data: {'targetUserId': userId.toInt()},
+    );
+    debugPrint(response.toString());
+  }
+
+  Future<BuddyDetail> getBuddySearch({required String userName}) async {
+    final response = await _dio.get(
+      '/api/buddy/search',
+      queryParameters: {'nickname': userName},
+    );
+
+    return BuddyDetail.fromJson(response.data);
+  }
+}
+
+class PockApi {
+  final Dio _dio = DioClient.dio;
+
+  Future<void> postPock({required int userId}) async {
+    final response = await _dio.post('/api/pokes/${userId}');
+    debugPrint(response.data.toString());
+  }
+
+  Future<Buddy> getPockList() async {
+    final response = await _dio.get('/api/pokes');
+    debugPrint(response.toString());
+    return Buddy.fromJson(response.data);
+  }
 }

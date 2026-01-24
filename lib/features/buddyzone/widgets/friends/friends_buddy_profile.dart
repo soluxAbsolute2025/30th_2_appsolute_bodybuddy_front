@@ -5,23 +5,36 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class BuddyProfileDialog extends StatefulWidget {
-  int buddyId;
-  BuddyProfileDialog({super.key, required this.buddyId});
+  final int buddyId; // final로 변경 권장
+  final bool isPocked;
+  final Future<void> Function({required int userId}) onPocked;
+
+  BuddyProfileDialog({
+    super.key,
+    required this.buddyId,
+    required this.isPocked,
+    required this.onPocked,
+  });
 
   @override
   State<BuddyProfileDialog> createState() => _BuddyProfileDialogState();
 }
 
-// ... 상단 import 생략
-
 class _BuddyProfileDialogState extends State<BuddyProfileDialog> {
   BuddyDetail? _buddyDetail;
   bool _isLoading = true; // 로딩 상태 추가
+  bool _isPocked = false;
 
   @override
   void initState() {
     super.initState();
     _getBuddyDetail(userId: widget.buddyId);
+    _isPocked = widget.isPocked;
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   void _getBuddyDetail({required int userId}) async {
@@ -215,10 +228,22 @@ class _BuddyProfileDialogState extends State<BuddyProfileDialog> {
             ],
           ),
         ),
-        IconButton(
-          onPressed: () => Navigator.of(context).pop(),
-          icon: SvgPicture.asset(
-            'assets/buddyzone/friend_profile/x_button.svg',
+        TextButton(
+          onPressed: () => {Navigator.of(context).pop()},
+          style: TextButton.styleFrom(
+            foregroundColor: Color(0x1188D3BD),
+            padding: EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(5.0),
+            ),
+          ),
+
+          child: Center(
+            child: SvgPicture.asset(
+              'assets/buddyzone/friend_profile/x_button.svg',
+            ),
           ),
         ),
       ],
@@ -239,10 +264,20 @@ class _BuddyProfileDialogState extends State<BuddyProfileDialog> {
             width: double.infinity,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.all(Radius.circular(10.0)),
-              color: Color(0xFF1AEDB0),
+              color: _isPocked ? Color(0xFFE4E4E4) : Color(0xFF1AEDB0),
             ),
             child: TextButton(
-              onPressed: () {},
+              onPressed: _isPocked
+                  ? null
+                  : () async {
+                      print("손 흔들기 클릭!");
+                      await widget.onPocked(userId: widget.buddyId);
+                      if (mounted) {
+                        setState(() {
+                          _isPocked = true;
+                        });
+                      }
+                    },
               style: TextButton.styleFrom(
                 foregroundColor: Color(0xFF669588),
                 padding: EdgeInsets.zero,
@@ -255,14 +290,16 @@ class _BuddyProfileDialogState extends State<BuddyProfileDialog> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      SvgPicture.asset(
-                        'assets/buddyzone/friend_profile/hand_white.svg',
-                      ),
+                      if (!_isPocked) ...[
+                        SvgPicture.asset(
+                          'assets/buddyzone/friend_profile/hand_white.svg',
+                        ),
+                      ],
                       SizedBox(width: 12.0),
                       Text(
-                        '콕 찌르기',
+                        _isPocked ? '콕 찌르기 완료' : '콕 찌르기',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: _isPocked ? Color(0xFFA7A7A7) : Colors.white,
                           fontSize: 14,
                           fontFamily: 'Pretendard Variable',
                           fontWeight: FontWeight.w700,
