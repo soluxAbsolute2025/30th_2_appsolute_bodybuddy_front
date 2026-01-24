@@ -37,6 +37,7 @@ class _MypageProfilePageState extends State<MypageProfilePage> {
   late File _originImage;
   late String _originNickname;
   late String _originIntroduction;
+  late String _originFullEmail;
   late String _originEmail;
   String? _originDomain;
 
@@ -50,8 +51,11 @@ class _MypageProfilePageState extends State<MypageProfilePage> {
 
     _originNickname = widget.myPageInfo?.userProfile.nickname ?? '';
     _originIntroduction = widget.myPageInfo?.userProfile.introduction ?? '';
-    _originEmail = 'buddy' ?? '';
-    _originDomain = 'daum.net' ?? '';
+    // _originEmail = 'buddy' ?? '';
+    // _originDomain = 'daum.net' ?? '';
+    _originFullEmail = widget.myPageInfo?.userProfile.email ?? '';
+    _originEmail = _originFullEmail.split('@')[0];
+    _originDomain = _originFullEmail.split('@')[1];
     // _originEmail = widget.myPageInfo?.userProfile.email ?? '';
     // _originDomain = widget.myPageInfo?.userProfile.emailDomain ?? '';
 
@@ -113,7 +117,7 @@ class _MypageProfilePageState extends State<MypageProfilePage> {
       nickname: (nickname != _originNickname) ? nickname : null,
       introduction: (introduction != _originIntroduction) ? introduction : null,
       email: (fullEmail != '$_originEmail@$_originDomain') ? fullEmail : null,
-      isImageDeleted: false,
+      // isImageDeleted: false,
     );
 
     debugPrint('전송 데이터: ${profileModel.toJsonString()}');

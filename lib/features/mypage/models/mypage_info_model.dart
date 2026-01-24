@@ -27,20 +27,27 @@ class MyPageResponse {
 
 // 1. 상단 프로필
 class UserProfile {
+  final int userId;
   final String nickname;
   final String? profileImageUrl;
   final String? introduction;
+  final String email;
+
   UserProfile({
+    required this.userId,
     required this.nickname,
     this.profileImageUrl,
     this.introduction,
+    required this.email,
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     return UserProfile(
+      userId: json['userId'] ?? 0,
       nickname: json['nickname'] ?? '',
       profileImageUrl: json['profileImageUrl'] ?? '',
       introduction: json['introduction'],
+      email: json['email'] ?? '',
     );
   }
 }

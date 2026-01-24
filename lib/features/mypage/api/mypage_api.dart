@@ -103,7 +103,7 @@ class ProfileApi {
       print("JSON Data: ${request.toJsonString()}");
 
       // 3. 전송
-      final response = await _dio.post(
+      final response = await _dio.patch(
         '/api/users/profile',
         data: formData,
         // options: Options(...) <-- 이 부분은 삭제하세요. Dio에게 맡기는 게 가장 안전합니다.
