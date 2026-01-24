@@ -164,21 +164,17 @@ class _WaterTabState extends State<WaterTab> with SingleTickerProviderStateMixin
             ],
           ),
           const SizedBox(height: 30),
-          // 버튼 리스트 (기존 유지)
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildAddButton('+ 200ml', 200),
-                const SizedBox(width: 12),
-                _buildAddButton('+ 300ml', 300),
-                const SizedBox(width: 12),
-                _buildAddButton('+ 500ml', 500),
-                const SizedBox(width: 12),
-                _buildCustomInputButton(),
-              ],
-            ),
+          // --- 수정된 버튼 영역: 가로 스크롤 제거 및 자동 맞춤 ---
+          Row(
+            children: [
+              Expanded(child: _buildAddButton('+ 200ml', 200)),
+              const SizedBox(width: 8), // 간격을 조금 줄였습니다
+              Expanded(child: _buildAddButton('+ 300ml', 300)),
+              const SizedBox(width: 8),
+              Expanded(child: _buildAddButton('+ 500ml', 500)),
+              const SizedBox(width: 8),
+              Expanded(child: _buildCustomInputButton()),
+            ],
           ),
           const SizedBox(height: 40),
           const Align(
@@ -209,7 +205,7 @@ class _WaterTabState extends State<WaterTab> with SingleTickerProviderStateMixin
         children: [
           // 1. 바깥쪽 게이지 (정상 작동 확인용)
           Transform.rotate(
-            angle: -math.pi / 2,
+            angle: -math.pi / 50,
             child: SizedBox(
               width: outerSize,
               height: outerSize,
@@ -276,9 +272,12 @@ class _WaterTabState extends State<WaterTab> with SingleTickerProviderStateMixin
     return InkWell(
       onTap: () => _addWater(amount),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        // horizontal을 20에서 4로 줄여서 글자가 들어갈 공간 확보
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
         decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
-        child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+        child: Center( // Center 추가
+          child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)), // 폰트 13으로 살짝 조절
+        ),
       ),
     );
   }
@@ -287,14 +286,11 @@ class _WaterTabState extends State<WaterTab> with SingleTickerProviderStateMixin
     return InkWell(
       onTap: _showCustomInputDialog,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        // 여기도 horizontal을 4로 조절
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
         decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(12)),
-        child: Row(
-          children: [
-            Icon(Icons.edit, size: 16, color: Colors.grey[700]),
-            const SizedBox(width: 6),
-            const Text('직접입력', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-          ],
+        child: Center( // Center 추가
+          child: Text('직접입력', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
         ),
       ),
     );

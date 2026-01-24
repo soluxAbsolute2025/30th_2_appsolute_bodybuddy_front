@@ -42,7 +42,6 @@ class _SleepEditPageState extends State<SleepEditPage> {
   @override
   void initState() {
     super.initState();
-    // 모델의 bedTime 사용
     _bedTimeController = TextEditingController(text: widget.record?.bedTime ?? "23:00");
     _wakeTimeController = TextEditingController(text: widget.record?.wakeTime ?? "07:00");
 
@@ -70,6 +69,7 @@ class _SleepEditPageState extends State<SleepEditPage> {
     }
   }
 
+  // AI 분석 (기존 유지)
   Future<void> _fetchSleepAnalysis() async {
     setState(() {
       _isAnalyzing = true;
@@ -97,10 +97,7 @@ class _SleepEditPageState extends State<SleepEditPage> {
           _selectedQuality = korQuality;
         }
       });
-
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('수면 분석 완료')));
     } catch (e) {
-      print("분석 에러: $e");
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('분석 실패')));
     } finally {
       setState(() => _isAnalyzing = false);
@@ -109,37 +106,55 @@ class _SleepEditPageState extends State<SleepEditPage> {
 
   Future<void> _save() async {
     try {
-      final data = {
-        "sleepDate": DateFormat('yyyy-MM-dd').format(widget.selectedDate),
-        "bedTime": _bedTimeController.text, // bedTime 필드명 확인 (HH:mm)
-        "wakeTime": _wakeTimeController.text,
-        "sleepQuality": _qualityMapping[_selectedQuality] ?? 'NORMAL',
-      };
-
-      print("서버 전송 데이터: $data");
+      // 1. 입력 필드에서 개별 데이터 추출
+      final String date = DateFormat('yyyy-MM-dd').format(widget.selectedDate);
+      final String bed = _bedTimeController.text;
+      final String wake = _wakeTimeController.text;
+      final String quality = _qualityMapping[_selectedQuality] ?? 'NORMAL';
 
       if (widget.record == null) {
-        await _apiService.createSleepLog(data);
+        // 2. 추가 시: 개별 인자로 넘기면 ApiService가 묶어서 전송
+        await _apiService.createSleepLog(date, bed, wake, quality);
       } else {
-        // ★ [수정] record!.sleepRecordId 사용 (이제 빨간줄 안 뜸)
-        await _apiService.updateSleepLog(widget.record!.sleepRecordId, data);
+        // 3. 수정 시: 저장되어 있던 ID와 함께 개별 인자 전송
+        await _apiService.updateSleepLog(
+            widget.record!.sleepRecordId, // 가져온 데이터 묶음에 들어있던 ID 사용
+            bed,
+            wake,
+            quality
+        );
       }
 
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
-      print("저장 오류: $e");
-      String msg = '저장 실패: 서버 오류가 발생했습니다.';
-      if (e.toString().contains('500')) {
-        msg = '저장 실패: 입력 형식을 확인해주세요.';
-      }
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('처리 중 오류가 발생했습니다. (ID 확인 필요)'))
+      );
     }
   }
 
+  // ✅ [수정] 삭제 로직: 중복 제거 및 확인 팝업 유지
   Future<void> _delete() async {
     if (widget.record == null) return;
+
+    bool? confirm = await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('기록 삭제'),
+        content: const Text('정말 이 수면 기록을 삭제하시겠습니까?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('취소')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('삭제', style: TextStyle(color: Colors.red))
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
     try {
-      // ★ [수정] 여기도 sleepRecordId 사용
       await _apiService.deleteSleepLog(widget.record!.sleepRecordId);
       if (mounted) Navigator.pop(context, true);
     } catch (e) {

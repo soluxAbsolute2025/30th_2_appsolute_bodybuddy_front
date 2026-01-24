@@ -166,7 +166,7 @@ class _SleepTabState extends State<SleepTab> {
           },
         ),
         Text(
-          DateFormat('yyyy년 MM월 dd일').format(_selectedDate),
+          DateFormat('yyyy-MM-dd').format(_selectedDate),
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         IconButton(

@@ -53,21 +53,39 @@ class WaterApiService {
   // [GET] 주간 통계 조회
   Future<List<WaterDailyStat>> getWeeklyStats() async {
     try {
-      // 실제 API가 있다면 주석을 풀고 사용하세요.
-      // final response = await _dio.get('/api/water-log/weekly');
+      final response = await _dio.get('/api/water-log/weekly');
 
-      List<WaterDailyStat> dummyStats = [];
+      // 1. 서버 응답이 Map 형태인지 확인 ({ "2026-01-24": 500 })
+      final Map<String, dynamic> apiData = (response.data is Map) ? response.data : {};
+
+      List<WaterDailyStat> weeklyStats = [];
       DateTime now = DateTime.now();
+
+      // 2. 최근 7일간 반복문 (그래프 틀 만들기)
       for (int i = 6; i >= 0; i--) {
         DateTime day = now.subtract(Duration(days: i));
-        dummyStats.add(WaterDailyStat(
-          day: DateFormat('dd').format(day),
-          totalAmount: 0,
+
+        // 서버 Key와 맞출 포맷 (yyyy-MM-dd)
+        String dateKey = DateFormat('yyyy-MM-dd').format(day);
+        // UI에 보여줄 날짜 (dd)
+        String displayDay = DateFormat('dd').format(day);
+
+        // 3. 서버 데이터(apiData)에서 해당 날짜의 값이 있는지 확인
+        int amount = 0;
+        if (apiData.containsKey(dateKey)) {
+          // value가 null이 아닐 경우 숫자로 변환
+          amount = (apiData[dateKey] as num).toInt();
+        }
+
+        weeklyStats.add(WaterDailyStat(
+          day: displayDay,
+          totalAmount: amount,
         ));
       }
-      return dummyStats;
+
+      return weeklyStats; // 가짜 데이터가 아닌 실제 계산된 데이터 반환!
     } catch (e) {
-      print('주간 통계 조회 실패: $e');
+      print('❌ 주간 통계 API 처리 실패: $e');
       return [];
     }
   }
