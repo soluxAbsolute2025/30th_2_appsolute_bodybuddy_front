@@ -20,12 +20,21 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
   int _currentPage = 0;
   bool _isLoading = false;
 
-  // 🎨 [색상 복구] 민트색 제거 -> 블랙으로 변경
-  final Color _activeColor = Colors.black;
+  // 🎨 [색상 정의]
+  // ✅ 메인 민트색 (버튼, 테두리, 활성 텍스트)
+  final Color _mintColor = const Color(0xFF00E6BD);
+
+  // ✅ 선택된 박스 배경색 (아주 연한 민트)
+  final Color _activeBackgroundColor = const Color(0xFFE5FCF8);
+
+  // 비활성 텍스트 색상
+  final Color _inactiveTextColor = const Color(0xFF9E9E9E);
+  // 입력창 배경색
+  final Color _inputFillColor = const Color(0xFFF7F8F9);
 
   // --- 1단계: 닉네임 ---
   final TextEditingController _nicknameController = TextEditingController();
-  bool _isNicknameChecked = false; // 닉네임 중복확인 완료 여부
+  bool _isNicknameChecked = false;
 
   // --- 2단계: 신체 정보 ---
   final TextEditingController _ageController = TextEditingController();
@@ -46,7 +55,6 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
   @override
   void initState() {
     super.initState();
-    // 닉네임이 바뀌면 중복확인 상태 초기화 (다시 확인해야 함)
     _nicknameController.addListener(() {
       if (_isNicknameChecked) {
         setState(() {
@@ -84,26 +92,25 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
   // 각 단계별 유효성 검사
   bool get _isCurrentStepValid {
     switch (_currentPage) {
-      case 0: // 닉네임: 입력되어 있고 + 중복확인까지 마쳐야 함
+      case 0:
         return _nicknameController.text.trim().isNotEmpty && _isNicknameChecked;
-      case 1: // 신체정보
+      case 1:
         return _ageController.text.isNotEmpty &&
             _heightController.text.isNotEmpty &&
             _weightController.text.isNotEmpty &&
             _selectedGender != null;
-      case 2: // 목표설정
+      case 2:
         return _stepsController.text.isNotEmpty &&
             _exerciseTimeController.text.isNotEmpty &&
             _sleepHourController.text.isNotEmpty &&
             _sleepMinController.text.isNotEmpty;
-      case 3: // 관심사
+      case 3:
         return _selectedInterests.isNotEmpty;
       default:
         return false;
     }
   }
 
-  // ✅ [Helper] 토큰 가져오기
   Future<String?> _getToken() async {
     String? token = Common.token;
     if (token == null) {
@@ -112,12 +119,11 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     return token;
   }
 
-  // ✅ [API 1] 닉네임 중복 확인 (버튼 클릭 시 실행)
+  // ✅ [API 1] 닉네임 중복 확인
   Future<void> _checkNickname() async {
     final nickname = _nicknameController.text.trim();
     if (nickname.isEmpty) return;
 
-    // 키보드 내리기
     FocusScope.of(context).unfocus();
     setState(() => _isLoading = true);
 
@@ -130,52 +136,38 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
 
     try {
       final url = Uri.parse('$baseUrl/api/users/check-nickname?nickname=$nickname');
-
       final response = await http.get(
         url,
-        headers: {
-          "Authorization": "Bearer $token",
-        },
+        headers: {"Authorization": "Bearer $token"},
       );
 
-      print("📩 [닉네임 확인] 상태코드: ${response.statusCode}");
-
       if (response.statusCode == 200) {
-        // ✅ 사용 가능
-        setState(() {
-          _isNicknameChecked = true;
-        });
+        setState(() => _isNicknameChecked = true);
         _showSnackBar("사용 가능한 닉네임입니다!");
       } else {
-        // ❌ 사용 불가 (409 Conflict 등)
-        setState(() {
-          _isNicknameChecked = false;
-        });
-        _showSnackBar("이미 사용 중인 닉네임입니다. 다른 이름을 써주세요.");
+        setState(() => _isNicknameChecked = false);
+        _showSnackBar("이미 사용 중인 닉네임입니다.");
       }
     } catch (e) {
-      print("Error: $e");
       _showSnackBar("서버 연결에 실패했습니다.");
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
-  // ✅ [API 2] 온보딩 정보 등록 (최종 제출)
+  // ✅ [API 2] 온보딩 정보 등록
   Future<void> _submitOnboarding() async {
     setState(() => _isLoading = true);
-
     String? token = await _getToken();
 
     if (token == null) {
-      _showSnackBar("로그인 정보가 없습니다. 다시 로그인해주세요.");
+      _showSnackBar("로그인 정보가 없습니다.");
       setState(() => _isLoading = false);
       return;
     }
 
     try {
       final url = Uri.parse('$baseUrl/api/users/onboarding');
-
       final bodyData = {
         "nickname": _nicknameController.text.trim(),
         "age": int.parse(_ageController.text),
@@ -191,8 +183,6 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
         "referrerId": "none"
       };
 
-      print("🚀 [전송 데이터]: $bodyData");
-
       final response = await http.post(
         url,
         headers: {
@@ -201,8 +191,6 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
         },
         body: jsonEncode(bodyData),
       );
-
-      print("📩 [응답 상태]: ${response.statusCode}");
 
       if (response.statusCode == 200) {
         if (!mounted) return;
@@ -215,7 +203,6 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
         _showSnackBar("저장에 실패했습니다. (코드: ${response.statusCode})");
       }
     } catch (e) {
-      print("🔥 [에러] $e");
       _showSnackBar("오류가 발생했습니다: $e");
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -272,9 +259,10 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                       height: 10,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
+                        // ✅ 현재 페이지만 민트색, 나머지는 회색
                         color: (_currentPage - 1) == index
-                            ? _activeColor
-                            : Colors.grey.shade300,
+                            ? _mintColor
+                            : const Color(0xFFEEEEEE),
                       ),
                     );
                   }),
@@ -302,22 +290,21 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
               child: SizedBox(
                 width: double.infinity,
-                height: 52,
+                height: 56,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _isCurrentStepValid ? _activeColor : Colors.grey.shade300,
-                    foregroundColor: _isCurrentStepValid ? Colors.white : Colors.grey,
+                    // ✅ 버튼 색상: 활성화되면 민트색, 아니면 회색
+                    backgroundColor: _isCurrentStepValid ? _mintColor : const Color(0xFFE0E0E0),
+                    foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  // 로딩 중이 아니고 유효할 때만 클릭 가능
                   onPressed: (_isCurrentStepValid && !_isLoading)
                       ? () {
-                    // 0페이지에서는 이미 중복확인이 끝났으므로 바로 넘어감
                     if (_currentPage == 3) {
-                      _submitOnboarding(); // 최종 등록
+                      _submitOnboarding();
                     } else {
                       _goToNextPage();
                     }
@@ -342,7 +329,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     );
   }
 
-  // --- 1단계: 닉네임 (수정됨) ---
+  // --- 1단계: 닉네임 ---
   Widget _buildNicknameStep() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -352,11 +339,10 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
           const SizedBox(height: 20),
           const Text(
             "어떻게\n불러드릴까요?",
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, height: 1.4),
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, height: 1.4, color: Colors.black),
           ),
           const SizedBox(height: 100),
 
-          // ✨ [수정] 입력창 + 중복확인 버튼 Row 배치
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -368,17 +354,18 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                       controller: _nicknameController,
                       maxLength: 10,
                       style: const TextStyle(fontSize: 18),
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         hintText: "닉네임을 입력해주세요",
-                        hintStyle: TextStyle(color: Color(0xFFBDBDBD), fontSize: 16),
+                        hintStyle: const TextStyle(color: Color(0xFFBDBDBD), fontSize: 16),
                         counterText: "",
-                        enabledBorder: UnderlineInputBorder(
+                        enabledBorder: const UnderlineInputBorder(
                           borderSide: BorderSide(color: Color(0xFFE0E0E0)),
                         ),
+                        // ✅ 포커스 시 민트색 밑줄
                         focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: Colors.black),
+                          borderSide: BorderSide(color: _mintColor, width: 2),
                         ),
-                        contentPadding: EdgeInsets.only(right: 30, bottom: 8),
+                        contentPadding: const EdgeInsets.only(right: 30, bottom: 8),
                       ),
                     ),
                     if (_nicknameController.text.isNotEmpty)
@@ -390,36 +377,31 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                 ),
               ),
               const SizedBox(width: 10),
-
-              // ✨ [추가] 중복 확인 버튼
               SizedBox(
                 height: 40,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black, // 버튼 색상
+                    // ✅ 중복확인 버튼: 민트색
+                    backgroundColor: _mintColor,
                     foregroundColor: Colors.white,
+                    elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(6),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                   ),
-                  onPressed: _nicknameController.text.trim().isEmpty
-                      ? null
-                      : _checkNickname, // 버튼 누르면 API 호출
+                  onPressed: _nicknameController.text.trim().isEmpty ? null : _checkNickname,
                   child: const Text("중복 확인", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
           ),
-
           const SizedBox(height: 8),
-
-          // 안내 문구 (확인 여부에 따라 다르게 표시 가능)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               if (_isNicknameChecked)
-                const Text("✅ 사용 가능한 닉네임입니다.", style: TextStyle(color: Colors.green, fontSize: 12))
+                const Text("사용 가능한 닉네임입니다.", style: TextStyle(color: Colors.green, fontSize: 12))
               else
                 const Text("닉네임 중복 확인을 해주세요.", style: TextStyle(color: Color(0xFF9E9E9E), fontSize: 12)),
 
@@ -434,7 +416,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     );
   }
 
-  // --- 2단계 UI ---
+  // --- 2단계: 신체 정보 ---
   Widget _buildPersonalInfoStep() {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -444,7 +426,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
           const SizedBox(height: 20),
           const Text(
             "버디님에 대해\n알려주세요",
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, height: 1.4),
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, height: 1.4, color: Colors.black),
           ),
           const SizedBox(height: 8),
           const Text(
@@ -452,6 +434,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
             style: TextStyle(fontSize: 14, color: Color(0xFF9E9E9E)),
           ),
           const SizedBox(height: 40),
+
           _buildLabel("나이"),
           const SizedBox(height: 8),
           _buildBoxTextField(controller: _ageController, hint: "예) 28", isNumber: true),
@@ -462,7 +445,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
           Row(
             children: [
               Expanded(child: _buildGenderButton("남성", "Male")),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               Expanded(child: _buildGenderButton("여성", "Female")),
             ],
           ),
@@ -482,7 +465,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     );
   }
 
-  // --- 3단계 UI ---
+  // --- 3단계: 일일 목표 ---
   Widget _buildDailyGoalStep() {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -492,7 +475,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
           const SizedBox(height: 20),
           const Text(
             "일일 목표를\n설정해주세요",
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, height: 1.4),
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, height: 1.4, color: Colors.black),
           ),
           const SizedBox(height: 8),
           const Text(
@@ -530,7 +513,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     );
   }
 
-  // --- 4단계 UI ---
+  // --- 4단계: 관심 분야 (큰 박스 형태 + 민트색 테두리) ---
   Widget _buildInterestStep() {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -540,44 +523,58 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
           const SizedBox(height: 20),
           const Text(
             "관심 분야를\n선택해주세요",
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, height: 1.4),
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, height: 1.4, color: Colors.black),
           ),
           const SizedBox(height: 40),
 
-          Wrap(
-            spacing: 8.0,
-            runSpacing: 8.0,
-            children: _interests.map((interest) {
-              final isSelected = _selectedInterests.contains(interest);
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    if (isSelected) {
-                      _selectedInterests.remove(interest);
-                    } else {
-                      _selectedInterests.add(interest);
-                    }
-                  });
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: isSelected ? Colors.black.withOpacity(0.05) : Colors.white,
-                    border: Border.all(
-                      color: isSelected ? _activeColor : const Color(0xFFE0E0E0),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final double itemWidth = (constraints.maxWidth - 12) / 2;
+
+              return Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                alignment: WrapAlignment.center,
+                children: _interests.map((interest) {
+                  final isSelected = _selectedInterests.contains(interest);
+
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        if (isSelected) {
+                          _selectedInterests.remove(interest);
+                        } else {
+                          _selectedInterests.add(interest);
+                        }
+                      });
+                    },
+                    child: Container(
+                      width: itemWidth,
+                      height: 56,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: isSelected ? _activeBackgroundColor : Colors.white,
+                        border: Border.all(
+                          // ✅ 선택 시 테두리: 민트색
+                          color: isSelected ? _mintColor : const Color(0xFFE0E0E0),
+                          width: 1.0,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        interest,
+                        style: TextStyle(
+                          // ✅ 선택 시 글자: 민트색
+                          color: isSelected ? _mintColor : _inactiveTextColor,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                          fontSize: 15,
+                        ),
+                      ),
                     ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    interest,
-                    style: TextStyle(
-                      color: isSelected ? _activeColor : const Color(0xFF9E9E9E),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
+                  );
+                }).toList(),
               );
-            }).toList(),
+            },
           ),
           const SizedBox(height: 20),
         ],
@@ -585,13 +582,19 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     );
   }
 
+  // 📝 공통 라벨
   Widget _buildLabel(String text) {
     return Text(
       text,
-      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black),
+      style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: Colors.black
+      ),
     );
   }
 
+  // 📝 공통 입력 박스 (포커스 시 민트색 테두리)
   Widget _buildBoxTextField({
     required TextEditingController controller,
     required String hint,
@@ -614,16 +617,27 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
         hintText: hint,
         hintStyle: const TextStyle(color: Color(0xFFBDBDBD), fontSize: 14),
         filled: true,
-        fillColor: const Color(0xFFF5F5F5),
+        fillColor: _inputFillColor,
+        // 평소 테두리 없음
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        // ✅ 포커스 시 민트색 테두리 적용
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: _mintColor, width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
     );
   }
 
+  // 📝 성별 선택 버튼 (민트색 테두리 적용)
   Widget _buildGenderButton(String label, String value) {
     bool isSelected = _selectedGender == value;
     return GestureDetector(
@@ -633,21 +647,24 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
         });
       },
       child: Container(
-        height: 50,
+        height: 52,
         decoration: BoxDecoration(
-          color: isSelected ? Colors.black.withOpacity(0.05) : Colors.white,
+          color: isSelected ? _activeBackgroundColor : Colors.white,
           border: Border.all(
-            color: isSelected ? _activeColor : const Color(0xFFE0E0E0),
-            width: 1.5,
+            // ✅ 선택 시 테두리: 민트색
+            color: isSelected ? _mintColor : const Color(0xFFE0E0E0),
+            width: 1.0,
           ),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
         ),
         alignment: Alignment.center,
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? _activeColor : const Color(0xFF9E9E9E),
-            fontWeight: FontWeight.bold,
+            // ✅ 선택 시 글자: 민트색
+            color: isSelected ? _mintColor : _inactiveTextColor,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            fontSize: 15,
           ),
         ),
       ),

@@ -93,9 +93,18 @@ class _MedicineEditPageState extends State<MedicineEditPage> {
     bool isDinner = _selectedTimeOfDay == '저녁';
 
     // 3. 데이터 생성
-    // 🚨 중요: 서버가 GET에서 'medicineName'을 줬으니, POST도 'medicineName'일 확률 99.9%
+    // ✅ [핵심 전략] 서버가 거절 못하게 다 넣어버리기
     final Map<String, dynamic> data = {
-      "medicineName": _nameController.text, // 이걸로 고정!
+      // 1. 가장 유력한 후보들
+      "medicineName": _nameController.text,   // 문서상 유력
+      "medicationName": _nameController.text, // 이전 로그 기반
+      "name": _nameController.text,           // 일반적인 관례
+
+      // 2. 혹시 언더바(_)를 쓸까?
+      "medicine_name": _nameController.text,
+      "medication_name": _nameController.text,
+
+      // 3. 나머지 데이터
       "timing": _selectedTiming,
       "takeMorning": isMorning,
       "takeLunch": isLunch,
@@ -103,7 +112,7 @@ class _MedicineEditPageState extends State<MedicineEditPage> {
     };
 
     try {
-      print("📦 [서버로 보내는 보따리] $data"); // 보내는 데이터 눈으로 확인
+      print("🚀 [저장 시도] 데이터: $data"); // 한글이 잘 찍히는지 콘솔 확인!
 
       if (widget.record == null) {
         await _apiService.createMedicine(data);
@@ -111,14 +120,10 @@ class _MedicineEditPageState extends State<MedicineEditPage> {
         await _apiService.updateMedicine(widget.record!.id, data);
       }
 
-      if (mounted) {
-        Navigator.pop(context, true);
-      }
+      if (mounted) Navigator.pop(context, true);
     } catch (e) {
-      print("❌ 저장 에러: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('저장 실패')),
-      );
+      print("❌ 저장 실패: $e");
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('저장 실패')));
     }
   }
 

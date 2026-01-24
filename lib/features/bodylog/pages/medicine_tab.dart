@@ -1,5 +1,3 @@
-// lib/features/bodylog/pages/medicine_tab.dart
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../data/medicine_api_service.dart';
@@ -49,30 +47,46 @@ class _MedicineTabState extends State<MedicineTab> {
     }
   }
 
-  // 복용 체크/취소
+  // ✅ [수정됨] 복용 체크 / 취소 로직 연결
   Future<void> _toggleCheck(MedicineRecord med) async {
-    // 이미 체크된 상태라면 취소 로직이 필요할 수 있지만, 일단 '복용' 기능만 연결
-    if (med.isTaken) return;
-
     try {
-      // ❌ [삭제] await _apiService.toggleCheck(med.id);
+      if (med.isTaken) {
+        // 🟥 1. 이미 먹은 상태면 -> 취소(삭제)
+        // (주의: MedicineRecord 모델에 logId가 있어야 취소가 정확히 됨)
+        if (med.logId != null) {
+          await _apiService.cancelMedicine(med.logId!);
 
-      // ✅ [수정] 객체 전체를 넘깁니다. (이름, 타이밍 정보가 필요해서)
-      await _apiService.toggleCheck(med);
+          setState(() {
+            med.isTaken = false;
+            med.logId = null; // ID 초기화
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('복용 취소됨')),
+          );
+        } else {
+          // logId가 없으면 화면에서만 일단 끔 (새로고침 권장)
+          setState(() => med.isTaken = false);
+          _fetchData(); // 확실하게 하기 위해 새로고침
+        }
+      } else {
+        // 🟩 2. 안 먹은 상태면 -> 복용(생성)
+        // checkMedicine이 생성된 로그의 ID를 반환하도록 API를 수정했었음
+        int? newLogId = await _apiService.checkMedicine(med);
 
-      setState(() {
-        med.isTaken = true; // 화면 즉시 반영
-      });
-
-      // 확실하게 하기 위해 서버 목록 다시 불러오기 (선택사항)
-      // _fetchData();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('복용 완료! 💊')),
-      );
+        if (newLogId != null) {
+          setState(() {
+            med.isTaken = true;
+            med.logId = newLogId; // ✅ ID 저장! (그래야 나중에 취소 가능)
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('복용 완료! 💊')),
+          );
+        }
+      }
     } catch (e) {
+      print("에러 발생: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('처리 실패')),
+        const SnackBar(content: Text('처리 실패: 서버 에러')),
       );
     }
   }
@@ -234,15 +248,18 @@ class _MedicineTabState extends State<MedicineTab> {
         child: Row(
           children: [
             // 체크 아이콘
-            Container(
-              width: 50, height: 50,
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(12),
+            GestureDetector( // 아이콘 눌러도 체크되게 수정
+              onTap: () => _toggleCheck(med),
+              child: Container(
+                width: 50, height: 50,
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: med.isTaken
+                    ? const Icon(Icons.check, color: Color(0xFF4BECBE))
+                    : const SizedBox(),
               ),
-              child: med.isTaken
-                  ? const Icon(Icons.check, color: Color(0xFF4BECBE))
-                  : const SizedBox(),
             ),
             const SizedBox(width: 15),
 
@@ -264,7 +281,7 @@ class _MedicineTabState extends State<MedicineTab> {
               ),
             ),
 
-            // 복용 버튼 (체크 API 호출)
+            // 복용 버튼
             GestureDetector(
               onTap: () => _toggleCheck(med),
               child: Container(

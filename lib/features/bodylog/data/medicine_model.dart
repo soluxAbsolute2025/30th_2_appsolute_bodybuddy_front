@@ -1,58 +1,49 @@
 class MedicineRecord {
-  final int id;
+  final int id;            // 프리셋 ID
   final String name;       // 약 이름
-  final String timing;     // 식전, 식후 등
+  final String timing;     // 식전, 식후
+  final String frequencyKor; // 매일
+  final String timeKor;    // 아침, 점심, 저녁
 
-  final bool takeMorning;
-  final bool takeLunch;
-  final bool takeDinner;
-
-  bool isTaken;
+  // 상태 관리 변수
+  bool isTaken;            // 복용 여부
+  int? logId;              // 서버 기록 ID
 
   MedicineRecord({
     required this.id,
     required this.name,
     required this.timing,
-    required this.takeMorning,
-    required this.takeLunch,
-    required this.takeDinner,
+    required this.frequencyKor,
+    required this.timeKor,
     this.isTaken = false,
+    this.logId,
   });
 
   factory MedicineRecord.fromJson(Map<String, dynamic> json) {
-    // 🕵️‍♂️ [디버깅용] 이 로그가 콘솔에 뜨면 "이름"이 어떤 영어 단어로 오는지 확인해보세요!
-    print("🔍 [데이터 확인] ID:${json['presetId']} / 전체: $json");
+    // 1. 이름 안전하게 가져오기 (없으면 '이름 없음')
+    String nameValue = json['medicineName'] ?? json['medicationName'] ?? json['name'] ?? '이름 없음';
+
+    // 2. 시간대 안전하게 만들기
+    List<String> times = [];
+    if (json['takeMorning'] == true) times.add('아침');
+    if (json['takeLunch'] == true) times.add('점심');
+    if (json['takeDinner'] == true) times.add('저녁');
+    String timeStr = times.isEmpty ? '시간 미정' : times.join(', ');
+
+    // 3. 타이밍 안전하게 가져오기
+    String timingValue = json['timing'] ?? '식후';
+
+    // 🚨 4. [에러 원인 해결] 빈도(frequencyKor)가 null이면 '매일'로 강제 고정
+    String freqValue = json['frequencyKor'] ?? json['frequency'] ?? '매일';
 
     return MedicineRecord(
       id: json['presetId'] ?? 0,
-
-      // 🚨 [수정] 서버가 줄 수 있는 모든 이름표를 다 검사합니다.
-      // 순서대로 찾아서 있으면 그걸 씁니다.
-      name: json['medicationName'] ??
-          json['medicineName'] ??
-          json['name'] ??          // 혹시 그냥 'name'일 수도 있음
-          json['itemName'] ??      // 혹시 'itemName'?
-          '이름 없음',             // 다 없으면 그때 '이름 없음'
-
-      timing: json['timing'] ?? '식후',
-
-      takeMorning: json['takeMorning'] == true,
-      takeLunch: json['takeLunch'] == true,
-      takeDinner: json['takeDinner'] == true,
-
+      name: nameValue,
+      timing: timingValue,
+      frequencyKor: freqValue, // 👈 여기가 Null이라서 터졌던 것임!
+      timeKor: timeStr,
       isTaken: false,
+      logId: null,
     );
   }
-
-  String get frequencyKor {
-    List<String> parts = [];
-    if (takeMorning) parts.add('아침');
-    if (takeLunch) parts.add('점심');
-    if (takeDinner) parts.add('저녁');
-
-    if (parts.isEmpty) return '매일';
-    return parts.join(', ');
-  }
-
-  String get timeKor => timing;
 }
