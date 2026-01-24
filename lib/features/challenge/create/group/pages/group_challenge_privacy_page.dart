@@ -5,7 +5,6 @@ import '../models/group_challenge_create_model.dart';
 import '../widgets/group_challenge_create_controller.dart';
 import '../widgets/group_challenge_privacy_tile.dart';
 import 'group_challenge_info_page.dart';
-
 import '../widgets/bottom_primary_button.dart';
 
 class GroupChallengePrivacyPage extends StatefulWidget {
@@ -13,14 +12,14 @@ class GroupChallengePrivacyPage extends StatefulWidget {
   const GroupChallengePrivacyPage({super.key, required this.model});
 
   @override
-  State<GroupChallengePrivacyPage> createState() => _GroupChallengePrivacyPageState();
+  State<GroupChallengePrivacyPage> createState() =>
+      _GroupChallengePrivacyPageState();
 }
 
 class _GroupChallengePrivacyPageState extends State<GroupChallengePrivacyPage> {
-  late final controller = GroupChallengeCreateController(widget.model);
-
   @override
   Widget build(BuildContext context) {
+    final controller = GroupChallengeCreateController(widget.model);
     final isValid = controller.isPrivacyPageValid;
 
     return Scaffold(
@@ -49,7 +48,7 @@ class _GroupChallengePrivacyPageState extends State<GroupChallengePrivacyPage> {
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
+        padding: const EdgeInsets.fromLTRB(16, 32, 16, 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -59,16 +58,19 @@ class _GroupChallengePrivacyPageState extends State<GroupChallengePrivacyPage> {
             ),
             const SizedBox(height: 40),
 
-            ...GroupChallengePrivacyOptions.items.map((opt) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: GroupChallengePrivacyTile(
-                    value: opt.value,
-                    title: opt.title,
-                    subtitle: opt.subtitle,
-                    groupValue: widget.model.privacyScope,
-                    onChanged: (v) => setState(() => widget.model.privacyScope = v),
-                  ),
-                )),
+            ...GroupChallengePrivacyOptions.items.map(
+              (opt) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: GroupChallengePrivacyTile(
+                  value: opt.value,
+                  title: opt.title,
+                  subtitle: opt.subtitle,
+                  // ✅ privacyScope -> visibility
+                  groupValue: widget.model.visibility,
+                  onChanged: (v) => setState(() => widget.model.visibility = v),
+                ),
+              ),
+            ),
 
             const Spacer(),
             BottomPrimaryButton(

@@ -44,7 +44,7 @@ class _MainPageState extends State<MainPage> {
         ],
       ),
 
-      floatingActionButton: _shouldShowFloating()
+      floatingActionButton: (!_hideBottomNav && _shouldShowFloating())
           ? MainFloating(navigatorKey: _navigatorKeys[_currentIndex])
           : null,
       bottomNavigationBar: _hideBottomNav
