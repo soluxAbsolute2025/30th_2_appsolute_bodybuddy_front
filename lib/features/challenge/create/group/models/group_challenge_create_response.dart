@@ -13,10 +13,10 @@ class GroupChallengeCreateResponse {
 
   factory GroupChallengeCreateResponse.fromJson(Map<String, dynamic> json) {
     return GroupChallengeCreateResponse(
-      status: json['status'] as int,
-      groupId: json['groupId'] as int,
-      groupCode: json['groupCode'] as String,
-      message: json['message'] as String,
+      status: json['status'] ?? 0,
+      groupId: json['groupId'] ?? 0,
+      groupCode: json['groupCode'] ?? '',
+      message: json['message'] ?? '',
     );
   }
 }

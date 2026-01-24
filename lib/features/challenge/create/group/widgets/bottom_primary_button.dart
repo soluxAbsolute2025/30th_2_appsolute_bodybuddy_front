@@ -18,7 +18,7 @@ class BottomPrimaryButton extends StatelessWidget {
       top: false,
       child: SizedBox(
         width: double.infinity,
-        height: 48,
+        height: 55,
         child: ElevatedButton(
           onPressed: isEnabled ? onPressed : null,
           style: ElevatedButton.styleFrom(
@@ -27,7 +27,7 @@ class BottomPrimaryButton extends StatelessWidget {
             disabledBackgroundColor: const Color(0xFFD9D9D9),
             elevation: 0,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(5),
             ),
           ),
           child: Text(
