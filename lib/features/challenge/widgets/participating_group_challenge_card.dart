@@ -5,7 +5,7 @@ import '../models/group_member_model.dart';
 import 'rank_badge.dart';
 import 'group_code_join_button.dart';
 import 'group_code_join_dialog.dart';
-
+import '../pages/group_challenge_detail_page.dart';
 import '../models/ongoing_group_challenge.dart';
 
 class ParticipatingGroupChallengeCard extends StatelessWidget {
@@ -40,7 +40,9 @@ class ParticipatingGroupChallengeCard extends StatelessWidget {
             width: double.infinity,
             height: 150,
             decoration: BoxDecoration(
-              color: challenge.imageUrl == null ? const Color(0xFFF5F5F5) : null,
+              color: challenge.imageUrl == null
+                  ? const Color(0xFFF5F5F5)
+                  : null,
               borderRadius: BorderRadius.circular(10),
               image: challenge.imageUrl != null
                   ? DecorationImage(
@@ -106,9 +108,14 @@ class ParticipatingGroupChallengeCard extends StatelessWidget {
           onTap: () {
             showJoinGroupCodeDialog(
               context: context,
-              onJoin: (code) {
-                debugPrint('그룹 코드: $code');
-                // TODO: 그룹 참여 API 호출
+              onMoveToChallenge: (challengeId) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        GroupChallengeDetailPage(challengeId: challengeId),
+                  ),
+                );
               },
             );
           },

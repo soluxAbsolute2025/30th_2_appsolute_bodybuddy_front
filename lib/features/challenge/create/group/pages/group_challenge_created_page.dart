@@ -59,7 +59,7 @@ class GroupChallengeCreatedPage extends StatelessWidget {
               Expanded(
                 child: Center(
                   child: Image.asset(
-                    'assets/challenge/group_success.svg',
+                    'assets/challenge/success.svg',
                     width: 180,
                     fit: BoxFit.contain,
                   ),
