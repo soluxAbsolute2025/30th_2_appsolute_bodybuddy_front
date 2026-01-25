@@ -6,7 +6,12 @@ import '/features/mypage/pages/mypage_profile_page.dart';
 
 class MypageProfileWidget extends StatefulWidget {
   MyPageResponse? myPageInfo;
-  MypageProfileWidget({super.key, required this.myPageInfo});
+  final Function() onBack;
+  MypageProfileWidget({
+    super.key,
+    required this.myPageInfo,
+    required this.onBack,
+  });
 
   @override
   State<MypageProfileWidget> createState() => _MypageProfileWidgetState();
@@ -96,13 +101,17 @@ class _MypageProfileWidgetState extends State<MypageProfileWidget> {
             ),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.of(context, rootNavigator: true).push(
+            onPressed: () async {
+              await Navigator.of(context, rootNavigator: true).push(
                 MaterialPageRoute(
                   builder: (context) =>
                       MypageProfilePage(myPageInfo: widget.myPageInfo),
                 ),
               );
+
+              if (context.mounted) {
+                widget.onBack();
+              }
             },
             style: TextButton.styleFrom(
               foregroundColor: Color(0x1188D3BD),

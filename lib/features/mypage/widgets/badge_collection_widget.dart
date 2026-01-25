@@ -4,7 +4,12 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 class BadgeCollectionWidget extends StatefulWidget {
   MyPageResponse? myPageInfo;
-  BadgeCollectionWidget({super.key, required this.myPageInfo});
+  Function() onBack;
+  BadgeCollectionWidget({
+    super.key,
+    required this.myPageInfo,
+    required this.onBack,
+  });
 
   @override
   State<BadgeCollectionWidget> createState() => _BadgeCollectionWidgetState();
@@ -38,7 +43,18 @@ class _BadgeCollectionWidgetState extends State<BadgeCollectionWidget> {
                   ),
                 ),
                 TextButton(
-                  onPressed: () {},
+                  onPressed: () async {
+                    // await Navigator.of(context, rootNavigator: true).push(
+                    //   MaterialPageRoute(
+                    //     builder: (context) =>
+                    //         MypageProfilePage(myPageInfo: widget.myPageInfo),
+                    //   ),
+                    // );
+                    //
+                    // if (context.mounted) {
+                    //   widget.onBack();
+                    // }
+                  },
                   style: TextButton.styleFrom(
                     foregroundColor: Color(0x1188D3BD),
                     padding: EdgeInsets.symmetric(

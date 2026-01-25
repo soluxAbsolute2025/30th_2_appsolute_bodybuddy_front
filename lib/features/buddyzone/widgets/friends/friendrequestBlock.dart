@@ -44,7 +44,7 @@ class _FriendrequestState extends State<FriendrequestBlock> {
                     ? NetworkImage(
                         widget.buddyRequest.profileImageUrl.toString(),
                       )
-                    : AssetImage('assets/buddyzone/myprofile.jpg'),
+                    : AssetImage('assets/buddyzone/myprofile.png'),
               ),
             ),
           ),
@@ -113,10 +113,7 @@ class _FriendrequestState extends State<FriendrequestBlock> {
                     color: Color(0xFF1AEDB1),
                   ),
                   child: TextButton(
-                    onPressed: () {
-                      print("수락 클릭!");
-                      widget.onAccept;
-                    },
+                    onPressed: widget.onAccept,
                     style: TextButton.styleFrom(
                       foregroundColor: Color(0xFF669688),
                       padding: EdgeInsets.symmetric(
@@ -148,10 +145,7 @@ class _FriendrequestState extends State<FriendrequestBlock> {
                     color: Colors.white,
                   ),
                   child: TextButton(
-                    onPressed: () {
-                      print("x 클릭!");
-                      widget.onReject;
-                    },
+                    onPressed: widget.onReject,
                     style: TextButton.styleFrom(
                       foregroundColor: Color(0xFFF65A33),
                       padding: EdgeInsets.symmetric(

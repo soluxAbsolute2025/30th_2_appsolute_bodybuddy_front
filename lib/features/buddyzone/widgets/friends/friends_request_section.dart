@@ -81,7 +81,7 @@ class FriendRequestSection extends StatelessWidget {
       height: 127.0,
       alignment: Alignment.center,
       child: const Text(
-        '친구 요청이 들어오지 않았습니다\n',
+        '친구 요청이 들어오지 않았습니다\n새로운 버디들을 탐색해보세요!',
         textAlign: TextAlign.center,
         style: TextStyle(
           color: Color(0xFFA6A6A6),

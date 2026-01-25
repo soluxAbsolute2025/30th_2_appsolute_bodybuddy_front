@@ -1,5 +1,6 @@
 // features/home/widgets/home_content.dart
 
+import 'package:bodybuddy_frontend/common/widgets/toast_widget.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/api/buddyzone_friends_api.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/models/friends/buddy_detail_model.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/models/friends/buddy_list_model.dart';
@@ -142,6 +143,10 @@ class _MyfriendBlockState extends State<MyfriendBlock> {
                   : () {
                       print("손 흔들기 클릭!");
                       _postPock(userId: widget.buddy!.userId);
+                      CustomToast.show(
+                        context,
+                        "${widget.buddy!.nickname}님을 콕 찔렀습니다!",
+                      );
                       setState(() {
                         isPocked = !isPocked;
                       });

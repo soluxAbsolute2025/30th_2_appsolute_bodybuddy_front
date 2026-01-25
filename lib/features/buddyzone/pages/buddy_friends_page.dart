@@ -1,3 +1,4 @@
+import 'package:bodybuddy_frontend/common/widgets/toast_widget.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/api/buddyzone_friends_api.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/models/friends/buddy_detail_model.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/models/friends/buddy_list_model.dart';
@@ -45,8 +46,11 @@ class _BuddyFriendPageState extends State<BuddyFriendPage> {
   }
 
   void _handleAcceptBuddy(int requestId) async {
+    print("DEBUG: 수락 버튼 클릭됨! requestId: $requestId"); // 1단계 확인
     try {
+      print("DEBUG: API 호출 시작...");
       await BuddysApi().acceptBuddyRequest(requestId: requestId);
+      print("DEBUG: API 호출 성공!"); // 2단계 확인
 
       setState(() {
         // 1. 요청 목록 속, 해당하는 요청 찾기
@@ -70,6 +74,10 @@ class _BuddyFriendPageState extends State<BuddyFriendPage> {
             profileImageUrl: targetRequest.profileImageUrl,
             isPokedToday: false,
           ),
+        );
+        CustomToast.show(
+          context,
+          "${targetRequest.nickname.toString()}님이 친구가 되었습니다!",
         );
       });
     } catch (e) {

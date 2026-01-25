@@ -163,10 +163,6 @@ class _SubFeedPagesState extends State<SubFeedPages> {
       print("삭제 성공!"); // 로그 확인용
     } catch (e) {
       print("삭제 실패 (서버 에러): $e");
-
-      // setState(() {
-      //   widget.feed.comments.removeWhere((comment) => comment.id == commentId);
-      // });
     }
   }
 

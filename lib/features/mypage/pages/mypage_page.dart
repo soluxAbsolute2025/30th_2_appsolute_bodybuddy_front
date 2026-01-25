@@ -52,8 +52,6 @@ class _MypagePageState extends State<MypagePage> with RouteAware {
   @override
   void didPopNext() {
     print("마이페이지로 돌아왔습니다. 데이터를 갱신합니다.");
-    // 이때는 로딩 화면을 보여주지 않고 조용히 데이터만 갱신하거나,
-    // 필요하다면 isLoading을 true로 바꿔 로딩을 보여줄 수도 있습니다.
     getMypageInfoAll();
   }
 
@@ -105,7 +103,10 @@ class _MypagePageState extends State<MypagePage> with RouteAware {
               padding: EdgeInsets.symmetric(horizontal: 16.0),
               child: Column(
                 children: [
-                  MypageProfileWidget(myPageInfo: myPageInfo),
+                  MypageProfileWidget(
+                    myPageInfo: myPageInfo,
+                    onBack: didPopNext,
+                  ),
                   MypageLevelBadgeWidget(myPageInfo: myPageInfo),
                   SizedBox(height: 30.0),
                   MypageMoemWidget(myPageInfo: myPageInfo),
@@ -117,13 +118,16 @@ class _MypagePageState extends State<MypagePage> with RouteAware {
             Container(
               color: Colors.white,
               padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: BadgeCollectionWidget(myPageInfo: myPageInfo),
+              child: BadgeCollectionWidget(
+                myPageInfo: myPageInfo,
+                onBack: didPopNext,
+              ),
             ),
             SizedBox(height: 10.0),
             Container(
               color: Colors.white,
               padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: StatisticsSettingsWidget(),
+              child: StatisticsSettingsWidget(onBack: didPopNext),
             ),
             SizedBox(height: 10.0),
             Container(

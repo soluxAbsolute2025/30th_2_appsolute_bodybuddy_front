@@ -157,7 +157,7 @@ class _MypageMyFeedWidget extends State<MypageMyFeedWidget> {
                       widget.feed?.postImageUrl != null ||
                           widget.feed.postImageUrl != ''
                       ? NetworkImage(widget.feed.postImageUrl)
-                      : AssetImage('assets/mypage/myprofile.png'),
+                      : AssetImage('assets/buddyzone/feed_image.png'),
                 ),
               ),
             ),

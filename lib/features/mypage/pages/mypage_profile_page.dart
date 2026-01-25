@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:bodybuddy_frontend/common/widgets/sub_appbar.dart';
+import 'package:bodybuddy_frontend/common/widgets/toast_widget.dart';
 import 'package:bodybuddy_frontend/features/mypage/api/mypage_api.dart';
 import 'package:bodybuddy_frontend/features/mypage/models/mypage_info_model.dart';
 import 'package:bodybuddy_frontend/features/mypage/models/mypage_profile_model.dart';
@@ -149,6 +150,8 @@ class _MypageProfilePageState extends State<MypageProfilePage> {
       request: profileModel,
       imageFile: _selectedImage, // 이미지가 있으면 파일 전송
     );
+
+    CustomToast.show(context, '나의 프로필을 수정했습니다!');
   }
 
   Future<void> _pickAndProcessImage() async {

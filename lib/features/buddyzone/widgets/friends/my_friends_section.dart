@@ -1,4 +1,5 @@
 // features/home/widgets/home_content.dart
+import 'package:bodybuddy_frontend/common/widgets/toast_widget.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/api/buddyzone_friends_api.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/models/friends/buddy_detail_model.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/models/friends/buddy_list_model.dart';
@@ -202,7 +203,13 @@ class _MyFriendsSectionState extends State<MyFriendsSection> {
             onPressed: () async {
               final nickname = _nicknameController.text;
               await _buddyRequest(nickname: nickname);
+              CustomToast.show(
+                context,
+                "${nickname}님에게 친구 신청을 보냈습니다!",
+                subMessage: "친구 추가",
+              );
               _nicknameController.clear();
+
               if (context.mounted) {
                 Navigator.of(context).pop();
               }

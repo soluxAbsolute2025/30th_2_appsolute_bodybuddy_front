@@ -1,4 +1,5 @@
 import 'package:bodybuddy_frontend/common/widgets/sub_appbar.dart';
+import 'package:bodybuddy_frontend/common/widgets/toast_widget.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/api/buddyzone_hottag_api.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/models/feeds/feed_post_model.dart';
 import 'package:bodybuddy_frontend/features/mypage/api/mypage_api.dart';
@@ -84,6 +85,9 @@ class _SubNewFeedPagesState extends State<SubNewFeedPages> {
       request: postFeedModel,
       imageFile: _selectedImage,
     );
+
+    CustomToast.show(context, "피드 작성을 완료했습니다!");
+    Navigator.pop(context);
   }
 
   void switchVisible() {
