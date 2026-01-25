@@ -16,7 +16,6 @@ class BodyLogPage extends StatefulWidget {
 
 class _BodyLogPageState extends State<BodyLogPage> {
 
-  // (선택사항) 페이지 들어올 때 토큰 잘 있나 확인해보기
   @override
   void initState() {
     super.initState();
@@ -40,27 +39,35 @@ class _BodyLogPageState extends State<BodyLogPage> {
           elevation: 0,
           centerTitle: false,
           actions: [
-            IconButton(
-              icon: const Icon(Icons.access_time, color: Colors.black, size: 24),
-              onPressed: () {
-                // ★ 2. 만약 알람 설정할 때 토큰이 필요하다면?
-                // 여기서 토큰을 확인하거나 다음 페이지에서 Common.token을 쓰면 됩니다.
+            // [수정] IconButton -> GestureDetector + Image.asset으로 변경
+            GestureDetector(
+              onTap: () {
                 print("알람 설정하러 감 (토큰 보유중: ${Common.token != null})");
-
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const AlarmSettingScreen()),
                 );
               },
+              child: Container(
+                // 터치 영역 확보를 위해 투명 배경 및 패딩 설정
+                color: Colors.transparent,
+                padding: const EdgeInsets.all(8.0), // 터치 영역 넓히기
+                child: Image.asset(
+                  'assets/bodylog/alarm_icon.png', // ★ 여기에 실제 이미지 경로를 넣으세요
+                  width: 80, // 이미지 너비
+                  height: 60, // 이미지 높이
+                  fit: BoxFit.contain,
+                ),
+              ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width:10), // 우측 여백 살짝 조정
           ],
           bottom: TabBar(
             isScrollable: true,
             tabAlignment: TabAlignment.start,
             labelColor: Colors.black,
             unselectedLabelColor: Colors.grey,
-            indicatorColor: Colors.teal,
+            indicatorColor: Color(0xFF00E6BD),
             indicatorWeight: 3,
             labelStyle: const TextStyle(fontWeight: FontWeight.bold),
             labelPadding: EdgeInsets.zero,
@@ -72,10 +79,6 @@ class _BodyLogPageState extends State<BodyLogPage> {
             ],
           ),
         ),
-
-        // ★ 3. 자식 탭들 (WaterTab 등)에게 토큰을 넘겨줄 필요가 있나요?
-        // 아니요! WaterTab 파일 안에서도 'import common.dart' 하고
-        // Common.token 쓰면 됩니다. 굳이 여기서 (token: Common.token) 이렇게 안 넘겨도 됩니다.
         body: const TabBarView(
           children: [
             WaterTab(),

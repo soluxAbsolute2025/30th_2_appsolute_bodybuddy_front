@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../data/alarm_setting_api.dart'; // 경로 확인
 
 class AlarmSettingScreen extends StatefulWidget {
   const AlarmSettingScreen({super.key});
@@ -8,205 +9,292 @@ class AlarmSettingScreen extends StatefulWidget {
 }
 
 class _AlarmSettingScreenState extends State<AlarmSettingScreen> {
-  // 스위치 상태 관리 변수들
-  bool _isBreakfastOn = true; // 아침 식사 (켜짐)
-  bool _isLunchOn = false;    // 점심 식사
-  bool _isDinnerOn = false;   // 저녁 식사
+  bool _isLoading = true;
 
-  // 테마 색상 (WaterTab에서 사용된 민트색)
-  final Color _primaryColor = const Color(0xFF4BECBE);
+  // 카테고리별 데이터
+  Map<String, List<dynamic>> _alarmData = {
+    'MEAL': [],
+    'MEDICINE': [],
+    'EXERCISE': [],
+    'WATER': [],
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    final data = await AlarmSettingApi.getAlarms();
+    if (mounted) {
+      setState(() {
+        _alarmData = data;
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _toggleSwitch(Map<String, dynamic> alarm, bool newVal) async {
+    final int id = alarm['alarmId'] ?? 0;
+    final String category = alarm['category'] ?? 'MEAL';
+    final String label = alarm['label'] ?? '';
+    final String time = alarm['parsedTime'] ?? '00:00:00';
+
+    setState(() {
+      alarm['isEnabled'] = newVal;
+    });
+
+    try {
+      final String timeToSend = time.length > 5 ? time.substring(0, 5) : time;
+      await AlarmSettingApi.updateAlarm(id, category, label, timeToSend, newVal);
+    } catch (e) {
+      setState(() => alarm['isEnabled'] = !newVal);
+      print("스위치 에러: $e");
+    }
+  }
+
+  void _showAlarmModal({required String categoryKey, Map<String, dynamic>? alarm}) {
+    final bool isEditMode = alarm != null;
+    final TextEditingController textController = TextEditingController(
+        text: isEditMode ? (alarm['label'] ?? '') : ''
+    );
+
+    TimeOfDay selectedTime = const TimeOfDay(hour: 8, minute: 0);
+
+    if (isEditMode) {
+      final String rawTime = alarm['parsedTime'] ?? '08:00:00';
+      try {
+        final parts = rawTime.split(':');
+        if (parts.length >= 2) {
+          selectedTime = TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+        }
+      } catch (_) {}
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: Text(isEditMode ? '알람 수정' : '알람 추가'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text("알람 이름", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  TextField(
+                    controller: textController,
+                    decoration: const InputDecoration(
+                      hintText: '예: 점심 약 먹기',
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(vertical: 8),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text("시간 설정", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  const SizedBox(height: 8),
+                  InkWell(
+                    onTap: () async {
+                      final TimeOfDay? time = await showTimePicker(
+                        context: context,
+                        initialTime: selectedTime,
+                      );
+                      if (time != null) {
+                        setStateDialog(() => selectedTime = time);
+                      }
+                    },
+                    child: Row(
+                      children: [
+                        Text(
+                          "${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}",
+                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(width: 8),
+                        const Icon(Icons.edit, size: 16, color: Colors.grey),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                if (isEditMode)
+                  TextButton(
+                    onPressed: () async {
+                      Navigator.pop(context);
+                      await _deleteAction(alarm['alarmId'] ?? 0);
+                    },
+                    style: TextButton.styleFrom(foregroundColor: Colors.red),
+                    child: const Text('삭제'),
+                  ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('취소', style: TextStyle(color: Colors.grey)),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (textController.text.isEmpty) return;
+                    // [중요] API 요구사항에 맞춰 :00 추가
+                    final String formattedTime =
+                        "${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}:00";
+
+                    Navigator.pop(context);
+
+                    if (isEditMode) {
+                      await AlarmSettingApi.updateAlarm(
+                        alarm['alarmId'] ?? 0,
+                        categoryKey,
+                        textController.text,
+                        formattedTime,
+                        alarm['isEnabled'] ?? true,
+                      );
+                    } else {
+                      await AlarmSettingApi.addAlarm(
+                        categoryKey,
+                        textController.text,
+                        formattedTime,
+                      );
+                    }
+                    await _loadData();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4BECBE),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                  ),
+                  child: const Text('저장'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _deleteAction(int id) async {
+    try {
+      await AlarmSettingApi.deleteAlarm(id);
+      await _loadData();
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("삭제되었습니다.")));
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("삭제 실패")));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5), // 전체 배경색 (연한 회색)
+      backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
+        title: const Text('알람 설정', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
-        scrolledUnderElevation: 0,
-        centerTitle: true, // 타이틀 중앙 정렬
+        centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          '알람 설정',
-          style: TextStyle(
-            fontFamily: 'Pretendard',
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.black,
-          ),
-        ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF4BECBE)))
+          : SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // 1. 식단 알람 (기본적으로 펼쳐져 있는 상태로 구현)
-            _buildAlarmCard(
-              title: '식단 알람',
-              icon: Icons.rice_bowl, // 식사 아이콘 대체
-              iconColor: Colors.orange,
-              initiallyExpanded: true,
-              children: [
-                _buildSwitchRow(
-                  title: '아침 식사 알람',
-                  time: '매일 07:00',
-                  value: _isBreakfastOn,
-                  onChanged: (v) => setState(() => _isBreakfastOn = v),
-                ),
-                _buildDivider(),
-                _buildSwitchRow(
-                  title: '점심 식사 알람',
-                  time: '매일 12:30',
-                  value: _isLunchOn,
-                  onChanged: (v) => setState(() => _isLunchOn = v),
-                ),
-                _buildDivider(),
-                _buildSwitchRow(
-                  title: '저녁 식사 알람',
-                  time: '매일 18:00',
-                  value: _isDinnerOn,
-                  onChanged: (v) => setState(() => _isDinnerOn = v),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // 2. 약/영양제 알람
-            _buildAlarmCard(
-              title: '약/영양제 알람',
-              icon: Icons.medication, // 알약 아이콘 대체
-              iconColor: Colors.deepPurpleAccent,
-              children: [], // 내용은 비워둠
-            ),
-            const SizedBox(height: 12),
-
-            // 3. 운동 알람
-            _buildAlarmCard(
-              title: '운동 알람',
-              icon: Icons.schedule, // 시계 아이콘 대체
-              iconColor: Colors.black87,
-              children: [],
-            ),
-            const SizedBox(height: 12),
-
-            // 4. 수분 섭취 알람
-            _buildAlarmCard(
-              title: '수분 섭취 알람',
-              icon: Icons.water_drop_outlined, // 물방울 아이콘
-              iconColor: _primaryColor,
-              children: [],
-            ),
+            // [수정] IconData 대신 이미지 경로를 전달합니다.
+            const SizedBox(height: 3),
+            _buildCategoryCard('식단 알람', 'MEAL', 'assets/bodylog/meal_alarm_icon.png'),
+            const SizedBox(height: 3),
+            _buildCategoryCard('약/영양제 알람', 'MEDICINE', 'assets/bodylog/medicine_alarm_icon.png'),
+            const SizedBox(height: 3),
+            _buildCategoryCard('운동 알람', 'EXERCISE', 'assets/bodylog/clock_alarm_icon.png'),
+            const SizedBox(height: 3),
+            _buildCategoryCard('수분 섭취 알람', 'WATER', 'assets/bodylog/water_alarm_icon.png'),
           ],
         ),
       ),
     );
   }
 
-  // --- 위젯 빌더 헬퍼 메서드들 ---
+  // [수정] 인자를 IconData -> String imagePath로 변경
+  Widget _buildCategoryCard(String title, String categoryKey, String imagePath) {
+    final List<dynamic> alarms = _alarmData[categoryKey] ?? [];
 
-  /// 흰색 둥근 배경의 확장 가능한 타일(Card)을 만드는 메서드
-  Widget _buildAlarmCard({
-    required String title,
-    required IconData icon,
-    required Color iconColor,
-    List<Widget> children = const [],
-    bool initiallyExpanded = false,
-  }) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-      ),
-      child: Theme(
-        // ExpansionTile의 위아래 구분선 제거를 위한 테마 설정
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          initiallyExpanded: initiallyExpanded,
-          tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-          childrenPadding: const EdgeInsets.only(bottom: 20),
-          // 아이콘
-          leading: Icon(icon, color: iconColor, size: 24),
-          // 제목
-          title: Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          // 확장 아이콘 색상
-          iconColor: Colors.grey,
-          collapsedIconColor: Colors.grey,
-          // 내부 컨텐츠
-          children: children,
-        ),
-      ),
-    );
-  }
-
-  /// 내부 스위치 행(Row)을 만드는 메서드
-  Widget _buildSwitchRow({
-    required String title,
-    required String time,
-    required bool value,
-    required ValueChanged<bool> onChanged,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                time,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
-                ),
-              ),
-            ],
-          ),
-          // 스위치 디자인 커스텀
-          Transform.scale(
-            scale: 0.9, // 스위치 크기를 살짝 줄임
-            child: Switch(
-              value: value,
-              onChanged: onChanged,
-              activeColor: Colors.white, // 활성화 시 동그라미 색
-              activeTrackColor: _primaryColor, // 활성화 시 배경 색 (민트)
-              inactiveThumbColor: Colors.white, // 비활성화 시 동그라미 색
-              inactiveTrackColor: Colors.grey[200], // 비활성화 시 배경 색
-              trackOutlineColor: MaterialStateProperty.all(Colors.transparent), // 테두리 제거
-            ),
-          ),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
-    );
-  }
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: true,
+          // [수정] Icon 위젯을 Image.asset으로 변경
+          leading: Image.asset(
+            imagePath,
+            width: 16,  // 이미지 크기 조절 (필요시 수정)
+            height: 16,
+            fit: BoxFit.contain,
+            // 이미지가 없을 경우 깨짐 방지용
+            errorBuilder: (context, error, stackTrace) {
+              return const Icon(Icons.image_not_supported, color: Colors.grey);
+            },
+          ),
+          title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          trailing: IconButton(
+            icon: const Icon(Icons.add_circle_outline, color: Colors.grey),
+            onPressed: () => _showAlarmModal(categoryKey: categoryKey),
+          ),
+          children: [
+            if (alarms.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text("등록된 알람이 없습니다.", style: TextStyle(color: Colors.grey)),
+              ),
 
-  /// 항목 사이의 얇은 구분선
-  Widget _buildDivider() {
-    return Divider(
-      height: 1,
-      thickness: 1,
-      color: Colors.grey[100],
-      indent: 20,
-      endIndent: 20,
+            ...alarms.map((alarm) {
+              final String label = alarm['label'] ?? '알람';
+              final String timeStr = alarm['parsedTime'] ?? '00:00:00';
+              final String displayTime = timeStr.length >= 5 ? timeStr.substring(0, 5) : timeStr;
+              final bool isEnabled = alarm['isEnabled'] ?? true;
+
+              return InkWell(
+                onTap: () => _showAlarmModal(categoryKey: categoryKey, alarm: alarm),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                            const SizedBox(height: 4),
+                            Text("매일 $displayTime", style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                          ],
+                        ),
+                      ),
+                      Switch(
+                        value: isEnabled,
+                        onChanged: (val) => _toggleSwitch(alarm, val),
+                        activeColor: const Color(0xFF4BECBE),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
     );
   }
 }

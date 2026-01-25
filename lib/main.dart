@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'features/onboarding/pages/onboarding_page.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'features/onboarding/pages/onboarding_page.dart'; // 맨 처음 화면
 import 'pages/main_page.dart';
 import 'common/common.dart';
 
@@ -8,8 +9,11 @@ final RouteObserver<ModalRoute<void>> routeObserver =
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('ko_KR', null);
 
+  // 토큰 저장소 초기화 (토큰을 불러오긴 하지만, 앱 시작 때 검사하진 않음)
   await Common.init();
+
   runApp(const MyApp());
 }
 
@@ -47,7 +51,7 @@ class MyApp extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF00E676),
             foregroundColor: Colors.white,
-            minimumSize: const Size(double.infinity, 56), // 버튼 높이 56으로 통일
+            minimumSize: const Size(30,35), // -> infinity 랑 width 수정하겠습니다
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
@@ -78,3 +82,4 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+

@@ -4,6 +4,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 class Common {
   static const storage = FlutterSecureStorage();
 
+  // 1. 키 이름을 하나로 확실히 고정합니다.
+  static const _key = 'accessToken';
+
   static String? token;
   static int? userId;
 
@@ -23,31 +26,50 @@ class Common {
     }
   }
 
+  // 토큰 저장 로직 단순화
   static Future<void> setToken(String newToken) async {
     token = newToken;
-    await storage.write(key: 'ACCESS_TOKEN', value: newToken);
+    await storage.write(key: _key, value: newToken);
 
-    // ✅ token에서 userId 추출
     final payload = _decodeJwt(newToken);
     userId = payload?['userId'];
 
-    print("[Common] 토큰 전역 설정 완료 (userId=$userId)");
+    print("[Common] 토큰 설정 완료 (userId=$userId)");
   }
 
+  // 초기화 로직 (에러 방지 핵심)
   static Future<void> init() async {
-    token = await storage.read(key: 'ACCESS_TOKEN');
+    try {
+      // 오직 한 가지 키로만 읽어옵니다.
+      token = await storage.read(key: _key);
 
-    if (token != null) {
-      final payload = _decodeJwt(token!);
-      userId = payload?['userId'];
-      print("[Common] 저장된 토큰 복구 완료 (userId=$userId)");
+      if (token != null && token!.isNotEmpty) {
+        final payload = _decodeJwt(token!);
+
+        if (payload != null) {
+          userId = payload['userId'];
+          print("[Common] 토큰 복구 성공: userId=$userId");
+        } else {
+          print("[Common] 토큰 형식이 올바르지 않음");
+          await logout(); // 잘못된 토큰이면 삭제
+        }
+      } else {
+        print("[Common] 저장된 토큰이 없습니다.");
+        token = null;
+        userId = null;
+      }
+    } catch (e) {
+      print("[Common] 초기화 중 에러 발생: $e");
+      await logout(); // 에러 발생 시 안전하게 로그아웃 처리
     }
   }
 
   static Future<void> logout() async {
     token = null;
-    userId = null; // ✅ 중요
+    userId = null;
+    await storage.delete(key: _key);
+    // 혹시 모를 옛날 키값도 같이 삭제
     await storage.delete(key: 'ACCESS_TOKEN');
-    print("[Common] 토큰 삭제 완료");
+    print("[Common] 모든 토큰 및 유저 정보 삭제 완료");
   }
 }

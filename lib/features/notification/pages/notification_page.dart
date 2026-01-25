@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../data/notification_api.dart'; // 위에서 만든 API 파일 import
 
 class NotificationPage extends StatefulWidget {
   const NotificationPage({super.key});
@@ -8,28 +9,41 @@ class NotificationPage extends StatefulWidget {
 }
 
 class _NotificationPageState extends State<NotificationPage> {
-  // ... (데이터는 아까와 동일) ...
-  final List<Map<String, dynamic>> _todayNotifications = [
-    {
-      "type": "water",
-      "title": "물 마실 시간이에요!",
-      "message": "수분 충전하고 활기찬 오후 보내세요 💧 (+200ml)",
-      "time": "방금 전",
-      "isRead": false,
-    },
-    {
-      "type": "medicine",
-      "title": "점심 약 복용 알림",
-      "message": "종합 비타민, 오메가3 챙겨 드셨나요?",
-      "time": "1시간 전",
-      "isRead": true,
-    },
-    // ... 더미 데이터 추가 가능
-  ];
+  bool _isLoading = true;
+  List<dynamic> _notifications = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotifications();
+  }
+
+  Future<void> _loadNotifications() async {
+    setState(() => _isLoading = true);
+    final data = await NotificationApi.getNotificationHistory();
+    if (mounted) {
+      setState(() {
+        _notifications = data;
+        _isLoading = false;
+      });
+    }
+  }
+
+  // "방금 전", "1시간 전" 계산 함수
+  String _timeAgo(String? dateStr) {
+    if (dateStr == null) return "";
+    DateTime date = DateTime.parse(dateStr);
+    Duration diff = DateTime.now().difference(date);
+
+    if (diff.inMinutes < 1) return "방금 전";
+    if (diff.inMinutes < 60) return "${diff.inMinutes}분 전";
+    if (diff.inHours < 24) return "${diff.inHours}시간 전";
+    return "${date.month}월 ${date.day}일";
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold( // 👈 Scaffold로 감싸서 독립된 화면으로 만듭니다.
+    return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -37,101 +51,126 @@ class _NotificationPageState extends State<NotificationPage> {
         centerTitle: true,
         title: const Text(
           '알림',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
         ),
-        leading: IconButton( // 👈 뒤로가기 버튼 명시
+        leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 오늘 알림
-            _buildSectionTitle('오늘'),
-            const SizedBox(height: 15),
-            ..._todayNotifications.map((noti) => _buildNotificationCard(noti)),
-
-            const SizedBox(height: 25),
-
-            // (예시) 어제 알림 데이터가 있다면 여기에 추가
-            // _buildSectionTitle('어제'),
-            // ...
-          ],
-        ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF4BECBE)))
+          : _notifications.isEmpty
+          ? _buildEmptyState()
+          : ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        itemCount: _notifications.length,
+        separatorBuilder: (context, index) => const Divider(height: 30, color: Color(0xFFF5F5F5)),
+        itemBuilder: (context, index) {
+          return _buildNotificationItem(_notifications[index]);
+        },
       ),
     );
   }
 
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey[500]),
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.notifications_off_outlined, size: 60, color: Colors.grey[300]),
+          const SizedBox(height: 16),
+          Text("새로운 알림이 없습니다.", style: TextStyle(color: Colors.grey[500])),
+        ],
+      ),
     );
   }
 
-  Widget _buildNotificationCard(Map<String, dynamic> noti) {
-    IconData iconData;
-    Color iconColor;
-    Color iconBgColor;
+  Widget _buildNotificationItem(Map<String, dynamic> noti) {
+    final String type = noti['type'] ?? 'ETC';
 
-    // 아이콘 로직 (아까와 동일)
-    switch (noti['type']) {
-      case 'water':
-        iconData = Icons.water_drop;
-        iconColor = const Color(0xFF4BECBE);
-        iconBgColor = const Color(0xFFE0FCF6);
+    // 타입별 아이콘 및 색상 설정
+    IconData iconData;
+    Color iconColor = const Color(0xFF4BECBE); // 기본 민트색
+
+    switch (type) {
+      case 'MEAL':
+        iconData = Icons.rice_bowl; // 식단
         break;
-      case 'medicine':
-        iconData = Icons.medication;
-        iconColor = const Color(0xFFFFAB91);
-        iconBgColor = const Color(0xFFFBE9E7);
+      case 'MEDICINE':
+        iconData = Icons.medication; // 약
+        break;
+      case 'EXERCISE':
+        iconData = Icons.fitness_center; // 운동
+        break;
+      case 'WATER':
+        iconData = Icons.water_drop; // 물
+        break;
+      case 'POKE':
+        iconData = Icons.touch_app; // 콕 찌르기 (손가락 아이콘)
         break;
       default:
         iconData = Icons.notifications;
-        iconColor = Colors.grey;
-        iconBgColor = Colors.grey[200]!;
     }
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: noti['isRead'] ? Colors.white : const Color(0xFFF0FDF9), // 안 읽음: 연한 민트 배경
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: iconBgColor,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(iconData, color: iconColor, size: 20),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 1. 원형 아이콘 영역
+        Container(
+          width: 24, // 스크린샷처럼 작고 깔끔하게
+          height: 24,
+          margin: const EdgeInsets.only(top: 2),
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            // 배경색 없이 아이콘만 있는 스타일 (스크린샷 반영)
+            // 만약 배경이 필요하면 color: Color(0xFFE0FCF6) 추가
           ),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(noti['title'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                    Text(noti['time'], style: TextStyle(color: Colors.grey[400], fontSize: 11)),
-                  ],
+          child: Icon(iconData, color: iconColor, size: 24),
+        ),
+        const SizedBox(width: 12),
+
+        // 2. 텍스트 내용 영역
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 제목 + 시간 (Row)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    noti['title'] ?? '알림',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey[400], // 제목은 약간 연하게 (스크린샷 "바디버디 식단 알람")
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    _timeAgo(noti['createdAt']),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[400], // 시간도 연한 회색
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+
+              // 본문 메시지
+              Text(
+                noti['message'] ?? '',
+                style: const TextStyle(
+                  fontSize: 15,
+                  color: Colors.black87, // 본문은 진하게
+                  height: 1.4, // 줄간격 살짝 줌
                 ),
-                const SizedBox(height: 4),
-                Text(noti['message'], style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
