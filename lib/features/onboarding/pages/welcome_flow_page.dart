@@ -378,7 +378,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
               ),
               const SizedBox(width: 10),
               SizedBox(
-                height: 40,
+                height:45,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     // ✅ 중복확인 버튼: 민트색

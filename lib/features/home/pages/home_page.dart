@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../common/widgets/main_appbar.dart';
 import '../widgets/attendance_section.dart';
 import '../widgets/today_date_header.dart';
+import '../../notification/pages/notification_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,7 +19,13 @@ class _HomePageState extends State<HomePage> {
         navIndex: 0,
         titleText: 'BodyBuddy',
         imageUrl: 'assets/images/common/bell.svg',
-        onButtonPressed: () {},
+        // 👇 [수정] 버튼 누르면 알림 페이지로 이동!
+        onButtonPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const NotificationPage()),
+          );
+        },
       ),
       body: SingleChildScrollView(
         child: Column(

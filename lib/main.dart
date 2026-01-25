@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'features/onboarding/pages/onboarding_page.dart'; // 맨 처음 화면
-import 'features/onboarding/pages/onboarding_page.dart';
 import 'pages/main_page.dart';
 import 'common/common.dart';
 
@@ -52,7 +51,7 @@ class MyApp extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF00E676),
             foregroundColor: Colors.white,
-            minimumSize: const Size(double.infinity, 56), // 버튼 높이 56으로 통일
+            minimumSize: const Size(30,35), // -> infinity 랑 width 수정하겠습니다
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
@@ -83,3 +82,4 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
