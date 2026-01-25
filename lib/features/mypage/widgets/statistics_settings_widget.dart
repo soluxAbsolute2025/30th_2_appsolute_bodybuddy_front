@@ -7,7 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class StatisticsSettingsWidget extends StatefulWidget {
-  StatisticsSettingsWidget({super.key});
+  final Function() onBack;
+  StatisticsSettingsWidget({super.key, required this.onBack});
 
   @override
   State<StatisticsSettingsWidget> createState() =>
@@ -80,11 +81,15 @@ class _StatisticsSettingsWidgetState extends State<StatisticsSettingsWidget> {
           ),
         ),
         TextButton(
-          onPressed: () {
-            Navigator.of(
+          onPressed: () async {
+            await Navigator.of(
               context,
               rootNavigator: true,
             ).push(MaterialPageRoute(builder: (context) => nextPage));
+
+            if (context.mounted) {
+              widget.onBack();
+            }
           },
           style: TextButton.styleFrom(
             foregroundColor: const Color(0x1188D3BD),

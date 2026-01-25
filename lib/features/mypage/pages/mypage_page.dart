@@ -103,7 +103,10 @@ class _MypagePageState extends State<MypagePage> with RouteAware {
               padding: EdgeInsets.symmetric(horizontal: 16.0),
               child: Column(
                 children: [
-                  MypageProfileWidget(myPageInfo: myPageInfo),
+                  MypageProfileWidget(
+                    myPageInfo: myPageInfo,
+                    onBack: didPopNext,
+                  ),
                   MypageLevelBadgeWidget(myPageInfo: myPageInfo),
                   SizedBox(height: 30.0),
                   MypageMoemWidget(myPageInfo: myPageInfo),
@@ -115,13 +118,16 @@ class _MypagePageState extends State<MypagePage> with RouteAware {
             Container(
               color: Colors.white,
               padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: BadgeCollectionWidget(myPageInfo: myPageInfo),
+              child: BadgeCollectionWidget(
+                myPageInfo: myPageInfo,
+                onBack: didPopNext,
+              ),
             ),
             SizedBox(height: 10.0),
             Container(
               color: Colors.white,
               padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: StatisticsSettingsWidget(),
+              child: StatisticsSettingsWidget(onBack: didPopNext),
             ),
             SizedBox(height: 10.0),
             Container(

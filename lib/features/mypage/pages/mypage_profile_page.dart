@@ -150,6 +150,8 @@ class _MypageProfilePageState extends State<MypageProfilePage> {
       request: profileModel,
       imageFile: _selectedImage, // 이미지가 있으면 파일 전송
     );
+
+    CustomToast.show(context, '나의 프로필을 수정했습니다!');
   }
 
   Future<void> _pickAndProcessImage() async {

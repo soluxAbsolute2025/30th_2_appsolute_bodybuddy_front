@@ -2,6 +2,8 @@ import 'package:bodybuddy_frontend/features/buddyzone/api/buddyzone_hottag_api.d
 import 'package:bodybuddy_frontend/features/buddyzone/models/feeds/feed_content_model.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/models/feeds/feed_type_model.dart';
 import 'package:bodybuddy_frontend/features/buddyzone/widgets/friends/friends_buddy_profile.dart';
+import 'package:bodybuddy_frontend/features/mypage/api/mypage_api.dart';
+import 'package:bodybuddy_frontend/features/mypage/models/mypage_info_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../widgets/feeds/feed_search_widget.dart';
@@ -13,12 +15,13 @@ class BuddyFeedPage extends StatefulWidget {
   const BuddyFeedPage({super.key});
 
   @override
-  State<BuddyFeedPage> createState() => _BuddyFeedPageState();
+  State<BuddyFeedPage> createState() => BuddyFeedPageState();
 }
 
-class _BuddyFeedPageState extends State<BuddyFeedPage> {
+class BuddyFeedPageState extends State<BuddyFeedPage> {
   FeedRequest _currentRequest = FeedRequest(mode: FeedMode.normal);
   final TextEditingController searchController = TextEditingController();
+  MyPageResponse? myPageInfo;
 
   List<FeedPost> feeds = [];
   List<String> hashtags = [];
@@ -31,6 +34,30 @@ class _BuddyFeedPageState extends State<BuddyFeedPage> {
   void initState() {
     super.initState();
     _setHashtagList();
+    _setFeedList();
+    checkMtFeeds();
+  }
+
+  void checkMtFeeds() async {
+    try {
+      final response = await MyPageAPI().getMyPageAllInfo();
+
+      if (mounted) {
+        setState(() {
+          myPageInfo = response; // 2. 데이터를 받아온 후 setState로 화면 갱신
+        });
+        print("내 닉네임 로드 완료: ${myPageInfo?.userProfile.nickname}");
+      }
+    } catch (e) {
+      print("내 정보 로드 실패: $e");
+    }
+  }
+
+  void resetAndFetch() {
+    currentPage = 0;
+    isLast = false;
+    feeds.clear();
+
     _setFeedList();
   }
 
@@ -88,6 +115,13 @@ class _BuddyFeedPageState extends State<BuddyFeedPage> {
     });
   }
 
+  // void checkMtFeeds() async {
+  //   final response = await MyPageAPI().getMyPageAllInfo();
+  //
+  //   myPageInfo = response;
+  //   print(myPageInfo.toString());
+  // }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -125,6 +159,28 @@ class _BuddyFeedPageState extends State<BuddyFeedPage> {
             ),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate((context, index) {
+                final feed = feeds[index];
+
+                // ---------------- 수정된 부분 시작 ----------------
+
+                // 1. 내 닉네임 확인 (아직 로딩 안됐으면 null)
+                // MyPageResponse 모델 안에 nickname 필드가 있다고 가정합니다.
+                final myNickname = myPageInfo?.userProfile.nickname;
+
+                // 2. 조건 체크
+                // 조건: 피드가 SECRET 상태이고, 작성자 닉네임이 내 닉네임과 다를 경우
+                // (내 정보가 아직 로드되지 않았을 때도 안전을 위해 숨기는 것이 좋습니다)
+                bool isSecret = feed.visibility == 'SECRET';
+                bool isNotMine =
+                    feed.writerNickname != myNickname; // feed.nickname은 작성자 닉네임
+
+                if (isSecret && isNotMine) {
+                  // 화면에 그리지 않고 공간도 차지하지 않게 빈 위젯 반환
+                  return const SizedBox.shrink();
+                }
+
+                // ---------------- 수정된 부분 끝 ----------------
+
                 return Container(
                   margin: EdgeInsets.only(bottom: 10.0),
                   child: FeedFrameWidget(

@@ -44,7 +44,7 @@ class _FriendrequestState extends State<FriendrequestBlock> {
                     ? NetworkImage(
                         widget.buddyRequest.profileImageUrl.toString(),
                       )
-                    : AssetImage('assets/buddyzone/myprofile.jpg'),
+                    : AssetImage('assets/buddyzone/myprofile.png'),
               ),
             ),
           ),
